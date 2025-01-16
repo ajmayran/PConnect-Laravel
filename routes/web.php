@@ -7,7 +7,7 @@ use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\RegisteredUserController; // Importing RegisteredUserController
 use App\Http\Controllers\Distributors\DistributorDashboardController;
 use App\Http\Controllers\Retailers\RetailerDashboardController;
-
+use App\Http\Controllers\Admin\AdminDashboardController; // Importing AdminDashboardController
 Route::get('/', function () {
     return view('index');
 });
@@ -51,15 +51,17 @@ Route::get('/approval-waiting', [RegisteredUserController::class, 'approvalWaiti
 
 
 require __DIR__ . '/auth.php';
-=======
+
 Route::get('auth/google', [SocialAuthController::class, 'googleRedirect'])->name('auth.google');
 Route::get('auth/google/callback', [SocialAuthController::class, 'googleCallback']);
 
 
     // Add distributor route
-    Route::get('/distributor/{id}', [DistributorPageController::class, 'show'])
+Route::get('/distributor/{id}', [DistributorDashboardController::class, 'show'])
         ->name('distributor.show');
-});
+
+Route::get('/admin', [AdminDashboardController::class, 'show'])
+        ->name('admin.dashboard');
 
 require __DIR__.'/auth.php';
 

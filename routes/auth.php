@@ -50,6 +50,12 @@ Route::middleware(['auth'])->group(function () {
             return view('distributor.dashboard');
         })->name('distributor.dashboard');
     });
+
+    Route::middleware(['admin', 'approved'])->group(function () {
+        Route::get('/admin/dashboard', function () {
+            return view('admin.dashboard');
+        })->name('admin.dashboard');
+    });
 });
 
 Route::middleware('auth')->group(function () {

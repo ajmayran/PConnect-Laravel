@@ -32,8 +32,10 @@ class AuthenticatedSessionController extends Controller
         $user = Auth::user();
         if ($user->user_type === 'retailer') {
             return redirect()->route('retailer.dashboard'); // Adjust the route name as necessary
-        } elseif ($user->user_type === 'distributor') {
+        }elseif ($user->user_type === 'distributor') {
             return redirect()->route('distributor.dashboard'); // Adjust the route name as necessary
+        }elseif ($user->user_type === 'admin') {
+            return redirect()->route('admin.dashboard'); // Adjust the route name as necessary
         }
 
         return redirect()->intended(route('dashboard', absolute: false));
