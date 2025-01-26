@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Models\Credential;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -32,9 +33,9 @@ class RegisteredUserController extends Controller
         $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'middle_name' => ['nullable','string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'credentials' => ['required', 'file', 'max:10240'],
+            'middle_name' => ['nullable', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'credentials' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
@@ -45,10 +46,19 @@ class RegisteredUserController extends Controller
             'last_name' => $request->last_name,
             'middle_name' => $request->middle_name,
             'email' => $request->email,
-            'credentials' => $credentialsPath,
             'password' => Hash::make($request->password),
-            
+
         ]);
+
+        if ($request->hasFile('credentials')) {
+            $filePath = $request->file('credentials')->store('credentials', 'public');
+
+            // Store file path in the credentials table
+            Credential::create([
+                'user_id' => $user->id,
+                'file_path' => $filePath,
+            ]);
+        }
 
         event(new Registered($user));
 
