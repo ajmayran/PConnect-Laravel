@@ -1,7 +1,7 @@
 <x-guest-layout>
     <div class="min-h-screen flex items-center justify-center bg-gradient-to-r from-green-400 to-green-600 py-12 px-4 sm:px-6 lg:px-8">
-        <!-- Login Form Card -->
-        <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 space-y-8">
+        <!-- Login Form Card - Increased width -->
+        <div class="w-full max-w-3xl bg-white rounded-2xl shadow-2xl p-8 space-y-8"> <!-- Changed from max-w-xl to max-w-3xl -->
             <!-- Header -->
             <div class="text-center">
                 <h2 class="text-3xl font-bold text-gray-900">Login</h2>
