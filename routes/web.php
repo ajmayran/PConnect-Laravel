@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserDashboardController;
+use App\Http\Controllers\Auth\SocialAuthController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -24,4 +25,12 @@ Route::get('/download-credential', [ProfileController::class, 'downloadCredentia
     ->middleware('auth');
 
     
+
+// Social Authentication Routes
+Route::get('auth/facebook', [SocialAuthController::class, 'facebookRedirect'])->name('auth.facebook');
+Route::get('auth/facebook/callback', [SocialAuthController::class, 'facebookCallback']);
+
+Route::get('auth/google', [SocialAuthController::class, 'googleRedirect'])->name('auth.google');
+Route::get('auth/google/callback', [SocialAuthController::class, 'googleCallback']);
+
 require __DIR__.'/auth.php';
