@@ -2,16 +2,16 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\Retailers\RetailerDashboardController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('index');
 });
 
-Route::get('/dashboard', [UserDashboardController::class, 'index'])
+Route::get('/retailers', [RetailerDashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+    ->name('retailers.dashboard');
 
 
 Route::middleware('auth')->group(function () {
