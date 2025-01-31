@@ -6,7 +6,7 @@
     </x-slot>
 
     <!-- Distributors Section -->
-    <section class="py-8 bg-gray-50 shadow-sm mb-6 rounded-lg">
+    <section class="py-8 mb-6 rounded-lg shadow-sm bg-gray-50">
         <div class="container px-4 mx-auto">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="mr-4 text-2xl font-bold text-gray-800">Explore Distributors</h2>
@@ -14,15 +14,15 @@
 
             <div class="grid grid-cols-1 gap-6 py-10 md:grid-cols-5">
                 <!-- Sample Distributor Cards -->
-                <div class="flex flex-col items-center p-6 bg-white rounded-xl shadow-lg cursor-pointer hover:shadow-xl transition-shadow duration-300 border border-gray-100">
+                <div class="flex flex-col items-center p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-lg cursor-pointer rounded-xl hover:shadow-xl">
                     <img class="w-24 h-24 mb-4 rounded-full shadow-md" src="{{ asset('storage/distributors/jacob.png') }}" alt="Distributor Jacob">
                     <h3 class="text-lg font-bold text-gray-800">Jacob Distribution</h3>
                 </div>
-                <div class="flex flex-col items-center p-6 bg-white rounded-xl shadow-lg cursor-pointer hover:shadow-xl transition-shadow duration-300 border border-gray-100">
+                <div class="flex flex-col items-center p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-lg cursor-pointer rounded-xl hover:shadow-xl">
                     <img class="w-24 h-24 mb-4 rounded-full shadow-md" src="{{ asset('storage/distributors/primus.png') }}" alt="Distributor Primus">
                     <h3 class="text-lg font-bold text-gray-800">Primus Distributor</h3>
                 </div>
-                <div class="flex flex-col items-center p-6 bg-white rounded-xl shadow-lg cursor-pointer hover:shadow-xl transition-shadow duration-300 border border-gray-100">
+                <div class="flex flex-col items-center p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-lg cursor-pointer rounded-xl hover:shadow-xl">
                     <img class="w-24 h-24 mb-4 rounded-full shadow-md" src="{{ asset('storage/distributors/glenmark.png') }}" alt="Distributor Glenmark">
                     <h3 class="text-lg font-bold text-gray-800">Glenmark Trading</h3>
                 </div>
@@ -40,7 +40,7 @@
                 <!-- Sample Product Cards -->
                 <div class="flex flex-col items-center p-6 bg-white rounded-lg shadow-md basis-1/5 w-[20] border border-gray-100">
                     <div class="flex justify-center mb-4">
-                        <img class="w-24 h-24 object-cover rounded" src="{{ asset('storage/products/rtc-chicken-bbq.png') }}" alt="Product 1">
+                        <img class="object-cover w-24 h-24 rounded" src="{{ asset('storage/products/rtc-chicken-bbq.png') }}" alt="Product 1">
                     </div>
                     <div class="text-left">
                         <h3 class="text-lg font-bold">Chicken BBQ</h3>
@@ -63,7 +63,7 @@
                 <!-- Product 2 -->
                 <div class="flex flex-col items-center p-6 bg-white rounded-lg shadow-md basis-1/5 w-[20] border border-gray-100">
                     <div class="flex justify-center mb-4">
-                        <img class="w-24 h-24 object-cover rounded" src="{{ asset('storage/products/coke_bottle.jpg') }}" alt="Product 1">
+                        <img class="object-cover w-24 h-24 rounded" src="{{ asset('storage/products/coke_bottle.jpg') }}" alt="Product 1">
                     </div>
                     <div class="text-left">
                         <h3 class="text-lg font-bold">Coke mismo case (12 pieces)</h3>
@@ -84,15 +84,5 @@
             </div>
         </div>
     </section>
-
-    @push('scripts')
-    <script>
-        setTimeout(() => {
-            const successAlert = document.getElementById('success-alert');
-            if (successAlert) {
-                successAlert.style.display = 'none';
-            }
-        }, 3000);
-    </script>
-    @endpush
+    <x-footer/>
 </x-app-layout>
