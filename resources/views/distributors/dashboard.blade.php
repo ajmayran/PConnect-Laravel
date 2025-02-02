@@ -32,6 +32,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             color: white;
         }
     </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
 <body class="bg-gray-100">
