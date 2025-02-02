@@ -14,10 +14,10 @@
 
             <div class="grid grid-cols-1 gap-6 py-10 md:grid-cols-5">
                 <!-- Distributor Cards with Enhanced Styling -->
-                <div class="flex flex-col items-center p-6 bg-white rounded-xl shadow-lg cursor-pointer hover:shadow-xl transition-shadow duration-300 border border-gray-200 hover:border-green-200 hover:bg-gray-50">
+                <a href="{{ route('distributor.show', 1) }}" class="flex flex-col items-center p-6 bg-white rounded-xl shadow-lg cursor-pointer hover:shadow-xl transition-shadow duration-300 border border-gray-200 hover:border-green-200 hover:bg-gray-50">
                     <img class="w-24 h-24 mb-4 rounded-full shadow-md" src="{{ asset('storage/distributors/jacob.png') }}" alt="Distributor Jacob">
                     <h3 class="text-lg font-bold text-gray-800">Jacob Distribution</h3>
-                </div>
+                </a>
                 <div class="flex flex-col items-center p-6 bg-white rounded-xl shadow-lg cursor-pointer hover:shadow-xl transition-shadow duration-300 border border-gray-200 hover:border-green-200 hover:bg-gray-50">
                     <img class="w-24 h-24 mb-4 rounded-full shadow-md" src="{{ asset('storage/distributors/primus.png') }}" alt="Distributor Primus">
                     <h3 class="text-lg font-bold text-gray-800">Primus Distributor</h3>
