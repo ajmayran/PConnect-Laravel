@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('distributors', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');  
+            $table->string('company_profile_image');
             $table->string('company_name');
             $table->string('company_email');
             $table->string('company_address');
