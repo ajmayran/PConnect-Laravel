@@ -1,9 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth; // Importing Auth facade
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\SocialAuthController;
-use App\Http\Controllers\DistributorDashboardController;
+use App\Http\Controllers\Auth\RegisteredUserController; // Importing RegisteredUserController
+use App\Http\Controllers\Distributors\DistributorDashboardController;
 use App\Http\Controllers\Retailers\RetailerDashboardController;
 
 Route::get('/', function () {
@@ -14,12 +16,22 @@ Route::get('/retailers', [RetailerDashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('retailers.dashboard');
 
-Route::get('/retailers', [DistributorDashboardController::class, 'index'])
+Route::get('/distributors', [DistributorDashboardController::class, 'index']) // Updated route
     ->middleware(['auth', 'verified'])
-    ->name('retailers.dashboard');
+    ->name('distributors.dashboard'); // Updated name
 
 Route::get('/dashboard', function () {
-    return redirect()->route('retailers.dashboard');
+    if (Auth::check()) {
+        return Auth::user()->user_type === 'distributor' 
+            ? redirect()->route('distributors.dashboard') 
+            : redirect()->route('retailers.dashboard');
+    }
+    if (Auth::check()) {
+        return Auth::user()->user_type === 'distributor' 
+            ? redirect()->route('distributors.dashboard') 
+            : redirect()->route('retailers.dashboard');
+    }
+    return redirect('/login');
 })->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -35,8 +47,6 @@ Route::get('/download-credential', [ProfileController::class, 'downloadCredentia
 // Social Authentication Routes
 Route::get('auth/facebook', [SocialAuthController::class, 'facebookRedirect'])->name('auth.facebook');
 Route::get('auth/facebook/callback', [SocialAuthController::class, 'facebookCallback']);
-
-Route::get('auth/google', [SocialAuthController::class, 'googleRedirect'])->name('auth.google');
-Route::get('auth/google/callback', [SocialAuthController::class, 'googleCallback']);
+Route::get('/approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])->name('auth.approval-waiting');
 
 require __DIR__ . '/auth.php';
