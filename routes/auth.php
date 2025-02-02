@@ -35,6 +35,23 @@ Route::middleware('guest')->group(function () {
         ->name('password.store');
 });
 
+
+Route::middleware(['auth'])->group(function () {
+    // Retailer routes
+    Route::middleware(['retailer'])->group(function () {
+        Route::get('/retailer/dashboard', function () {
+            return view('retailer.dashboard');
+        })->name('retailer.dashboard');
+    });
+
+    // Distributor routes
+    Route::middleware(['distributor', 'approved'])->group(function () {
+        Route::get('/distributor/dashboard', function () {
+            return view('distributor.dashboard');
+        })->name('distributor.dashboard');
+    });
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');

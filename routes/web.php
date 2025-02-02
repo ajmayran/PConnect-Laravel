@@ -1,8 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth; // Importing Auth facade
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\Auth\RegisteredUserController; // Importing RegisteredUserController
+use App\Http\Controllers\Distributors\DistributorDashboardController;
 use App\Http\Controllers\Retailers\RetailerDashboardController;
 
 Route::get('/', function () {
@@ -13,6 +16,23 @@ Route::get('/retailers', [RetailerDashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('retailers.dashboard');
 
+Route::get('/distributors', [DistributorDashboardController::class, 'index']) // Updated route
+    ->middleware(['auth', 'verified'])
+    ->name('distributors.dashboard'); // Updated name
+
+Route::get('/dashboard', function () {
+    if (Auth::check()) {
+        return Auth::user()->user_type === 'distributor' 
+            ? redirect()->route('distributors.dashboard') 
+            : redirect()->route('retailers.dashboard');
+    }
+    if (Auth::check()) {
+        return Auth::user()->user_type === 'distributor' 
+            ? redirect()->route('distributors.dashboard') 
+            : redirect()->route('retailers.dashboard');
+    }
+    return redirect('/login');
+})->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -24,19 +44,17 @@ Route::get('/download-credential', [ProfileController::class, 'downloadCredentia
     ->name('download.credential')
     ->middleware('auth');
 
-    
-
 // Social Authentication Routes
 Route::get('auth/facebook', [SocialAuthController::class, 'facebookRedirect'])->name('auth.facebook');
 Route::get('auth/facebook/callback', [SocialAuthController::class, 'facebookCallback']);
+Route::get('/approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])->name('auth.approval-waiting');
 
+
+require __DIR__ . '/auth.php';
+=======
 Route::get('auth/google', [SocialAuthController::class, 'googleRedirect'])->name('auth.google');
 Route::get('auth/google/callback', [SocialAuthController::class, 'googleCallback']);
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
 
     // Add distributor route
     Route::get('/distributor/{id}', [DistributorPageController::class, 'show'])
@@ -44,3 +62,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+

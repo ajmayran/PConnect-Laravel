@@ -1,4 +1,5 @@
 <x-app-layout>
+
     <x-dashboard-nav />
 
     <x-slot name="header">
@@ -14,22 +15,17 @@
 
             <div class="grid grid-cols-1 gap-6 py-10 md:grid-cols-5">
                 <!-- Sample Distributor Cards -->
-                <div
-                    class="flex flex-col items-center p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-lg cursor-pointer rounded-xl hover:shadow-xl">
-                    <img class="w-24 h-24 mb-4 rounded-full shadow-md" src="{{ asset('storage/distributors/jacob.png') }}"
-                        alt="Distributor Jacob">
+
+                <div class="flex flex-col items-center p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-lg cursor-pointer rounded-xl hover:shadow-xl">
+                    <img class="w-24 h-24 mb-4 rounded-full shadow-md" src="{{ asset('img/distributors/jacob.png') }}" alt="Distributor Jacob">
                     <h3 class="text-lg font-bold text-gray-800">Jacob Distribution</h3>
                 </div>
-                <div
-                    class="flex flex-col items-center p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-lg cursor-pointer rounded-xl hover:shadow-xl">
-                    <img class="w-24 h-24 mb-4 rounded-full shadow-md"
-                        src="{{ asset('storage/distributors/primus.png') }}" alt="Distributor Primus">
+                <div class="flex flex-col items-center p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-lg cursor-pointer rounded-xl hover:shadow-xl">
+                    <img class="w-24 h-24 mb-4 rounded-full shadow-md" src="{{ asset('img/distributors/primus.png') }}" alt="Distributor Primus">
                     <h3 class="text-lg font-bold text-gray-800">Primus Distributor</h3>
                 </div>
-                <div
-                    class="flex flex-col items-center p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-lg cursor-pointer rounded-xl hover:shadow-xl">
-                    <img class="w-24 h-24 mb-4 rounded-full shadow-md"
-                        src="{{ asset('storage/distributors/glenmark.png') }}" alt="Distributor Glenmark">
+                <div class="flex flex-col items-center p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-lg cursor-pointer rounded-xl hover:shadow-xl">
+                    <img class="w-24 h-24 mb-4 rounded-full shadow-md" src="{{ asset('img/distributors/glenmark.png') }}" alt="Distributor Glenmark">
                     <h3 class="text-lg font-bold text-gray-800">Glenmark Trading</h3>
                 </div>
             </div>
@@ -47,8 +43,7 @@
                 <div
                     class="flex flex-col items-center p-6 bg-white rounded-lg shadow-md basis-1/5 w-[20] border border-gray-100">
                     <div class="flex justify-center mb-4">
-                        <img class="object-cover w-24 h-24 rounded"
-                            src="{{ asset('storage/products/rtc-chicken-bbq.png') }}" alt="Product 1">
+                        <img class="object-cover w-24 h-24 rounded" src="{{ asset('img/products/rtc-chicken-bbq.png') }}" alt="Product 1">
                     </div>
                     <div class="text-left">
                         <h3 class="text-lg font-bold">Chicken BBQ</h3>
@@ -74,8 +69,7 @@
                 <div
                     class="flex flex-col items-center p-6 bg-white rounded-lg shadow-md basis-1/5 w-[20] border border-gray-100">
                     <div class="flex justify-center mb-4">
-                        <img class="object-cover w-24 h-24 rounded"
-                            src="{{ asset('storage/products/coke_bottle.jpg') }}" alt="Product 1">
+                        <img class="object-cover w-24 h-24 rounded" src="{{ asset('img/softdrinks/coke_bottle.jpg') }}" alt="Product 1">
                     </div>
                     <div class="text-left">
                         <h3 class="text-lg font-bold">Coke mismo case (12 pieces)</h3>

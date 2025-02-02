@@ -30,24 +30,26 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
-            'credentials' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'],
+            'user_type' => ['required', 'in:retailer,distributor'],
+            'credentials' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $credentialsPath = $request->file('credentials')->store('credentials', 'public');
 
         $user = User::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'middle_name' => $request->middle_name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
+            'middle_name' => $validated['middle_name'],
+            'user_type' => $validated['user_type'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'status' => $validated['user_type'] === 'retailer' ? 'approved' : 'pending'
         ]);
 
         if ($request->hasFile('credentials')) {
@@ -62,8 +64,12 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        Auth::login($user);
+        if ($user->user_type === 'distributor') {
+            return redirect()->route('auth.approval-waiting')
+                ->with('message', 'Registration successful! Please wait for admin approval.');
+        }
 
+        Auth::login($user);
         return redirect(route('retailers.dashboard', absolute: false));
     }
 }
