@@ -49,4 +49,17 @@ Route::get('auth/facebook', [SocialAuthController::class, 'facebookRedirect'])->
 Route::get('auth/facebook/callback', [SocialAuthController::class, 'facebookCallback']);
 Route::get('/approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])->name('auth.approval-waiting');
 
+
 require __DIR__ . '/auth.php';
+=======
+Route::get('auth/google', [SocialAuthController::class, 'googleRedirect'])->name('auth.google');
+Route::get('auth/google/callback', [SocialAuthController::class, 'googleCallback']);
+
+
+    // Add distributor route
+    Route::get('/distributor/{id}', [DistributorPageController::class, 'show'])
+        ->name('distributor.show');
+});
+
+require __DIR__.'/auth.php';
+
