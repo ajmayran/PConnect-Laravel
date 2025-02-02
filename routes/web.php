@@ -33,4 +33,14 @@ Route::get('auth/facebook/callback', [SocialAuthController::class, 'facebookCall
 Route::get('auth/google', [SocialAuthController::class, 'googleRedirect'])->name('auth.google');
 Route::get('auth/google/callback', [SocialAuthController::class, 'googleCallback']);
 
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+
+    // Add distributor route
+    Route::get('/distributor/{id}', [DistributorPageController::class, 'show'])
+        ->name('distributor.show');
+});
+
 require __DIR__.'/auth.php';
