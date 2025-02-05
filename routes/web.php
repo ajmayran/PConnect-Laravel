@@ -60,7 +60,7 @@ Route::get('auth/google/callback', [SocialAuthController::class, 'googleCallback
 Route::get('/distributor/{id}', [DistributorDashboardController::class, 'show'])
         ->name('distributor.show');
 
-Route::get('/admin', [AdminDashboardController::class, 'show'])
+Route::get('/admin', [AdminDashboardController::class, 'index'])
         ->name('admin.dashboard');
 
 require __DIR__.'/auth.php';
