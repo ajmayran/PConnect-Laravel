@@ -2,10 +2,6 @@
 
     <x-dashboard-nav />
 
-    <x-slot name="header">
-        <h2 class="text-2xl font-bold">Dashboard</h2>
-    </x-slot>
-
     <!-- Distributors Section -->
     <section class="py-8 mb-6 rounded-lg shadow-sm bg-gray-50">
         <div class="container px-4 mx-auto">
