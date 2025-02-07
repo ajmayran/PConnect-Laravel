@@ -85,8 +85,8 @@ Route::get('/approval-waiting', [RegisteredUserController::class, 'approvalWaiti
 Route::get('auth/google', [SocialAuthController::class, 'googleRedirect'])->name('auth.google');
 Route::get('auth/google/callback', [SocialAuthController::class, 'googleCallback']);
 
-Route::get('/distributor/{id}', [DistributorDashboardController::class, 'show'])
-        ->name('distributor.show');
+// Route::get('/distributor/{id}', [DistributorDashboardController::class, 'show'])
+//         ->name('distributor.show');
 
 Route::get('/admin', [AdminDashboardController::class, 'index'])
         ->name('admin.dashboard');

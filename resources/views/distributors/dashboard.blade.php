@@ -124,10 +124,10 @@
             </div>
         </div>
         <div class="w-4/5 mx-auto text-sm font-bold text-left text-gray-200" id="submenu">
-            <h1 class="p-2 rounded-md cursor-pointer hover:bg-green-600">
+            <h1 class="p-2 mt-1 rounded-md cursor-pointer hover:bg-green-600">
                 Customers
             </h1>
-            <h1 class="p-2 rounded-md cursor-pointer hover:bg-green-600">
+            <h1 class="p-2 mt-1 rounded-md cursor-pointer hover:bg-green-600">
                 Messages
             </h1>
         </div>
