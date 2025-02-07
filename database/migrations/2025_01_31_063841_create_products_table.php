@@ -18,13 +18,13 @@ return new class extends Migration
             $table->decimal('price', 10, 2);
             $table->bigInteger('stock_quantity');
             $table->integer('minimum_purchase_qty');
-            $table->unsignedBigInteger('distributor_id');
+            $table->unsignedBigInteger('category_id');
             $table->string('image')->nullable();
             $table->string('status')->default('pending');
             $table->timestamps();
 
             $table->foreign('distributor_id')->references('id')->on('distributors')->onDelete('cascade');
-            $table->foreign('catergory_id')->references('id')->on('categories')->onDelete('cascade');
+            $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
         });
     }
 
