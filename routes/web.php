@@ -15,14 +15,12 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\CancellationController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\Auth\RegisteredUserController; 
+use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Retailers\RetailerDashboardController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
-
-
 use App\Http\Controllers\DistributorController;
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 Route::get('/distributors/create', [DistributorController::class, 'create'])->name('distributors.create');
 Route::post('/distributors', [DistributorController::class, 'store'])->name('distributors.store');
@@ -40,16 +38,22 @@ Route::get('/retailers', [RetailerDashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('retailers.dashboard');
 
-Route::get('/distributors', [DistributorDashboardController::class, 'index']); 
+Route::get('/distributors', [DistributorDashboardController::class, 'index']);
 
-Route::get('/distributors/dashboard', [DistributorDashboardController::class, 'dashboard'])
-    ->middleware(['auth', 'verified'])
-    ->name('distributors.dashboard'); 
+Route::get('/approval-waiting', function () {
+    return view('auth.approval-waiting');
+})->name('auth.approval-waiting');
+
+Route::middleware(['auth', 'approved'])->group(function () {
+    // Your protected routes here
+    Route::get('/distributors/dashboard', [DistributorDashboardController::class, 'dashboard'])
+        ->name('distributors.dashboard');
+});
 
 Route::get('/dashboard', function () {
     if (Auth::check()) {
-        return Auth::user()->user_type === 'distributor' 
-            ? redirect()->route('distributors.dashboard') 
+        return Auth::user()->user_type === 'distributor'
+            ? redirect()->route('distributors.dashboard')
             : redirect()->route('retailers.dashboard');
     }
     return redirect('/login');
@@ -68,7 +72,6 @@ Route::get('/distributors/orders/{id}', [OrderController::class, 'show'])->name(
 Route::get('/distributors/products', [ProductController::class, 'index'])->name('distributors.products.index');
 Route::get('/distributors/products/create', [ProductController::class, 'create'])->name('distributors.products.create');
 Route::post('/distributors/products', [ProductController::class, 'store'])->name('distributors.products.store');
-
 
 Route::get('/distributors/returns', [ReturnController::class, 'index'])->name('distributors.returns.index');
 Route::get('/distributors/cancellations', [CancellationController::class, 'index'])->name('distributors.cancellations.index');
@@ -91,7 +94,6 @@ Route::get('/download-credential', [ProfileController::class, 'downloadCredentia
 Route::get('auth/facebook', [SocialAuthController::class, 'facebookRedirect'])->name('auth.facebook');
 Route::get('auth/facebook/callback', [SocialAuthController::class, 'facebookCallback']);
 Route::get('/approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])->name('auth.approval-waiting');
-
 
 Route::get('auth/google', [SocialAuthController::class, 'googleRedirect'])->name('auth.google');
 Route::get('auth/google/callback', [SocialAuthController::class, 'googleCallback']);

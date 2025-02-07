@@ -30,8 +30,10 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
-        // Check if the user is a distributor and their status is pending
         if ($user->user_type === 'distributor' && $user->status === 'pending') {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
             return redirect()->route('auth.approval-waiting');
         }
 
