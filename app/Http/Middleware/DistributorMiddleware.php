@@ -13,6 +13,11 @@ class DistributorMiddleware
         if (!Auth::check() || Auth::user()->user_type !== 'distributor' || !Auth::user()->distributor->profile_completed) {
             return redirect('/login');
         }
+        // Restrict distributor access to retailer dashboard
+        if ($request->is('retailer/*')) {
+            return redirect('/distributor/dashboard'); // Redirect to distributor dashboard
+        }
+        
         return $next($request);
     }
 }
