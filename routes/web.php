@@ -1,15 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth; // Importing Auth facade
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\DistributorPageController;
 use App\Http\Controllers\Retailers\CartController;
-use App\Http\Controllers\Auth\RegisteredUserController; // Importing RegisteredUserController
+use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
 use App\Http\Controllers\Retailers\RetailerDashboardController;
-use App\Http\Controllers\Admin\AdminDashboardController; // Importing AdminDashboardController
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\ProductDescController;
 Route::get('/', function () {
     return view('index');
 });
@@ -59,14 +60,16 @@ Route::get('auth/google/callback', [SocialAuthController::class, 'googleCallback
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [RetailerDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/cart', [CartController::class, 'show'])->name('cart.show');
+    Route::get('/product', [ProductDescController::class, 'show'])->name('retailer.product-description');
 
     // Add distributor route
     Route::get('/distributors', [DistributorPageController::class, 'index'])->name('distributors');
     Route::get('/distributors', [DistributorPageController::class, 'show'])->name('distributor.show');
     // Add distributor route
-    Route::get('/cart', [CartController::class, 'show'])->name('cart.show');
 
     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+
 });
 require __DIR__.'/auth.php';
 
