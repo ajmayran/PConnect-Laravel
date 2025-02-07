@@ -12,9 +12,4 @@ class AdminDashboardController extends Controller
     {
         return view('admin.dashboard', ['user' => Auth::user()]);
     }
-    
-    public function show()
-    {
-        return view('admin.dashboard');
-    }
 }

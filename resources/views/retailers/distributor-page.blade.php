@@ -3,7 +3,7 @@
 
     <!-- Back Button -->
     <div class="container mx-auto px-4 py-6">
-        <a href="{{ url()->previous() }}" class="text-green-600 hover:text-green-700 flex items-center">
+        <a href="{{route('retailers.dashboard')}}" class="text-green-600 hover:text-green-700 flex items-center">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
