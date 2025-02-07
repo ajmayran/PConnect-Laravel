@@ -1,9 +1,6 @@
 <x-app-layout>
-    <x-dashboard-nav />
 
-    <x-slot name="header">
-        <h2 class="text-2xl font-bold">Dashboard</h2>
-    </x-slot>
+    <x-dashboard-nav />
 
     <!-- Distributors Section -->
     <section class="py-8 mb-6 rounded-lg shadow-sm bg-gray-50">
@@ -17,6 +14,7 @@
                 <x-sample-distributor-card distributor_name="Jacob Distribution" imagepath="storage/distributors/jacob.png" route="{{route('distributor.show')}}"></x-sample-distributor-card>
                 <x-sample-distributor-card distributor_name="Primus Distributor" imagepath="storage/distributors/primus.png" route="null"></x-sample-distributor-card>
                 <x-sample-distributor-card distributor_name="Glenmark Trading" imagepath="storage/distributors/glenmark.png" route="null"></x-sample-distributor-card>
+                
             </div>
         </div>
     </section>
@@ -32,8 +30,7 @@
                 <div
                     class="flex flex-col items-center p-6 bg-white rounded-lg shadow-md basis-1/5 w-[20] border border-gray-100">
                     <div class="flex justify-center mb-4">
-                        <img class="object-cover w-24 h-24 rounded"
-                            src="{{ asset('storage/products/rtc-chicken-bbq.png') }}" alt="Product 1">
+                        <img class="object-cover w-24 h-24 rounded" src="{{ asset('img/products/rtc-chicken-bbq.png') }}" alt="Product 1">
                     </div>
                     <div class="text-left">
                         <h3 class="text-lg font-bold">Chicken BBQ</h3>
@@ -59,8 +56,7 @@
                 <div
                     class="flex flex-col items-center p-6 bg-white rounded-lg shadow-md basis-1/5 w-[20] border border-gray-100">
                     <div class="flex justify-center mb-4">
-                        <img class="object-cover w-24 h-24 rounded"
-                            src="{{ asset('storage/products/coke_bottle.jpg') }}" alt="Product 1">
+                        <img class="object-cover w-24 h-24 rounded" src="{{ asset('img/softdrinks/coke_bottle.jpg') }}" alt="Product 1">
                     </div>
                     <div class="text-left">
                         <h3 class="text-lg font-bold">Coke mismo case (12 pieces)</h3>

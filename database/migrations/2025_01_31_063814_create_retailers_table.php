@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('retailers', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
+            $table->string('profile_picture');
             $table->string('business_name');
             $table->string('phone');
             $table->text('address');
-            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
             
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
