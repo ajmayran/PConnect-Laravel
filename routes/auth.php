@@ -12,6 +12,9 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
+    Route::get('approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])
+        ->name('auth.approval-waiting');
+        
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');
 

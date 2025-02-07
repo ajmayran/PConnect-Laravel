@@ -10,7 +10,7 @@ class DistributorMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!Auth::check() || Auth::user()->user_type !== 'distributor') {
+        if (!Auth::check() || Auth::user()->user_type !== 'distributor' || !Auth::user()->distributor->profile_completed) {
             return redirect('/login');
         }
         return $next($request);

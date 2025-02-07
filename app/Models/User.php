@@ -45,6 +45,11 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
+     
+    public function distributor()
+    {
+        return $this->hasOne(Distributors::class, 'user_id');
+    }
     protected function casts(): array
     {
         return [

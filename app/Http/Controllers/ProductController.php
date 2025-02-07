@@ -4,14 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Models\Category; // Import the Category model
 
 class ProductController extends Controller
 {
-    public function index()
-    {
-        $products = Product::all();
-        return view('distributors.products.index', compact('products'));
-    }
+public function index()
+{
+    $products = Product::all();
+    $categories = Category::all(); // Fetch categories
+    return view('distributors.products.index', compact('products', 'categories'));
+}
+
 
     public function show($id)
     {
@@ -19,21 +22,31 @@ class ProductController extends Controller
         return view('distributors.products.show', compact('product'));
     }
 
-    public function create()
-    {
-        return view('distributors.products.create');
-    }
+public function create()
+{
+    $categories = Category::all(); // Fetch categories
+    return view('distributors.products.create', compact('categories'));
+}
+
 
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
+            'product_name' => 'required',
             'description' => 'required',
             'price' => 'required|numeric',
             'category_id' => 'required|exists:categories,id',
         ]);
 
-        Product::create($request->all());
+        Product::create([
+            'name' => $request->product_name, // Update to match the form field
+            'description' => $request->description,
+            'price' => $request->price,
+            'stock_quantity' => $request->stock_quantity,
+            'minimum_purchase_qty' => $request->minimum_purchase_qty,
+            'category_id' => $request->category_id,
+            'image' => $request->image, // Ensure to handle image upload if necessary
+        ]);
         return redirect()->route('products.index')->with('success', 'Product created successfully.');
     }
 

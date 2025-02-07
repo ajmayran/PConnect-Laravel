@@ -79,14 +79,14 @@
                 <img src="{{ asset('img/Pconnect Logo.png') }}" alt="PC Connect Logo" class="h-10 mr-2">
                 <span class="text-2xl font-semibold text-black-700">PConnect</span>
             </div>
-            <select
-                class="px-3 py-2 mr-2 bg-gray-200 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent">
-                <option value="all">All Categories</option>
-            </select>
             <input type="text" placeholder="Search for items..."
                 class="flex-1 px-3 py-2 bg-gray-200 border border-gray-300 rounded-tl-lg rounded-bl-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent">
             <button class="px-4 py-2 font-bold text-white bg-green-500 rounded-tr-lg rounded-br-lg hover:bg-green-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="pb-1 text-2xl align-middle" width="1.1em" height="1.1em" viewBox="0 0 24 24"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5A6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5S14 7.01 14 9.5S11.99 14 9.5 14"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="pb-1 text-2xl align-middle" width="1.1em" height="1.1em"
+                    viewBox="0 0 24 24">
+                    <path fill="currentColor"
+                        d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5A6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5S14 7.01 14 9.5S11.99 14 9.5 14" />
+                </svg>
             </button>
             <a href="{{ route('login') }}" class="py-2 ml-10 align-middle">
                 <iconify-icon icon="mdi:cart" class="text-3xl text-green-500 hover:text-green-600"></iconify-icon>
@@ -128,7 +128,8 @@
                 class="flex flex-col items-center justify-center hidden w-full min-h-[400px] text-white bg-green-500 section">
                 <h1 class="text-5xl font-bold">Exclusive Offers</h1>
                 <p class="text-lg">Don't miss out on our limited-time deals!</p>
-                <a href="{{ route('login') }}" class="px-6 py-3 mt-2 text-black bg-white rounded-lg hover:bg-gray-200">Shop
+                <a href="{{ route('login') }}"
+                    class="px-6 py-3 mt-2 text-black bg-white rounded-lg hover:bg-gray-200">Shop
                     Now &rarr;</a>
             </div>
 

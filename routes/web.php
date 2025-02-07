@@ -20,7 +20,16 @@ use App\Http\Controllers\Retailers\RetailerDashboardController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
 
 
+use App\Http\Controllers\DistributorController;
+
 require __DIR__.'/auth.php';
+
+Route::get('/distributors/create', [DistributorController::class, 'create'])->name('distributors.create');
+Route::post('/distributors', [DistributorController::class, 'store'])->name('distributors.store');
+Route::get('/distributors/approve/{id}', [DistributorController::class, 'approve'])->name('distributors.approve');
+Route::get('/distributors/setup', [ProfileController::class, 'setup'])->name('profile.setup');
+
+Route::post('/profile/setup', [ProfileController::class, 'updateSetup'])->name('profile.updateSetup');
 
 Route::get('/', function () {
     return view('index');
@@ -31,7 +40,9 @@ Route::get('/retailers', [RetailerDashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('retailers.dashboard');
 
-Route::get('/distributors', [DistributorDashboardController::class, 'index']) 
+Route::get('/distributors', [DistributorDashboardController::class, 'index']); 
+
+Route::get('/distributors/dashboard', [DistributorDashboardController::class, 'dashboard'])
     ->middleware(['auth', 'verified'])
     ->name('distributors.dashboard'); 
 
@@ -85,8 +96,6 @@ Route::get('/approval-waiting', [RegisteredUserController::class, 'approvalWaiti
 Route::get('auth/google', [SocialAuthController::class, 'googleRedirect'])->name('auth.google');
 Route::get('auth/google/callback', [SocialAuthController::class, 'googleCallback']);
 
-// Route::get('/distributor/{id}', [DistributorDashboardController::class, 'show'])
-//         ->name('distributor.show');
+Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
 
-Route::get('/admin', [AdminDashboardController::class, 'index'])
-        ->name('admin.dashboard');
+Route::get('/admin', [AdminDashboardController::class, 'index']);

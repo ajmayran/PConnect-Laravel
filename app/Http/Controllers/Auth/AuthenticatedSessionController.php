@@ -28,14 +28,11 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // Check user type and redirect accordingly
         $user = Auth::user();
-        if ($user->user_type === 'retailer') {
-            return redirect()->route('retailer.dashboard'); // Adjust the route name as necessary
-        }elseif ($user->user_type === 'distributor') {
-            return redirect()->route('distributor.dashboard'); // Adjust the route name as necessary
-        }elseif ($user->user_type === 'admin') {
-            return redirect()->route('admin.dashboard'); // Adjust the route name as necessary
+
+        // Check if the user is a distributor and their status is pending
+        if ($user->user_type === 'distributor' && $user->status === 'pending') {
+            return redirect()->route('auth.approval-waiting');
         }
 
         return redirect()->intended(route('dashboard', absolute: false));

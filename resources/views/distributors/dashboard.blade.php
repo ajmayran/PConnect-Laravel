@@ -143,8 +143,13 @@
 
         <div
             class="flex items-center px-4 py-2 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer hover:bg-green-600">
-            <i class="bi bi-box-arrow-in-right"></i>
-            <span class="ml-4 font-normal text-gray-200">Logout</span>
+            <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="flex items-center">
+                <i class="bi bi-box-arrow-in-right"></i>
+                <span class="ml-4 font-normal text-gray-200">Logout</span>
+            </button>
+            </form>
         </div>
     </div>
 
@@ -303,6 +308,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ asset('js/tailwind/dist_dashboard.js') }}"></script>
+</body>
+
+</html>
 </body>
 
 </html>
