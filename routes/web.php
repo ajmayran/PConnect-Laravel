@@ -53,13 +53,18 @@ Route::delete('retailers/carts/{id}', [CartController::class, 'remove'])->name('
 
 Route::get('/distributors/orders', [OrderController::class, 'index'])->name('distributors.orders.index');
 Route::get('/distributors/orders/{id}', [OrderController::class, 'show'])->name('distributors.orders.show');
+
 Route::get('/distributors/products', [ProductController::class, 'index'])->name('distributors.products.index');
+Route::get('/distributors/products/create', [ProductController::class, 'create'])->name('distributors.products.create');
+Route::post('/distributors/products', [ProductController::class, 'store'])->name('distributors.products.store');
+
+
 Route::get('/distributors/returns', [ReturnController::class, 'index'])->name('distributors.returns.index');
 Route::get('/distributors/cancellations', [CancellationController::class, 'index'])->name('distributors.cancellations.index');
 Route::get('/distributors/delivery', [DeliveryController::class, 'index'])->name('distributors.delivery.index');
 Route::get('/distributors/inventory', [InventoryController::class, 'index'])->name('distributors.inventory.index');
-Route::get('/distributors/messages', [MessageController::class, 'index'])->name('distributors.messages');
-Route::get('/distributors/insights', [InsightsController::class, 'index'])->name('distributors.insights');
+Route::get('/distributors/messages', [MessageController::class, 'index'])->name('distributors.messages.index');
+Route::get('/distributors/insights', [InsightsController::class, 'index'])->name('distributors.insights.index');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -137,12 +137,12 @@
         <div
             class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer hover:bg-green-600">
             <a href="{{ route('distributors.insights.index') }}" class="flex items-center">
-            <iconify-icon icon="gg:insights" class="text-xl icon"></iconify-icon>
-            <span class="ml-4 font-normal text-gray-200 ">Business Insights</span>
+                <iconify-icon icon="gg:insights" class="text-xl icon"></iconify-icon>
+                <span class="ml-4 font-normal text-gray-200 ">Business Insights</span>
         </div>
 
         <div
-            class="p-2.5 mt-2 ml-2 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-green-600 text-white">
+            class="flex items-center px-4 py-2 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer hover:bg-green-600">
             <i class="bi bi-box-arrow-in-right"></i>
             <span class="ml-4 font-normal text-gray-200">Logout</span>
         </div>

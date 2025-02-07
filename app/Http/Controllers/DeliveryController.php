@@ -8,6 +8,6 @@ class DeliveryController extends Controller
 {
     public function index()
     {
-        return view('distributors.delivery'); // Create this view file later
+        return view('distributors.delivery.index'); // Create this view file later
     }
 }
