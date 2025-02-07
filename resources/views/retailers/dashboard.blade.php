@@ -11,19 +11,10 @@
 
             <div class="grid grid-cols-1 gap-6 py-10 md:grid-cols-5">
                 <!-- Sample Distributor Cards -->
-
-                <div class="flex flex-col items-center p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-lg cursor-pointer rounded-xl hover:shadow-xl">
-                    <img class="w-24 h-24 mb-4 rounded-full shadow-md" src="{{ asset('img/distributors/jacob.png') }}" alt="Distributor Jacob">
-                    <h3 class="text-lg font-bold text-gray-800">Jacob Distribution</h3>
-                </div>
-                <div class="flex flex-col items-center p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-lg cursor-pointer rounded-xl hover:shadow-xl">
-                    <img class="w-24 h-24 mb-4 rounded-full shadow-md" src="{{ asset('img/distributors/primus.png') }}" alt="Distributor Primus">
-                    <h3 class="text-lg font-bold text-gray-800">Primus Distributor</h3>
-                </div>
-                <div class="flex flex-col items-center p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-lg cursor-pointer rounded-xl hover:shadow-xl">
-                    <img class="w-24 h-24 mb-4 rounded-full shadow-md" src="{{ asset('img/distributors/glenmark.png') }}" alt="Distributor Glenmark">
-                    <h3 class="text-lg font-bold text-gray-800">Glenmark Trading</h3>
-                </div>
+                <x-sample-distributor-card distributor_name="Jacob Distribution" imagepath="storage/distributors/jacob.png" route="{{route('distributor.show')}}"></x-sample-distributor-card>
+                <x-sample-distributor-card distributor_name="Primus Distributor" imagepath="storage/distributors/primus.png" route="null"></x-sample-distributor-card>
+                <x-sample-distributor-card distributor_name="Glenmark Trading" imagepath="storage/distributors/glenmark.png" route="null"></x-sample-distributor-card>
+                
             </div>
         </div>
     </section>

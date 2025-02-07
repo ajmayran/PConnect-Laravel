@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth; // Importing Auth facade
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\DistributorPageController;
 use App\Http\Controllers\Auth\RegisteredUserController; // Importing RegisteredUserController
 use App\Http\Controllers\Distributors\DistributorDashboardController;
 use App\Http\Controllers\Retailers\RetailerDashboardController;
@@ -55,7 +56,11 @@ require __DIR__ . '/auth.php';
 Route::get('auth/google', [SocialAuthController::class, 'googleRedirect'])->name('auth.google');
 Route::get('auth/google/callback', [SocialAuthController::class, 'googleCallback']);
 
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', [RetailerDashboardController::class, 'index'])->name('dashboard');
 
+    // Add distributor route
+    Route::get('/distributor', [DistributorPageController::class, 'show'])
     // Add distributor route
 Route::get('/distributor/{id}', [DistributorDashboardController::class, 'show'])
         ->name('distributor.show');
