@@ -53,49 +53,65 @@
         </div>
         <div
             class="flex items-center px-4 py-1 mt-3 ml-2 text-white duration-300 rounded-md cursor-pointer hover:bg-green-600">
-            <iconify-icon icon="mdi:home" class="text-xl icon"></iconify-icon>
-            <span class="ml-4 font-normal text-gray-200 ">Dashboard</span>
+            <a href="{{ route('distributors.dashboard') }}" class="flex items-center">
+                <iconify-icon icon="mdi:home" class="text-xl icon"></iconify-icon>
+                <span class="ml-4 font-normal text-gray-200 ">Dashboard</span>
+            </a>
         </div>
         <div
             class="flex items-center px-4 py-1 mt-3 ml-2 text-white duration-300 rounded-md cursor-pointer hover:bg-green-600">
-            <iconify-icon icon="material-symbols-light:sell" class="text-xl icon"></iconify-icon>
-            <span class="ml-4 font-normal text-gray-200 ">My Orders</span>
+            <a href="{{ route('distributors.orders.index') }}" class="flex items-center">
+                <iconify-icon icon="material-symbols-light:sell" class="text-xl icon"></iconify-icon>
+                <span class="ml-4 font-normal text-gray-200 ">My Orders</span>
+            </a>
         </div>
         <div
             class="flex items-center px-4 py-1 mt-3 ml-2 text-white duration-300 rounded-md cursor-pointer hover:bg-green-600">
-            <iconify-icon icon="ph:key-return-fill" class="text-xl icon"></iconify-icon>
-            <span class="ml-4 font-normal text-gray-200 ">Return | Refund</span>
+            <a href="{{ route('distributors.returns.index') }}" class="flex items-center">
+                <iconify-icon icon="ph:key-return-fill" class="text-xl icon"></iconify-icon>
+                <span class="ml-4 font-normal text-gray-200">Return | Refund</span>
+            </a>
         </div>
         <div
             class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer hover:bg-green-600">
-            <iconify-icon icon="basil:cancel-solid" class="text-xl icon"></iconify-icon>
-            <span class="ml-4 font-normal text-gray-200 ">Cancellation</span>
+            <a href="{{ route('distributors.cancellations.index') }}" class="flex items-center">
+                <iconify-icon icon="basil:cancel-solid" class="text-xl icon"></iconify-icon>
+                <span class="ml-4 font-normal text-gray-200 ">Cancellation</span>
+            </a>
         </div>
         <div
             class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer hover:bg-green-600">
-            <iconify-icon icon="mdi:truck-delivery" class="text-xl icon"></iconify-icon>
-            <span class="ml-4 font-normal text-gray-200 ">Delivery</span>
+            <a href="{{ route('distributors.delivery.index') }}" class="flex items-center">
+                <iconify-icon icon="mdi:truck-delivery" class="text-xl icon"></iconify-icon>
+                <span class="ml-4 font-normal text-gray-200 ">Delivery</span>
+            </a>
         </div>
 
         <div class="my-2 bg-gray-600 h-[1px]"></div>
 
         <div
             class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer hover:bg-green-600">
-            <iconify-icon icon="dashicons:products" class="text-xl icon"></iconify-icon>
-            <span class="ml-4 font-normal text-gray-200 ">My Products</span>
+            <a href="{{ route('distributors.products.index') }}" class="flex items-center">
+                <iconify-icon icon="dashicons:products" class="text-xl icon"></iconify-icon>
+                <span class="ml-4 font-normal text-gray-200 ">My Products</span>
+            </a>
         </div>
         <div
             class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer hover:bg-green-600">
-            <iconify-icon icon="ic:baseline-inventory-2" class="text-xl icon"></iconify-icon>
-            <span class="ml-4 font-normal text-gray-200 ">Inventory</span>
+            <a href="{{ route('distributors.inventory.index') }}" class="flex items-center">
+                <iconify-icon icon="ic:baseline-inventory-2" class="text-xl icon"></iconify-icon>
+                <span class="ml-4 font-normal text-gray-200 ">Inventory</span>
+            </a>
         </div>
 
         <div class="my-2 bg-gray-600 h-[1px]"></div>
 
         <div
             class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer hover:bg-green-600">
-            <iconify-icon icon="ant-design:message-filled" class="text-xl icon"></iconify-icon>
-            <span class="ml-4 font-normal text-gray-200 ">Messages</span>
+            <a href="{{ route('distributors.messages.index') }}" class="flex items-center">
+                <iconify-icon icon="ant-design:message-filled" class="text-xl icon"></iconify-icon>
+                <span class="ml-4 font-normal text-gray-200 ">Messages</span>
+            </a>
         </div>
         <div class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer hover:bg-green-600"
             onclick="dropdown()">
@@ -120,6 +136,7 @@
 
         <div
             class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer hover:bg-green-600">
+            <a href="{{ route('distributors.insights.index') }}" class="flex items-center">
             <iconify-icon icon="gg:insights" class="text-xl icon"></iconify-icon>
             <span class="ml-4 font-normal text-gray-200 ">Business Insights</span>
         </div>
@@ -282,7 +299,6 @@
                 }
             }
         }
-        
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
