@@ -21,7 +21,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Retailers\RetailerDashboardController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
 
-require __DIR__ . '/auth.php';  
+require __DIR__ . '/auth.php';
 
 Route::get('/distributors/create', [DistributorController::class, 'create'])->name('distributors.create');
 Route::post('/distributors', [DistributorController::class, 'store'])->name('distributors.store');
@@ -60,6 +60,12 @@ Route::middleware(['auth', 'verified', 'approved', 'distributor'])->prefix('dist
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
     Route::get('/insights', [InsightsController::class, 'index'])->name('insights.index');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::prefix('distributors')->name('distributors.')->group(function () {
+        Route::resource('products', ProductController::class);
+    });
 });
 
 Route::get('/dashboard', function () {
