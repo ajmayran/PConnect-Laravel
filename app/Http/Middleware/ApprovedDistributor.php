@@ -24,9 +24,9 @@ class ApprovedDistributor
         $user = Auth::user();
 
         if ($user->user_type !== 'distributor') {
-        Log::info('Access denied for user type: ' . $user->user_type);
-        abort(401);
-     }       
+            Log::info('Access denied for user type: ' . $user->user_type);
+            return redirect()->route('/login');
+        }
         if ($user->status !== 'approved') {
             Auth::logout();
             return redirect()->route('auth.approval-waiting');
@@ -34,5 +34,4 @@ class ApprovedDistributor
 
         return $next($request);
     }
-    
 }

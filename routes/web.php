@@ -12,22 +12,23 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\InsightsController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\DistributorController;
 use App\Http\Controllers\CancellationController;
 use App\Http\Controllers\Auth\SocialAuthController;
-use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\DistributorProfileController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Retailers\RetailerDashboardController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
-use App\Http\Controllers\DistributorController;
 
-require __DIR__ . '/auth.php';
+require __DIR__ . '/auth.php';  
 
 Route::get('/distributors/create', [DistributorController::class, 'create'])->name('distributors.create');
 Route::post('/distributors', [DistributorController::class, 'store'])->name('distributors.store');
 Route::get('/distributors/approve/{id}', [DistributorController::class, 'approve'])->name('distributors.approve');
-Route::get('/distributors/setup', [ProfileController::class, 'setup'])->name('profile.setup');
+Route::get('/distributors/setup', [DistributorProfileController::class, 'setup'])->name('distributors.setup');
+Route::post('/profile/setup', [DistributorProfileController::class, 'updateSetup'])->name('profile.updateSetup');
 
-Route::post('/profile/setup', [ProfileController::class, 'updateSetup'])->name('profile.updateSetup');
 
 Route::get('/', function () {
     return view('index');
@@ -46,7 +47,7 @@ Route::get('/approval-waiting', function () {
 })->name('auth.approval-waiting');
 
 // Distributor Routes
-Route::middleware(['auth', 'verified', 'approved'])->prefix('distributors')->name('distributors.')->group(function () {
+Route::middleware(['auth', 'verified', 'approved', 'distributor'])->prefix('distributors')->name('distributors.')->group(function () {
     Route::get('/dashboard', [DistributorDashboardController::class, 'dashboard'])->name('dashboard');
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
