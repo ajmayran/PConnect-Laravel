@@ -38,7 +38,8 @@ Route::get('/retailers', [RetailerDashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('retailers.dashboard');
 
-Route::get('/distributors', [DistributorDashboardController::class, 'index']);
+Route::get('/distributors', [DistributorDashboardController::class, 'index'])
+    ->middleware(['auth', 'verified', 'approved']);
 
 Route::get('/approval-waiting', function () {
     return view('auth.approval-waiting');
