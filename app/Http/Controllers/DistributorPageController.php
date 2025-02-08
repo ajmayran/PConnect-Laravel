@@ -8,6 +8,6 @@ class DistributorPageController extends Controller
 {
     public function show()
     {
-        return view('retailers.distributor-page');
+        return view('retailers.distributor.dashboard');
     }
 }

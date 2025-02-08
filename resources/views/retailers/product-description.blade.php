@@ -1,11 +1,14 @@
 <x-app-layout>
     <x-dashboard-nav />
         <!-- Back Button -->
-        <div class="container mx-auto my-10">
-            <a href="{{ route('retailers.dashboard') }}" class="text-green-500 hover:text-green-700">
-                Go back
-            </a>
-        </div>
+    <div class="container mx-auto px-4 py-6">
+        <a href="{{route('retailers.dashboard')}}" class="text-green-600 hover:text-green-700 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Back to Dashboard
+        </a>
+    </div>
     
         <div class="container flex items-center px-4 py-5 mx-auto border border-gray-400">
             <div class="flex justify-center p-5 mx-auto bg-white">
