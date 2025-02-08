@@ -28,7 +28,7 @@
 </head>
 
 <body class="font-sans antialiased">
-    <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div class="min-h-screen bg-gray-100 dark:bg-gray-200">
         @stack('scripts')
         <!-- Page Content -->
         <main>
