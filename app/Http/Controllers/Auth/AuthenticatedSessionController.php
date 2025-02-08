@@ -25,16 +25,19 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
-
         $request->session()->regenerate();
 
         $user = Auth::user();
 
-        if ($user->user_type === 'distributor' && $user->status === 'pending') {
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-            return redirect()->route('auth.approval-waiting');
+        if ($user->user_type === 'distributor') {
+            if ($user->status === 'approved') {
+                return redirect()->route('distributors.dashboard');
+            } elseif ($user->status === 'pending') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return redirect()->route('auth.approval-waiting');
+            }
         }
 
         return redirect()->intended(route('dashboard', absolute: false));
@@ -48,7 +51,6 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');

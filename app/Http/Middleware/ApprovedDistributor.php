@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ApprovedDistributor
 {
@@ -21,8 +22,12 @@ class ApprovedDistributor
         }
 
         $user = Auth::user();
-        
-        if ($user->user_type === 'distributor' && $user->status === 'pending') {
+
+        if ($user->user_type !== 'distributor') {
+            abort(401);
+        }
+
+        if ($user->status !== 'approved') {
             Auth::logout();
             return redirect()->route('auth.approval-waiting');
         }

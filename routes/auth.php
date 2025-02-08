@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     Route::get('approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])
         ->name('auth.approval-waiting');
-        
+
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');
 
@@ -46,20 +46,8 @@ Route::middleware(['auth'])->group(function () {
             return view('retailer.dashboard');
         })->name('retailer.dashboard');
     });
-
-    // Distributor routes
-    Route::middleware(['distributor', 'approved'])->group(function () {
-        Route::get('/distributor/dashboard', function () {
-            return view('distributor.dashboard');
-        })->name('distributor.dashboard');
-    });
-
-    Route::middleware(['admin', 'approved'])->group(function () {
-        Route::get('/admin/dashboard', function () {
-            return view('admin.dashboard');
-        })->name('admin.dashboard');
-    });
 });
+
 
 Route::middleware('auth')->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)

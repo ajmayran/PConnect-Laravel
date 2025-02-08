@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Distributors;
-use App\Models\Category; // Import the Category model
+use App\Models\Category; 
 use Illuminate\Support\Facades\Auth;
 
 class DistributorController extends Controller
