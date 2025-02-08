@@ -20,6 +20,8 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Retailers\RetailerDashboardController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
+use App\Http\Controllers\DistributorPageController;
+use App\Http\Controllers\ProductDescController;
 
 require __DIR__ . '/auth.php';
 
