@@ -3,8 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo; // Import BelongsTo
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo; // Import BelongsTo
 
 class Distributors extends Model
 {
@@ -35,5 +36,13 @@ class Distributors extends Model
     {
         return $this->hasMany(Product::class, 'distributor_id');
     }
+
+    public function getProfilePhotoUrlAttribute()
+    {
+        return $this->profile_photo 
+            ? Storage::url($this->company_profile_image)
+            : asset('img/default-profile.png');
+    }
+
 }
 

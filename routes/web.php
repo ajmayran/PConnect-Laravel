@@ -29,15 +29,17 @@ Route::get('/distributors/approve/{id}', [DistributorController::class, 'approve
 Route::get('/distributors/setup', [DistributorProfileController::class, 'setup'])->name('distributors.setup');
 Route::post('/profile/setup', [DistributorProfileController::class, 'updateSetup'])->name('profile.updateSetup');
 
-
 Route::get('/', function () {
     return view('index');
 });
 
-//Login Routes
 Route::get('/retailers', [RetailerDashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('retailers.dashboard');
+
+Route::get('/distributors/{id}/products', [DistributorController::class, 'showProducts'])
+    ->middleware(['auth', 'verified'])
+    ->name('retailers.distributor-page');
 
 Route::get('/distributors', [DistributorDashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'approved']);
@@ -68,6 +70,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
+Route::middleware(['auth', 'role:retailer'])->prefix('retailer')->group(function () {
+    // ...existing routes...
+
+    Route::get('/distributor/{id}', [DistributorController::class, 'show'])
+        ->name('retailers.distributor.show');
+});
+
 Route::get('/dashboard', function () {
     if (Auth::check()) {
         return Auth::user()->user_type === 'distributor'
@@ -77,13 +86,11 @@ Route::get('/dashboard', function () {
     return redirect('/login');
 })->name('dashboard');
 
-
 // Cart Routes
 Route::get('retailers/carts', [CartController::class, 'index'])->name('retailers.carts.index');
 Route::post('retailers/carts', [CartController::class, 'add'])->name('retailers.carts.add');
 Route::put('retailers/carts/{id}', [CartController::class, 'update'])->name('retailers.carts.update');
 Route::delete('retailers/carts/{id}', [CartController::class, 'remove'])->name('retailers.carts.remove');
-
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -106,3 +113,6 @@ Route::get('auth/google/callback', [SocialAuthController::class, 'googleCallback
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
 
 Route::get('/admin', [AdminDashboardController::class, 'index']);
+
+Route::get('/retailer/product/{id}', [ProductController::class, 'show'])
+    ->name('retailers.products.show');

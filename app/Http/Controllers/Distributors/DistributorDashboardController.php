@@ -17,4 +17,5 @@ class DistributorDashboardController extends Controller
     {
         return view('distributors.dashboard', ['user' => Auth::user()]);
     }
+    
 }

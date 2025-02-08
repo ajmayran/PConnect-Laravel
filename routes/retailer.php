@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DistributorPageController;
+use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {

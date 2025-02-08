@@ -26,4 +26,9 @@ class Product extends Model
     {
         return $this->belongsToMany(Order::class)->withPivot('quantity');
     }
+
+    public function distributor()
+    {
+        return $this->belongsTo(Distributors::class, 'distributor_id');
+    }
 }

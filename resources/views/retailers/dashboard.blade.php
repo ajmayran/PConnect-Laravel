@@ -1,5 +1,4 @@
 <x-app-layout>
-
     <x-dashboard-nav />
 
     <!-- Distributors Section -->
@@ -8,23 +7,19 @@
             <div class="flex items-center justify-between mb-6">
                 <h2 class="mr-4 text-2xl font-bold text-gray-800">Explore Distributors</h2>
             </div>
-
-            <div class="grid grid-cols-1 gap-6 py-10 md:grid-cols-5">
-                <!-- Sample Distributor Cards -->
-
-                <div class="flex flex-col items-center p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-lg cursor-pointer rounded-xl hover:shadow-xl">
-                    <img class="w-24 h-24 mb-4 rounded-full shadow-md" src="{{ asset('img/distributors/jacob.png') }}" alt="Distributor Jacob">
-                    <h3 class="text-lg font-bold text-gray-800">Jacob Distribution</h3>
+            @forelse ($distributors as $distributor)
+                <a href="{{ route('retailers.distributor.show', $distributor->id) }}"
+                    class="flex flex-col items-center p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-lg cursor-pointer rounded-xl hover:shadow-xl">
+                    <img class="w-24 h-24 mb-4 rounded-full shadow-md" src="{{ $distributor->company_profile_image ? asset('storage/' . $distributor->company_profile_image) : asset('img/default-logo.png') }}"
+                        alt="Distributor {{ $distributor->user?->name ?? 'Unknown' }}">
+                    <h3 class="text-lg font-bold text-gray-800">
+                        {{ $distributor->company_name ?? $distributor->company_name }}</h3>
+                </a>
+            @empty
+                <div class="col-span-5 text-center text-gray-500">
+                    No distributors found.
                 </div>
-                <div class="flex flex-col items-center p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-lg cursor-pointer rounded-xl hover:shadow-xl">
-                    <img class="w-24 h-24 mb-4 rounded-full shadow-md" src="{{ asset('img/distributors/primus.png') }}" alt="Distributor Primus">
-                    <h3 class="text-lg font-bold text-gray-800">Primus Distributor</h3>
-                </div>
-                <div class="flex flex-col items-center p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-lg cursor-pointer rounded-xl hover:shadow-xl">
-                    <img class="w-24 h-24 mb-4 rounded-full shadow-md" src="{{ asset('img/distributors/glenmark.png') }}" alt="Distributor Glenmark">
-                    <h3 class="text-lg font-bold text-gray-800">Glenmark Trading</h3>
-                </div>
-            </div>
+            @endforelse
         </div>
     </section>
 
@@ -35,58 +30,49 @@
                 <h2 class="mr-4 text-2xl font-bold">Popular Products</h2>
             </div>
             <div class="flex flex-wrap gap-4 py-10">
-                <!-- Sample Product Cards -->
-                <div
-                    class="flex flex-col items-center p-6 bg-white rounded-lg shadow-md basis-1/5 w-[20] border border-gray-100">
-                    <div class="flex justify-center mb-4">
-                        <img class="object-cover w-24 h-24 rounded" src="{{ asset('img/products/rtc-chicken-bbq.png') }}" alt="Product 1">
-                    </div>
-                    <div class="text-left">
-                        <h3 class="text-lg font-bold">Chicken BBQ</h3>
-                        <p class="text-[12px] text-gray-500">Jacob Distribution</p>
-                        <p class="text-[12px] text-gray-500">Min purchase qty: 10</p>
-                        <p class="text-[12px] text-gray-500">Stocks Remaining: 100</p>
-                        <div class="flex flex-col items-center mt-4">
-                            <span class="text-lg font-bold text-green-600">₱380.00</span>
-                            <div class="flex items-center mt-2">
-                                <input type="number" value="10" min="10"
-                                    class="w-16 text-center border border-gray-300 rounded focus:ring focus:ring-green-200">
-                                <button
-                                    class="px-4 py-2 ml-2 font-bold text-white bg-green-500 rounded hover:bg-green-700">
-                                    Add to Cart
-                                </button>
+                @forelse ($products as $product)
+                    <a href="{{ route('retailers.products.show', $product->id) }}"
+                        class="flex flex-col items-center p-6 bg-white rounded-lg shadow-md basis-1/5 w-[20] border border-gray-100 hover:shadow-xl transition-shadow">
+                        <div class="flex justify-center mb-4">
+                            <img class="object-cover w-24 h-24 rounded"
+                                src="{{ $product->image ? asset('storage/' . $product->image) : asset('img/default-product.jpg') }}"
+                                alt="{{ $product->name }}">
+                        </div>
+                        <div class="text-left">
+                            <h3 class="text-lg font-bold">{{ $product->product_name }}</h3>
+                            <p class="text-[12px] text-gray-500">{{ $product->distributor->company_name }}</p>
+                            <p class="text-[12px] text-gray-500">Min purchase qty:
+                                {{ $product->minimum_purchase_qty ?? 1 }}</p>
+                            <p class="text-[12px] text-gray-500">Stocks Remaining: {{ $product->stock_quantity ?? 0 }}
+                            </p>
+                            <div class="flex flex-col items-center mt-4">
+                                <span
+                                    class="text-lg font-bold text-green-600">₱{{ number_format($product->price, 2) }}</span>
+                                <div class="flex items-center mt-2">
+                                    <input type="number" value="{{ $product->minimum_purchase_qty }}"
+                                        min="{{ $product->minimum_purchase_qty }}"
+                                        class="w-16 text-center border border-gray-300 rounded focus:ring focus:ring-green-200">
+                                    <button
+                                        class="px-4 py-2 ml-2 font-bold text-white bg-green-500 rounded hover:bg-green-700">
+                                        Add to Cart
+                                    </button>
+                                </div>
                             </div>
                         </div>
+                    </a>
+                @empty
+                    <div class="w-full text-center text-gray-500">
+                        No products found.
                     </div>
-                </div>
+                @endforelse
+            </div>
 
-                <!-- Duplicate product cards for demo -->
-                <!-- Product 2 -->
-                <div
-                    class="flex flex-col items-center p-6 bg-white rounded-lg shadow-md basis-1/5 w-[20] border border-gray-100">
-                    <div class="flex justify-center mb-4">
-                        <img class="object-cover w-24 h-24 rounded" src="{{ asset('img/softdrinks/coke_bottle.jpg') }}" alt="Product 1">
-                    </div>
-                    <div class="text-left">
-                        <h3 class="text-lg font-bold">Coke mismo case (12 pieces)</h3>
-                        <p class="text-[12px] text-gray-500">Primus Distributor</p>
-                        <p class="text-[12px] text-gray-500">Min purchase qty: 4</p>
-                        <p class="text-[12px] text-gray-500">Stocks Remaining: 75</p>
-                        <div class="flex flex-col items-center mt-4">
-                            <span class="text-lg font-bold text-green-600">₱210.00</span>
-                            <div class="flex items-center mt-2">
-                                <input type="number" value="15" min="15"
-                                    class="w-16 text-center border border-gray-300 rounded focus:ring focus:ring-green-200">
-                                <button
-                                    class="px-4 py-2 ml-2 font-bold text-white bg-green-500 rounded hover:bg-green-700">
-                                    Add to Cart
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- Pagination -->
+            <div class="mt-6">
+                {{ $products->links() }}
             </div>
         </div>
     </section>
+
     <x-footer />
 </x-app-layout>

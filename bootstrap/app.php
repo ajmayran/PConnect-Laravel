@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Middleware\CheckRole;
 use Illuminate\Foundation\Application;
+use App\Http\Middleware\RetailerMiddleware;
 use App\Http\Middleware\ApprovedDistributor;
 use App\Http\Middleware\DistributorMiddleware;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -15,7 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'approved' => ApprovedDistributor::class,
-            'distributor' => DistributorMiddleware::class
+            'distributor' => DistributorMiddleware::class,
+            'retailer' => RetailerMiddleware::class,
+            'role'  => CheckRole::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

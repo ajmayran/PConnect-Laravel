@@ -2,13 +2,44 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Product;
+use App\Models\Category;
 use App\Models\Distributors;
-use App\Models\Category; 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DistributorController extends Controller
 {
+    public function index()
+    {
+        $distributors = Distributors::with('user')->get();
+        $products = Product::with('distributor')
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        return view('retailers.dashboard', compact('distributors', 'products'));
+    }
+    public function show($id)
+    {
+        $distributor = Distributors::with(['products', 'products.category'])->findOrFail($id);
+        $categories = Category::all();
+        $selectedCategory = request('category', 'all');
+
+        $products = $distributor->products;
+        if ($selectedCategory !== 'all') {
+            $products = $products->where('category_id', $selectedCategory);
+        }
+
+        return view('retailers.distributor-page', compact('distributor', 'categories', 'products', 'selectedCategory'));
+    }
+    public function showProducts($id)
+    {
+        $distributor = Distributors::findOrFail($id); // Fetch the distributor
+        $products = $distributor->products()->paginate(10); // Fetch products with pagination
+
+        return view('distributors.products.index', compact('distributor', 'products')); // Pass data to the view
+    }
+
     public function create()
     {
         $categories = Category::all(); // Fetch categories
@@ -37,7 +68,6 @@ class DistributorController extends Controller
 
         // Redirect or return response
         return redirect()->route('distributors.dashboard')->with('status', 'Distributor account created.');
-
     }
 
     public function approve($id)
