@@ -47,5 +47,6 @@ class Kernel extends HttpKernel
         'retailer' => \App\Http\Middleware\RetailerMiddleware::class,
         'distributor' => \App\Http\Middleware\DistributorMiddleware::class,
         'approved' => \App\Http\Middleware\ApprovedDistributor::class,
+        'role' => \App\Http\Middleware\CheckRole::class,
     ];
 }
