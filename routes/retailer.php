@@ -5,6 +5,8 @@ use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
+
     Route::get('/distributor/{id}', [DistributorPageController::class, 'show'])
         ->name('distributor.show');
 });
+

@@ -20,6 +20,8 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Retailers\RetailerDashboardController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
+use App\Http\Controllers\DistributorPageController;
+use App\Http\Controllers\ProductDescController;
 
 require __DIR__ . '/auth.php';
 
@@ -110,9 +112,26 @@ Route::get('/approval-waiting', [RegisteredUserController::class, 'approvalWaiti
 Route::get('auth/google', [SocialAuthController::class, 'googleRedirect'])->name('auth.google');
 Route::get('auth/google/callback', [SocialAuthController::class, 'googleCallback']);
 
-Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
 
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', [RetailerDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/cart', [CartController::class, 'show'])->name('cart.show');
+    Route::get('/product', [ProductDescController::class, 'show'])->name('retailer.product-description');
+
+    // Add distributor route
+    Route::get('/distributors', [DistributorPageController::class, 'index'])->name('distributors');
+    Route::get('/distributors', [DistributorPageController::class, 'show'])->name('distributor.show');
+    // Add distributor route
+
+    Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+
+});
+require __DIR__.'/auth.php';
+
+Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
 Route::get('/admin', [AdminDashboardController::class, 'index']);
+
 
 Route::get('/retailer/product/{id}', [ProductController::class, 'show'])
     ->name('retailers.products.show');
+

@@ -7,6 +7,7 @@
             <div class="flex items-center justify-between mb-6">
                 <h2 class="mr-4 text-2xl font-bold text-gray-800">Explore Distributors</h2>
             </div>
+
             @forelse ($distributors as $distributor)
                 <a href="{{ route('retailers.distributor.show', $distributor->id) }}"
                     class="flex flex-col items-center p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-lg cursor-pointer rounded-xl hover:shadow-xl">
@@ -20,6 +21,7 @@
                     No distributors found.
                 </div>
             @endforelse
+
         </div>
     </section>
 
@@ -30,6 +32,7 @@
                 <h2 class="mr-4 text-2xl font-bold">Popular Products</h2>
             </div>
             <div class="flex flex-wrap gap-4 py-10">
+
                 @forelse ($products as $product)
                     <a href="{{ route('retailers.products.show', $product->id) }}"
                         class="flex flex-col items-center p-6 bg-white rounded-lg shadow-md basis-1/5 w-[20] border border-gray-100 hover:shadow-xl transition-shadow">
@@ -70,6 +73,7 @@
             <!-- Pagination -->
             <div class="mt-6">
                 {{ $products->links() }}
+
             </div>
         </div>
     </section>

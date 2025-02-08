@@ -7,7 +7,7 @@
                 <!-- Logo -->
                 <div class="flex items-center flex-shrink-0">
                     <div class="flex items-center"> <!-- Changed to div since route might not be ready -->
-                        <img class="w-auto h-10" src="{{ asset('img/pconnect/Pconnect Logo.png') }}" alt="PConnect">
+                        <img class="w-auto h-10" src="{{ asset('img/pconnect/Pconnect-Logo.png') }}" alt="PConnect">
                     </div>
                 </div>
 
@@ -34,31 +34,12 @@
             <div class="flex items-center">
                 <!-- Cart -->
                 <div class="relative">
-                    <button onclick="toggleCart()" class="p-2 text-gray-500 hover:text-gray-700">
+                    <a href="{{route('cart.show')}}" class="p-2 text-gray-500 hover:text-gray-700 hover:cursor-pointer">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
-                    </button>
-
-                    <!-- Cart Popup -->
-                    <div id="cartPopup" class="absolute right-0 z-50 hidden mt-2 bg-white rounded-lg shadow-xl w-80">
-                        <!-- Cart Content -->
-                        <div class="p-4 border-b border-gray-200">
-                            <h3 class="font-semibold text-gray-800">Shopping Cart</h3>
-                        </div>
-                        <!-- Sample Items -->
-                        <div class="p-4">
-                            <div class="flex items-center space-x-4">
-                                <img src="{{ asset('storage/products/rtc-chicken-bbq.png') }}"
-                                    class="w-12 h-12 rounded-lg">
-                                <div>
-                                    <p class="text-sm font-medium">Chicken BBQ</p>
-                                    <p class="text-xs text-gray-500">2 × ₱380.00</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    </a>
                 </div>
 
                 <!-- Notifications -->
@@ -89,33 +70,23 @@
 
 
                 <script>
-                    function toggleCart() {
-                        const popup = document.getElementById('cartPopup');
-                        const backdrop = document.getElementById('backdrop');
-                        document.getElementById('notificationsPopup').classList.add('hidden');
-                        popup.classList.toggle('hidden');
-                        backdrop.classList.toggle('hidden');
-                    }
-
                     function toggleNotifications() {
                         const popup = document.getElementById('notificationsPopup');
                         const backdrop = document.getElementById('backdrop');
-                        document.getElementById('cartPopup').classList.add('hidden');
                         popup.classList.toggle('hidden');
                         backdrop.classList.toggle('hidden');
                     }
 
                     function closeAll() {
-                        document.getElementById('cartPopup').classList.add('hidden');
                         document.getElementById('notificationsPopup').classList.add('hidden');
                         document.getElementById('backdrop').classList.add('hidden');
                     }
 
                     // Close popups when clicking outside
                     document.addEventListener('click', function(event) {
-                        if (!event.target.closest('#cartPopup') &&
+                        if (!event.target.closest('#notificationsPopup') &&
                             !event.target.closest('button') &&
-                            !document.getElementById('cartPopup').classList.contains('hidden')) {
+                            !document.getElementById('notificationsPopup').classList.contains('hidden')) {
                             closeAll();
                         }
                     });
@@ -166,7 +137,7 @@
         <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="flex justify-center space-x-8">
                 <!-- Changed links to spans or buttons -->
-                <span class="px-3 py-2 text-white cursor-pointer hover:text-green-400">HOME</span>
+                <a href="{{route('retailers.dashboard')}}" class="px-3 py-2 text-white cursor-pointer hover:text-green-400">HOME</a>
                 <span class="px-3 py-2 text-white cursor-pointer hover:text-green-400">DISTRIBUTORS</span>
                 <span class="px-3 py-2 text-white cursor-pointer hover:text-green-400">PRODUCTS</span>
             </div>
