@@ -6,8 +6,8 @@ use Illuminate\Http\Request;
 
 class DistributorPageController extends Controller
 {
-    public function show($id)
+    public function show()
     {
-        return view('retailer.distributor-page');
+        return view('retailers.distributor-page');
     }
 }
