@@ -72,4 +72,12 @@ class RegisteredUserController extends Controller
         Auth::login($user);
         return redirect(route('retailers.dashboard', absolute: false));
     }
+
+    /**
+     * Display the approval waiting view.
+     */
+    public function approvalWaiting(): View
+    {
+        return view('auth.approval-waiting');
+    }
 }
