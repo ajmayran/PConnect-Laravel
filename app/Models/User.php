@@ -12,6 +12,7 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    // Add this line
     /**
      * The attributes that are mass assignable.
      *
@@ -28,6 +29,11 @@ class User extends Authenticatable
         'facebook_id',
         'google_id',
         'status',
+        'profile_completed',
+    ];
+
+    protected $casts = [
+        'profile_completed' => 'boolean'
     ];
 
     /**
@@ -45,7 +51,7 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-     
+
     public function distributor()
     {
         return $this->hasOne(Distributors::class, 'user_id');

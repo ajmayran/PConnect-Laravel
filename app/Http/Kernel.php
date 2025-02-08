@@ -12,7 +12,6 @@ class Kernel extends HttpKernel
      * @var array<int, class-string|string>
      */
     protected $middleware = [
-        'approved' => \App\Http\Middleware\CheckUserApproval::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
     ];
@@ -47,6 +46,6 @@ class Kernel extends HttpKernel
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'retailer' => \App\Http\Middleware\RetailerMiddleware::class,
         'distributor' => \App\Http\Middleware\DistributorMiddleware::class,
-        'approved' => \App\Http\Middleware\CheckUserApproval::class,
+        'approved' => \App\Http\Middleware\ApprovedDistributor::class,
     ];
 }

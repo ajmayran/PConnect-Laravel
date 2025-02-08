@@ -15,8 +15,13 @@
                         <input type="text" class="form-control" id="product_name" name="product_name" required>
                     </div>
                     <div class="mb-3 form-group">
+                        <label for="description">Description</label>
+                        <textarea class="form-control" id="description" name="description" required></textarea>
+                    </div>
+                    <div class="mb-3 form-group">
                         <label for="price">Price</label>
-                        <input type="number" class="form-control" id="price" name="price" step="0.01" required>
+                        <input type="number" class="form-control" id="price" name="price" step="0.01"
+                            required>
                     </div>
                     <div class="mb-3 form-group">
                         <label for="stock_quantity">Stock Quantity</label>
@@ -24,17 +29,19 @@
                     </div>
                     <div class="mb-3 form-group">
                         <label for="minimum_purchase_qty">Minimum Purchase Quantity</label>
-                        <input type="number" class="form-control" id="minimum_purchase_qty" name="minimum_purchase_qty" required>
-                    </div>
+                        <input type="number" class="form-control" id="minimum_purchase_qty" name="minimum_purchase_qty"
+                            required>
+                    </div>  
                     <div class="mb-3 form-group">
                         <label for="category_id">Category</label>
                         <select class="form-control" id="category_id" name="category_id" required>
+                            <option value="">Select Category</option>   
                             @foreach ($categories as $category)
                                 <option value="{{ $category->id }}">{{ $category->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <input type="hidden" name="distributor_id" value="{{ auth()->id() }}">
+                    <input type="hidden" name="distributor_id" value="{{ auth()->user()->distributor->id }}">
                     <button type="submit" class="btn btn-primary">Add Product</button>
                 </form>
             </div>

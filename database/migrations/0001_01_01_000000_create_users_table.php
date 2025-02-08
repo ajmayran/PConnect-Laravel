@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('password');
             $table->boolean('is_admin')->default(false);
             $table->enum('status', ['pending', 'approved', 'rejected']);
-            $table->text('rejection_reason')->nullable();
+            $table->boolean('profile_completed')->default(false);
             $table->rememberToken();
             $table->timestamps();
         });
