@@ -22,6 +22,7 @@ use App\Http\Controllers\Retailers\RetailerDashboardController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
 use App\Http\Controllers\DistributorPageController;
 use App\Http\Controllers\ProductDescController;
+use App\Http\Controllers\RetailerDistributorPageController;
 
 require __DIR__ . '/auth.php';
 
@@ -114,7 +115,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Add distributor route
     Route::get('/distributors', [DistributorPageController::class, 'index'])->name('distributors');
     Route::get('/distributors', [DistributorPageController::class, 'show'])->name('distributor.show');
-    // Add distributor route
+
+    // distributor nav view
+    Route::get('/retailers/distributor', [RetailerDistributorPageController::class, 'index'])->name('retailers.nav-distributor');
 
     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 

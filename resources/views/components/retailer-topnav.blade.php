@@ -138,7 +138,7 @@
             <div class="flex justify-center space-x-8">
                 <!-- Changed links to spans or buttons -->
                 <a href="{{route('retailers.dashboard')}}" class="px-3 py-2 text-white cursor-pointer hover:text-green-400">HOME</a>
-                <span class="px-3 py-2 text-white cursor-pointer hover:text-green-400">DISTRIBUTORS</span>
+                <a href="{{route('retailers.nav-distributor')}}" class="px-3 py-2 text-white cursor-pointer hover:text-green-400">DISTRIBUTORS</a>
                 <span class="px-3 py-2 text-white cursor-pointer hover:text-green-400">PRODUCTS</span>
             </div>
         </div>
