@@ -40,10 +40,14 @@ Route::get('/', function () {
     return view('index');
 });
 
-// Admin Routes 
+//Admin Routes
 Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function () {
     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('dashboard');
-    // Add other admin routes here
+    Route::get('/admin/pending-distributors', [AdminDashboardController::class, 'pendingDistributors'])->name('pendingDistributors');
+    Route::post('/admin/accept-distributor/{id}', [AdminDashboardController::class, 'acceptDistributor'])->name('acceptDistributor');
+    Route::post('/admin/decline-distributor/{id}', [AdminDashboardController::class, 'declineDistributor'])->name('declineDistributor');
+
+    Route::get('/admin/download-credential/{id}', [AdminDashboardController::class, 'downloadCredential'])->name('downloadCredential');
 });
 
 // Retailer Routes
@@ -109,9 +113,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::get('/download-credential', [ProfileController::class, 'downloadCredential'])
-    ->name('download.credential')
-    ->middleware('auth');
 
 // Social Authentication Routes
 Route::get('auth/facebook', [SocialAuthController::class, 'facebookRedirect'])->name('auth.facebook');

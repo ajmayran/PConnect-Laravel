@@ -66,6 +66,6 @@ class User extends Authenticatable
 
     public function credential()
     {
-        return $this->hasOne(Credential::class, 'user_id');
+        return $this->hasOne(Credential::class);
     }
 }
