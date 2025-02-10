@@ -1,6 +1,5 @@
-@extends('layouts.app')
-
-@section('content')
+<x-app-layout>
+    <x-dashboard-nav />
 <div class="container">
     <h1>Your Cart</h1>
     <table class="table">
@@ -17,7 +16,8 @@
             <tr>
                 <td>{{ $cart->product->name }}</td>
                 <td>
-                    <form action="{{ route('carts.update', $cart->id) }}" method="POST" style="display:inline;">
+                        <form action="{{ route('cart.update', $cart->id) }}" method="POST" style="display:inline;">
+
                         @csrf
                         @method('PUT')
                         <input type="number" name="quantity" value="{{ $cart->quantity }}" min="1" required>
@@ -26,7 +26,7 @@
                 </td>
                 <td>${{ $cart->product->price }}</td>
                 <td>
-                    <form action="{{ route('carts.remove', $cart->id) }}" method="POST" style="display:inline;">
+                    <form action="{{ route('cart.remove', $cart->id) }}" method="POST" style="display:inline;">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger">Remove</button>
@@ -38,4 +38,4 @@
     </table>
     <a href="{{ route('checkout') }}" class="btn btn-primary">Proceed to Checkout</a>
 </div>
-@endsection
+</x-app-layout>

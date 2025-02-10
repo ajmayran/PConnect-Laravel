@@ -5,12 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Cart;
 use App\Models\Order;
 use Illuminate\Http\Request;
-
-use Illuminate\Support\Facades\Auth; // Import the Auth facade
+use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
-
     public function index()
     {
         if (!Auth::check()) {
@@ -18,7 +16,13 @@ class CartController extends Controller
         }
 
         $carts = Cart::with('product')->where('user_id', Auth::id())->get();
-        return view('distributors.carts.index', compact('carts'));
+        return view('retailers.cart.index', compact('carts'));  // Updated view path
+    }
+
+    public function show($id)
+    {
+        $cart = Cart::where('user_id', Auth::id())->findOrFail($id);
+        return view('retailers.cart.show', compact('cart'));
     }
 
     public function add(Request $request)
@@ -33,14 +37,7 @@ class CartController extends Controller
             ['quantity' => $request->quantity]
         );
 
-        return redirect()->route('carts.index')->with('success', 'Product added to cart successfully.');
-    }
-
-    public function remove($id)
-    {
-        $cart = Cart::where('user_id', Auth::id())->where('id', $id)->firstOrFail();
-        $cart->delete();
-        return redirect()->route('carts.index')->with('success', 'Product removed from cart successfully.');
+        return redirect()->route('retailers.cart.index')->with('success', 'Product added to cart successfully.');
     }
 
     public function update(Request $request, $id)
@@ -52,6 +49,13 @@ class CartController extends Controller
         $cart = Cart::where('user_id', Auth::id())->where('id', $id)->firstOrFail();
         $cart->update(['quantity' => $request->quantity]);
 
-        return redirect()->route('carts.index')->with('success', 'Cart updated successfully.');
+        return redirect()->route('retailers.cart.index')->with('success', 'Cart updated successfully.');
+    }
+
+    public function remove($id)
+    {
+        $cart = Cart::where('user_id', Auth::id())->where('id', $id)->firstOrFail();
+        $cart->delete();
+        return redirect()->route('retailers.cart.index')->with('success', 'Product removed from cart successfully.');
     }
 }

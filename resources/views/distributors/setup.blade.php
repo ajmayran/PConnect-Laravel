@@ -1,6 +1,23 @@
 <x-app-layout>
     <div class="container">
         <h1>Profile Setup</h1>
+
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        @if (session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
+
         <form action="{{ route('profile.updateSetup') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="form-group">

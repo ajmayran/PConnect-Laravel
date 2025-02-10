@@ -70,12 +70,8 @@ class DistributorController extends Controller
         return redirect()->route('distributors.dashboard')->with('status', 'Distributor account created.');
     }
 
-    public function approve($id)
+    public function approvalWaiting()
     {
-        $distributor = Distributors::findOrFail($id);
-        $distributor->approval_status = 'approved'; // Assuming you have an approval_status field
-        $distributor->save();
-
-        return redirect()->route('distributors.dashboard')->with('status', 'Distributor account approved successfully.');
+        return view('auth.approval-waiting');
     }
 }

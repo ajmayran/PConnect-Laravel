@@ -41,12 +41,13 @@ class Kernel extends HttpKernel
      * @var array<string, class-string|string>
      */
     protected $routeMiddleware = [
+        'admin' => \App\Http\Middleware\AdminMiddleware::class,
         'auth' => \App\Http\Middleware\Authenticate::class,
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'retailer' => \App\Http\Middleware\RetailerMiddleware::class,
-        'distributor' => \App\Http\Middleware\DistributorMiddleware::class,
         'approved' => \App\Http\Middleware\ApprovedDistributor::class,
-        'role' => \App\Http\Middleware\CheckRole::class,
+        'checkRole' => \App\Http\Middleware\CheckRole::class,
+        'profile.completed' => \App\Http\Middleware\EnsureProfileIsCompleted::class
     ];
 }

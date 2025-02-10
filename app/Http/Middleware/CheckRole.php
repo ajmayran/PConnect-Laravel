@@ -15,9 +15,22 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next, $role): Response
     {
-        if (!$request->user() || $request->user()->user_type !== $role) {
-            return redirect()->route('dashboard');
+        if (!$request->user()) {
+            return redirect()->route('login');
         }
+
+        $userType = $request->user()->user_type;
+
+        // If user type doesn't match required role
+        if ($userType !== $role) {
+            return match ($userType) {
+                'admin' => redirect()->route('admin.dashboard.index'),
+                'retailer' => redirect()->route('retailers.index'),
+                'distributor' => redirect()->route('distributors.index'),
+                default => redirect()->route('login')
+            };
+        }
+
         return $next($request);
     }
 }
