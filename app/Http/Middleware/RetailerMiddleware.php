@@ -11,7 +11,7 @@ class RetailerMiddleware
     public function handle(Request $request, Closure $next)
     {
         if (!Auth::check() || Auth::user()->user_type !== 'retailer') {
-            return redirect('/login');
+            return redirect('login');
         }
         return $next($request);
     }

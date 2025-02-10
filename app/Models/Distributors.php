@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo; // Import BelongsTo
+use Illuminate\Database\Eloquent\Relations\BelongsTo; 
 
 class Distributors extends Model
 {
@@ -32,6 +32,7 @@ class Distributors extends Model
     {
         return $this->hasOne(Distributors::class);
     }
+    
     public function products(): HasMany
     {
         return $this->hasMany(Product::class, 'distributor_id');

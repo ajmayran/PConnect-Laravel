@@ -83,7 +83,7 @@
                 <hr class="my-6">
                 <div class="flex justify-center mt-6">
                     <button onclick="closeproductModal()" class="px-6 py-2 mr-4 text-white bg-gray-400 border rounded-lg hover:bg-gray-300 hover:text-gray-700">Close</button>
-                    <a href="{{ route('cart.show') }}"><button class="px-6 py-2 mr-4 text-gray-700 bg-white border rounded-lg hover:bg-gray-100">View Cart</button></a>
+                    <a href="{{ route('cart.show', $cart->id) }}"><button class="px-6 py-2 mr-4 text-gray-700 bg-white border rounded-lg hover:bg-gray-100">View Cart</button></a>
                 </div>
             </div>
         </div>
