@@ -69,7 +69,7 @@
                     <p class="text-[12px] text-gray-500">Stocks: {{ $product->stock_quantity }}</p>
                     <div class="flex flex-col items-center mt-4">
                         <span class="text-lg font-bold text-green-600">₱{{ number_format($product->price, 2) }}</span>
-                        <form action="{{ route('retailers.carts.add') }}" method="POST" class="flex items-center mt-2">
+                        <form action="{{ route('retailers.cart.add') }}" method="POST" class="flex items-center mt-2">
                             @csrf
                             <input type="hidden" name="product_id" value="{{ $product->id }}">
                             <input type="number" name="quantity" value="{{ $product->minimum_purchase_qty }}" 

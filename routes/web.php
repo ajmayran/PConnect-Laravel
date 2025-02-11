@@ -2,26 +2,37 @@
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\ReturnController;
-use App\Http\Controllers\MessageController;
-use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\DeliveryController;
-use App\Http\Controllers\InsightsController;
-use App\Http\Controllers\InventoryController;
+
+
+
 use App\Http\Controllers\DistributorController;
-use App\Http\Controllers\CancellationController;
-use App\Http\Controllers\Auth\SocialAuthController;
-use App\Http\Controllers\DistributorProfileController;
-use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\Retailers\RetailerDashboardController;
-use App\Http\Controllers\Distributors\DistributorDashboardController;
-use App\Http\Controllers\DistributorPageController;
 use App\Http\Controllers\ProductDescController;
+
+
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Retailers\CartController;
+use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\DistributorPageController;
+use App\Http\Controllers\Distributors\OrderController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Distributors\ReturnController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+
+
+use App\Http\Controllers\Distributors\MessageController;
+use App\Http\Controllers\Distributors\ProductController;
+
+use App\Http\Controllers\Distributors\DeliveryController;
+
+use App\Http\Controllers\Distributors\InsightsController;
+use App\Http\Controllers\Distributors\InventoryController;
+
+
+use App\Http\Controllers\Distributors\CancellationController;
+use App\Http\Controllers\Retailers\RetailerDashboardController;
+use App\Http\Controllers\Distributors\DistributorProfileController;
+use App\Http\Controllers\Distributors\DistributorDashboardController;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -40,29 +51,65 @@ Route::get('/', function () {
     return view('index');
 });
 
+
+
 //Admin Routes
 Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function () {
     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/admin/pending-distributors', [AdminDashboardController::class, 'pendingDistributors'])->name('pendingDistributors');
     Route::post('/admin/accept-distributor/{id}', [AdminDashboardController::class, 'acceptDistributor'])->name('acceptDistributor');
     Route::post('/admin/decline-distributor/{id}', [AdminDashboardController::class, 'declineDistributor'])->name('declineDistributor');
+    
 
     Route::get('/admin/download-credential/{id}', [AdminDashboardController::class, 'downloadCredential'])->name('downloadCredential');
 });
+
+
+
+
+
+
 
 // Retailer Routes
 Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('retailers')->group(function () {
     Route::get('/dashboard', [RetailerDashboardController::class, 'index'])->name('dashboard');
     Route::get('/distributor/{id}', [DistributorController::class, 'show'])->name('distributor.show');
+
+    // Product Routes
+    Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+    Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/distributors/{id}/products', [DistributorController::class, 'showProducts'])->name('distributor-page');
+    
 
     // Cart Routes - Consolidated
-    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-    Route::get('/cart/{id}', [CartController::class, 'show'])->name('cart.show');
-    Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
-    Route::put('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
-    Route::delete('/cart/{id}', [CartController::class, 'remove'])->name('cart.remove');
+    Route::get('/', [CartController::class, 'index'])->name('cart.index');
+    Route::get('/{id}', [CartController::class, 'show'])->name('cart.show');
+    Route::post('/add', [CartController::class, 'add'])->name('cart.add');
+    Route::put('/{id}/update', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('/{id}', [CartController::class, 'remove'])->name('cart.remove');
+
+
+
+
+
+
+
+
+
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Distributor Routes
 Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'profile.completed'])->group(function () {
@@ -121,5 +168,6 @@ Route::get('auth/facebook/callback', [SocialAuthController::class, 'facebookCall
 Route::get('auth/google', [SocialAuthController::class, 'googleRedirect'])->name('auth.google');
 Route::get('auth/google/callback', [SocialAuthController::class, 'googleCallback']);
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+
 
 require __DIR__ . '/auth.php';

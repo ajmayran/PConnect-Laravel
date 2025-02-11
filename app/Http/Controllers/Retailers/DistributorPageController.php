@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Retailers;
 
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 
 class DistributorPageController extends Controller
 {

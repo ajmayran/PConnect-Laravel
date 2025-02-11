@@ -1,118 +1,621 @@
-<x-app-layout>
-    <div class="flex h-screen bg-gray-100">
-        <!-- Sidebar -->
-        <div id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 transition duration-300 ease-in transform -translate-x-full bg-gray-900 lg:translate-x-0 lg:static lg:inset-0">
-            <div class="flex items-center justify-between px-6 py-4">
-                <div class="flex items-center">
-                    <span class="text-2xl font-semibold text-white">Admin Panel</span>
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Dashboard</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+
+    <!-- Styles / Scripts -->
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/admin_dash.js'])
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/iconify-icon/dist/iconify-icon.min.js"></script>
+    <style>
+        .circle-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: gray;
+            cursor: pointer;
+        }
+
+        .circle-button.active {
+            background-color: white;
+        }
+
+        .tab-item.active {
+            border-bottom: 2px solid rgb(38, 113, 38);
+        }
+    </style>
+</head>
+<x-navbar :user="Auth::user()" />
+
+<Body>
+    <main class="w-full md:w-[calc(100%-256px)] md:ml-64 bg-gray-50 min-h-screen transition-all main">
+        <div class="fixed top-0 left-0 z-50 w-64 h-full p-4 transition-transform sidebar-menu"
+            style="background-color: #abebc6;">
+            <x-admin-sidebar />
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 gap-6 mb-6 md:grid-cols-2 lg:grid-cols-3">
+                <div class="p-6 bg-white border border-gray-100 rounded-md shadow-md shadow-black/5">
+                    <div class="flex justify-between mb-6">
+                        <div>
+                            <div class="mb-1 text-2xl font-semibold">529</div>
+                            <div class="text-sm font-medium text-gray-400">Active Retailers</div>
+                        </div>
+                        <div class="dropdown">
+                            <button type="button"
+                                class="text-gray-400 dropdown-toggle hover:text-gray-600"><iconify-icon
+                                    icon="mdi:more-horiz" class="text-lg"></iconify-icon></button>
+                            <ul
+                                class="dropdown-menu shadow-md shadow-black/5 z-30 hidden py-1.5 rounded-md bg-white border border-gray-100 w-full max-w-[140px]">
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Goto</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Edit</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Delete</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-full h-4 bg-gray-100 rounded-full">
+                            <div class="h-full p-1 bg-green-500 rounded-full" style="width: 79%;">
+                                <div class="w-2 h-2 ml-auto bg-white rounded-full"></div>
+                            </div>
+                        </div>
+                        <span class="ml-4 text-sm font-medium text-gray-600">79%</span>
+                    </div>
                 </div>
-                <button id="closeSidebarButton" class="p-2 rounded-md lg:hidden focus:outline-none focus:ring">
-                    <svg class="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+                <div class="p-6 bg-white border border-gray-100 rounded-md shadow-md shadow-black/5">
+                    <div class="flex justify-between mb-4">
+                        <div>
+                            <div class="flex items-center mb-1">
+                                <div class="text-2xl font-semibold">2,420</div>
+                                <div
+                                    class="p-1 rounded bg-emerald-500/10 text-emerald-500 text-[12px] font-semibold leading-none ml-2">
+                                    +89%</div>
+                            </div>
+                            <div class="text-sm font-medium text-gray-400">Visitors</div>
+                        </div>
+                        <div class="dropdown">
+                            <button type="button"
+                                class="text-gray-400 dropdown-toggle hover:text-gray-600"><iconify-icon
+                                    icon="mdi:more-horiz" class="text-lg"></iconify-icon></button>
+                            <ul
+                                class="dropdown-menu shadow-md shadow-black/5 z-30 hidden py-1.5 rounded-md bg-white border border-gray-100 w-full max-w-[140px]">
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Goto</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Edit</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Delete</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <img src="https://placehold.co/32x32" alt=""
+                            class="block object-cover w-8 h-8 rounded-full">
+                        <img src="https://placehold.co/32x32" alt=""
+                            class="block object-cover w-8 h-8 -ml-3 rounded-full">
+                        <img src="https://placehold.co/32x32" alt=""
+                            class="block object-cover w-8 h-8 -ml-3 rounded-full">
+                        <img src="https://placehold.co/32x32" alt=""
+                            class="block object-cover w-8 h-8 -ml-3 rounded-full">
+                        <img src="https://placehold.co/32x32" alt=""
+                            class="block object-cover w-8 h-8 -ml-3 rounded-full">
+                    </div>
+                </div>
+                <div class="p-6 bg-white border border-gray-100 rounded-md shadow-md shadow-black/5">
+                    <div class="flex justify-between mb-6">
+                        <div>
+                            <div class="mb-1 text-2xl font-semibold"><span
+                                    class="text-base font-normal text-gray-400 align-top"></span>2,345</div>
+                            <div class="text-sm font-medium text-gray-400">Active Orders</div>
+                        </div>
+                        <div class="dropdown">
+                            <button type="button"
+                                class="text-gray-400 dropdown-toggle hover:text-gray-600"><iconify-icon
+                                    icon="mdi:more-horiz" class="text-lg"></iconify-icon></button>
+                            <ul
+                                class="dropdown-menu shadow-md shadow-black/5 z-30 hidden py-1.5 rounded-md bg-white border border-gray-100 w-full max-w-[140px]">
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Goto</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Edit</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Delete</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <a href="#" class="text-sm font-medium text-blue-500 hover:text-blue-600">View details</a>
+                </div>
             </div>
-
-            <nav class="mt-10">
-                <!-- Dashboard -->
-                <a class="flex items-center px-6 py-2 mt-4 text-gray-100 bg-gray-700 bg-opacity-25" href="{{ route('admin.dashboard') }}">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                    <span class="mx-3">Dashboard</span>
-                </a>
-
-                <!-- Distributor Management -->
-                <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open" class="flex items-center justify-between w-full px-6 py-2 mt-4 text-gray-100 hover:bg-gray-700 hover:bg-opacity-25 hover:text-gray-100 focus:outline-none">
-                        <div class="flex items-center">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                            </svg>
-                            <span class="mx-3">Distributor Management</span>
-                        </div>
-                        <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-
-                    <div x-show="open" class="py-2 mt-2 space-y-2 px-7">
-                        <a class="block text-sm text-gray-100 hover:text-white" href="{{ route('admin.pendingDistributors') }}">
-                            Pending Distributors
-                        </a>
-                        <a class="block text-sm text-gray-100 hover:text-white" href="#">
-                            All Distributors
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Settings -->
-                <a class="flex items-center px-6 py-2 mt-4 text-gray-500 hover:bg-gray-700 hover:bg-opacity-25 hover:text-gray-100" href="#">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    <span class="mx-3">Settings</span>
-                </a>
-            </nav>
-        </div>
-
-        <!-- Content -->
-        <div class="flex-1 h-full overflow-x-hidden overflow-y-auto">
-            <!-- Top Navigation -->
-            <header class="flex items-center justify-between px-6 py-4 bg-white border-b-4 border-indigo-600">
-                <div class="flex items-center">
-                    <button id="openSidebarButton" class="text-gray-500 focus:outline-none lg:hidden">
-                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M4 6H20M4 12H20M4 18H11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="flex items-center">
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" class="flex items-center space-x-2">
-                            <span class="text-gray-700">{{ auth()->user()->name }}</span>
-                            <img class="w-8 h-8 rounded-full" src="https://ui-avatars.com/api/?name={{ auth()->user()->name }}" alt="">
-                        </button>
-                        <div x-show="open" @click.away="open = false" class="absolute right-0 w-48 py-1 mt-2 bg-white rounded-md shadow-lg">
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100">
-                                    Logout
-                                </button>
-                            </form>
+            <div class="grid grid-cols-1 gap-6 mb-6 lg:grid-cols-2">
+                <div class="p-6 bg-white border border-gray-100 rounded-md shadow-md shadow-black/5">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="font-medium">Transactions Overview</div>
+                        <div class="dropdown">
+                            <button type="button"
+                                class="text-gray-400 dropdown-toggle hover:text-gray-600"><iconify-icon
+                                    icon="mdi:more-horiz" class="text-lg"></iconify-icon></button>
+                            <ul
+                                class="dropdown-menu shadow-md shadow-black/5 z-30 hidden py-1.5 rounded-md bg-white border border-gray-100 w-full max-w-[140px]">
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Goto</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Edit</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Delete</a>
+                                </li>
+                            </ul>
                         </div>
                     </div>
+                    <div class="flex items-center mb-4 order-tab">
+                        <button type="button" data-tab="order" data-tab-page="active"
+                            class="px-4 py-2 text-sm font-medium text-gray-400 bg-gray-50 rounded-tl-md rounded-bl-md hover:text-gray-600 active">Active</button>
+                        <button type="button" data-tab="order" data-tab-page="completed"
+                            class="px-4 py-2 text-sm font-medium text-gray-400 bg-gray-50 hover:text-gray-600">Completed</button>
+                        <button type="button" data-tab="order" data-tab-page="Cancelled"
+                            class="px-4 py-2 text-sm font-medium text-gray-400 bg-gray-50 rounded-tr-md rounded-br-md hover:text-gray-600">Cancelled</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-[540px]" data-tab-for="order" data-page="active">
+                            <thead>
+                                <tr>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left rounded-tl-md rounded-bl-md">
+                                        Service</th>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left">
+                                        Estimate</th>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left">
+                                        Budget</th>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left rounded-tr-md rounded-br-md">
+                                        Status</th>
+                                </tr>
+                            </thead>
+                        </table>
+                        <table class="w-full min-w-[540px] hidden" data-tab-for="order" data-page="completed">
+                            <thead>
+                                <tr>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left rounded-tl-md rounded-bl-md">
+                                        Service</th>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left">
+                                        Estimate</th>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left">
+                                        Budget</th>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left rounded-tr-md rounded-br-md">
+                                        Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <div class="flex items-center">
+                                            <img src="https://placehold.co/32x32" alt=""
+                                                class="block object-cover w-8 h-8 rounded">
+                                            <a href="#"
+                                                class="ml-2 text-sm font-medium text-gray-600 truncate hover:text-blue-500">Order
+                                                1</a>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">3 days</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">$56</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span
+                                            class="inline-block p-1 rounded bg-emerald-500/10 text-emerald-500 font-medium text-[12px] leading-none">Completed</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <div class="flex items-center">
+                                            <img src="https://placehold.co/32x32" alt=""
+                                                class="block object-cover w-8 h-8 rounded">
+                                            <a href="#"
+                                                class="ml-2 text-sm font-medium text-gray-600 truncate hover:text-blue-500">Order
+                                                2</a>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">3 days</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">$56</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span
+                                            class="inline-block p-1 rounded bg-emerald-500/10 text-emerald-500 font-medium text-[12px] leading-none">Completed</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <div class="flex items-center">
+                                            <img src="https://placehold.co/32x32" alt=""
+                                                class="block object-cover w-8 h-8 rounded">
+                                            <a href="#"
+                                                class="ml-2 text-sm font-medium text-gray-600 truncate hover:text-blue-500">Order
+                                                3</a>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">3 days</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">$56</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span
+                                            class="inline-block p-1 rounded bg-emerald-500/10 text-emerald-500 font-medium text-[12px] leading-none">Completed</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <div class="flex items-center">
+                                            <img src="https://placehold.co/32x32" alt=""
+                                                class="block object-cover w-8 h-8 rounded">
+                                            <a href="#"
+                                                class="ml-2 text-sm font-medium text-gray-600 truncate hover:text-blue-500">Order
+                                                4</a>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">3 days</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">$56</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span
+                                            class="inline-block p-1 rounded bg-emerald-500/10 text-emerald-500 font-medium text-[12px] leading-none">Completed</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <div class="flex items-center">
+                                            <img src="https://placehold.co/32x32" alt=""
+                                                class="block object-cover w-8 h-8 rounded">
+                                            <a href="#"
+                                                class="ml-2 text-sm font-medium text-gray-600 truncate hover:text-blue-500">Order
+                                                5</a>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">3 days</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">$56</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span
+                                            class="inline-block p-1 rounded bg-emerald-500/10 text-emerald-500 font-medium text-[12px] leading-none">Completed</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <table class="w-full min-w-[540px] hidden" data-tab-for="order" data-page="Cancelled">
+                            <thead>
+                                <tr>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left rounded-tl-md rounded-bl-md">
+                                        Service</th>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left">
+                                        Estimate</th>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left">
+                                        Budget</th>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left rounded-tr-md rounded-br-md">
+                                        Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <div class="flex items-center">
+                                            <img src="https://placehold.co/32x32" alt=""
+                                                class="block object-cover w-8 h-8 rounded">
+                                            <a href="#"
+                                                class="ml-2 text-sm font-medium text-gray-600 truncate hover:text-blue-500">Order
+                                                1</a>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">3 days</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">$56</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span
+                                            class="inline-block p-1 rounded bg-rose-500/10 text-rose-500 font-medium text-[12px] leading-none">Cancelled</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <div class="flex items-center">
+                                            <img src="https://placehold.co/32x32" alt=""
+                                                class="block object-cover w-8 h-8 rounded">
+                                            <a href="#"
+                                                class="ml-2 text-sm font-medium text-gray-600 truncate hover:text-blue-500">Order
+                                                2</a>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">3 days</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">$56</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span
+                                            class="inline-block p-1 rounded bg-rose-500/10 text-rose-500 font-medium text-[12px] leading-none">Cancelled</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <div class="flex items-center">
+                                            <img src="https://placehold.co/32x32" alt=""
+                                                class="block object-cover w-8 h-8 rounded">
+                                            <a href="#"
+                                                class="ml-2 text-sm font-medium text-gray-600 truncate hover:text-blue-500">Order
+                                                3</a>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">3 days</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">$56</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span
+                                            class="inline-block p-1 rounded bg-rose-500/10 text-rose-500 font-medium text-[12px] leading-none">Cancelled</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <div class="flex items-center">
+                                            <img src="https://placehold.co/32x32" alt=""
+                                                class="block object-cover w-8 h-8 rounded">
+                                            <a href="#"
+                                                class="ml-2 text-sm font-medium text-gray-600 truncate hover:text-blue-500">Order
+                                                4</a>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">3 days</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">$56</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span
+                                            class="inline-block p-1 rounded bg-rose-500/10 text-rose-500 font-medium text-[12px] leading-none">Cancelled</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <div class="flex items-center">
+                                            <img src="https://placehold.co/32x32" alt=""
+                                                class="block object-cover w-8 h-8 rounded">
+                                            <a href="#"
+                                                class="ml-2 text-sm font-medium text-gray-600 truncate hover:text-blue-500">Order
+                                                5</a>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">3 days</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span class="text-[13px] font-medium text-gray-400">$56</span>
+                                    </td>
+                                    <td class="px-4 py-2 border-b border-b-gray-50">
+                                        <span
+                                            class="inline-block p-1 rounded bg-rose-500/10 text-rose-500 font-medium text-[12px] leading-none">Cancelled</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </header>
-
-            <!-- Main Content -->
-            <main class="p-6">
-                <!-- Your page content here -->
-                <div class="container mx-auto">
-                    <h1 class="text-2xl font-semibold text-gray-900">Welcome, {{ auth()->user()->name }}</h1>
-                    <!-- Add your dashboard content here -->
+                <div class="p-6 bg-white border border-gray-100 rounded-md shadow-md shadow-black/5">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="font-medium">Manage Services</div>
+                        <div class="dropdown">
+                            <button type="button"
+                                class="text-gray-400 dropdown-toggle hover:text-gray-600"><iconify-icon
+                                    icon="mdi:more-horiz" class="text-lg"></iconify-icon></button>
+                            <ul
+                                class="dropdown-menu shadow-md shadow-black/5 z-30 hidden py-1.5 rounded-md bg-white border border-gray-100 w-full max-w-[140px]">
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Goto</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Edit</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Delete</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <form action="" class="flex items-center mb-4">
+                        <div class="relative w-full mr-2">
+                            <input type="text"
+                                class="w-full py-2 pl-10 pr-4 text-sm border border-gray-100 rounded-md outline-none bg-gray-50 focus:border-blue-500"
+                                placeholder="Search...">
+                            <i class="absolute text-gray-400 -translate-y-1/2 ri-search-line top-1/2 left-4"></i>
+                        </div>
+                        <select
+                            class="text-sm py-2 pl-4 pr-10 bg-gray-50 border border-gray-100 rounded-md focus:border-blue-500 outline-none appearance-none bg-select-arrow bg-no-repeat bg-[length:16px_16px] bg-[right_16px_center]">
+                            <option value="">All</option>
+                        </select>
+                    </form>
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-[540px]">
+                            <thead>
+                                <tr>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left rounded-tl-md rounded-bl-md">
+                                        Service</th>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left">
+                                        Price</th>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left">
+                                        Clicks</th>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left rounded-tr-md rounded-br-md">
+                                    </th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
                 </div>
-            </main>
+            </div>
+            <div class="grid grid-cols-1 gap-6 mb-6 lg:grid-cols-3">
+                <div class="p-6 bg-white border border-gray-100 rounded-md shadow-md shadow-black/5 lg:col-span-2">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="font-medium">Order Statistics</div>
+                        <div class="dropdown">
+                            <button type="button"
+                                class="text-gray-400 dropdown-toggle hover:text-gray-600"><iconify-icon
+                                    icon="mdi:more-horiz" class="text-lg"></iconify-icon></button>
+                            <ul
+                                class="dropdown-menu shadow-md shadow-black/5 z-30 hidden py-1.5 rounded-md bg-white border border-gray-100 w-full max-w-[140px]">
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Goto</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Edit</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Delete</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4 mb-4 md:grid-cols-2 lg:grid-cols-3">
+                        <div class="p-4 border border-gray-200 border-dashed rounded-md">
+                            <div class="flex items-center mb-0.5">
+                                <div class="text-xl font-semibold">10</div>
+                                <span
+                                    class="p-1 rounded text-[12px] font-semibold bg-blue-500/10 text-blue-500 leading-none ml-1">$80</span>
+                            </div>
+                            <span class="text-sm text-gray-400">Active</span>
+                        </div>
+                        <div class="p-4 border border-gray-200 border-dashed rounded-md">
+                            <div class="flex items-center mb-0.5">
+                                <div class="text-xl font-semibold">50</div>
+                                <span
+                                    class="p-1 rounded text-[12px] font-semibold bg-emerald-500/10 text-emerald-500 leading-none ml-1">+$469</span>
+                            </div>
+                            <span class="text-sm text-gray-400">Completed</span>
+                        </div>
+                        <div class="p-4 border border-gray-200 border-dashed rounded-md">
+                            <div class="flex items-center mb-0.5">
+                                <div class="text-xl font-semibold">4</div>
+                                <span
+                                    class="p-1 rounded text-[12px] font-semibold bg-rose-500/10 text-rose-500 leading-none ml-1">-$130</span>
+                            </div>
+                            <span class="text-sm text-gray-400">Cancelled</span>
+                        </div>
+                    </div>
+                    <div>
+                        <canvas id="order-chart"></canvas>
+                    </div>
+                </div>
+                <div class="p-6 bg-white border border-gray-100 rounded-md shadow-md shadow-black/5">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="font-medium">User Engagement</div>
+                        <div class="dropdown">
+                            <button type="button"
+                                class="text-gray-400 dropdown-toggle hover:text-gray-600"><iconify-icon
+                                    icon="mdi:more-horiz" class="text-lg"></iconify-icon></button>
+                            <ul
+                                class="dropdown-menu shadow-md shadow-black/5 z-30 hidden py-1.5 rounded-md bg-white border border-gray-100 w-full max-w-[140px]">
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Goto</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Edit</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center text-[13px] py-1.5 px-4 text-gray-600 hover:text-blue-500 hover:bg-gray-50">Delete</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-[460px]">
+                            <thead>
+                                <tr>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left rounded-tl-md rounded-bl-md">
+                                        User</th>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left">
+                                        Rating</th>
+                                    <th
+                                        class="text-[12px] uppercase tracking-wide font-medium text-gray-400 py-2 px-4 bg-gray-50 text-left rounded-tr-md rounded-br-md">
+                                        Review</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-
-    <!-- Alpine.js -->
-    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
-    <script>
-        // Sidebar Toggle
-        const sidebar = document.getElementById('sidebar');
-        const openSidebarButton = document.getElementById('openSidebarButton');
-        const closeSidebarButton = document.getElementById('closeSidebarButton');
-
-        openSidebarButton.addEventListener('click', () => {
-            sidebar.classList.remove('-translate-x-full');
-        });
-
-        closeSidebarButton.addEventListener('click', () => {
-            sidebar.classList.add('-translate-x-full');
-        });
-    </script>
-</x-app-layout>
+    </main>
+</Body>
+<script src="https://unpkg.com/@popperjs/core@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</html>

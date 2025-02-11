@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Distributors;
 
-use Illuminate\Http\Request;
-use App\Models\Distributors;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Distributors;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class DistributorProfileController extends Controller
 {
