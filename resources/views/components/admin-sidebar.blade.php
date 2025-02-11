@@ -20,18 +20,13 @@
             </a>
             <ul class="pl-7 mt-2 hidden group-[.selected]:block">
                 <li class="mb-4">
-                    <a href="./products/acceptedProducts.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Accepted
+                    <a href="#"
+                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">All
                         Products</a>
                 </li>
                 <li class="mb-4">
-                    <a href="./products/pendingProducts.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Pending
-                        Products</a>
-                </li>
-                <li class="mb-4">
-                    <a href="./products/rejectedProducts.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Rejected
+                    <a href="#"
+                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Removed
                         Products</a>
                 </li>
             </ul>
@@ -47,8 +42,8 @@
             <ul class="pl-7 mt-2 hidden group-[.selected]:block">
                 <li class="mb-4">
                     <a href="./transactions/completedOrders.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Completed
-                        order</a>
+                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Transaction
+                        History</a>
                 </li>
                 <li class="mb-4">
                     <a href="./transactions/CancelledOrders.php"

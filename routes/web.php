@@ -11,13 +11,16 @@ use App\Http\Controllers\ProductDescController;
 
 
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\Distributor;
+
 use App\Http\Controllers\Retailers\CartController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\DistributorPageController;
 use App\Http\Controllers\Distributors\OrderController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Distributors\ReturnController;
-use App\Http\Controllers\Admin\AdminDashboardController;
+
 
 
 use App\Http\Controllers\Distributors\MessageController;
@@ -56,9 +59,9 @@ Route::get('/', function () {
 //Admin Routes
 Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function () {
     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/admin/pending-distributors', [AdminDashboardController::class, 'pendingDistributors'])->name('pendingDistributors');
-    Route::post('/admin/accept-distributor/{id}', [AdminDashboardController::class, 'acceptDistributor'])->name('acceptDistributor');
-    Route::post('/admin/decline-distributor/{id}', [AdminDashboardController::class, 'declineDistributor'])->name('declineDistributor');
+    Route::get('/distributors/pending', [Distributor::class, 'pendingDistributors'])->name('pendingDistributors');
+    Route::post('/admin/accept-distributor/{id}', [Distributor::class, 'acceptDistributor'])->name('acceptDistributor');
+    Route::post('/admin/decline-distributor/{id}', [Distributor::class, 'declineDistributor'])->name('declineDistributor');
     
 
     Route::get('/admin/download-credential/{id}', [AdminDashboardController::class, 'downloadCredential'])->name('downloadCredential');
