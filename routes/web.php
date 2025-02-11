@@ -58,7 +58,7 @@ Route::get('/', function () {
 
 //Admin Routes
 Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function () {
-    Route::get('/admin', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/admin', [AdminDashboardController::class, 'index'])->name('dashboard.index');
     Route::get('/distributors/pending', [Distributor::class, 'pendingDistributors'])->name('pendingDistributors');
     Route::post('/admin/accept-distributor/{id}', [Distributor::class, 'acceptDistributor'])->name('acceptDistributor');
     Route::post('/admin/decline-distributor/{id}', [Distributor::class, 'declineDistributor'])->name('declineDistributor');
