@@ -36,7 +36,7 @@
             margin-left: 0 !important;
         }
     </style>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/dist_dashboard.js'])
 </head>
 
 <body class="bg-gray-100">
@@ -146,6 +146,7 @@
             <a href="{{ route('distributors.insights.index') }}" class="flex items-center">
                 <iconify-icon icon="gg:insights" class="text-xl icon"></iconify-icon>
                 <span class="ml-4 font-normal text-gray-200 ">Business Insights</span>
+            </a>
         </div>
 
         <div
@@ -159,6 +160,7 @@
             </form>
         </div>
     </div>
+    
 
     <!-- Main Content -->
 
@@ -212,7 +214,7 @@
                         </thead>
                         <tbody>
                             <tr class="border-b">
-                                <td class="py-2"><img src="../../resources/img/Products/rtc-fried-chicken.png"
+                                <td class="py-2"><img src="{{ asset('img/Products/rtc-fried-chicken.png') }}"
                                         alt="" class="w-16 h-16 rounded"></td>
                                 <td class="py-2 text-[12px] font-light">Magnolia Ready to Cook Fried Chicken</td>
                                 <td class="py-2 text-[12px] font-light">Frozen Products</td>
@@ -220,7 +222,7 @@
                             </tr>
                             <tr class="border-b">
                                 <td class="py-2"><img
-                                        src="../../resources/img/Products/Chicken-lumpia-shanghai-mix.png"
+                                        src="{{ asset('img/Products/Chicken-lumpia-shanghai-mix.png') }}"
                                         alt="" class="ml-1 rounded h-14 w-14"></td>
                                 <td class="py-2 text-[12px] font-light">Magnolia Ready to Cook Chicken Lumpia Shanghai
                                     Mix
@@ -266,7 +268,7 @@
                         <tbody>
                             <tr class="border-b">
                                 <td class="px-2 py-2">1</td>
-                                <td class="py-2"><img src="../../resources/img/Products/rtc-chicken-siomai.png"
+                                <td class="py-2"><img src="{{ asset('img/Products/rtc-chicken-siomai.png') }}"
                                         alt="" class="w-16 h-16 rounded"></td>
                                 <td class="py-2 text-[12px] font-light">Ready to Cook Chicken Siomai</td>
                                 <td class="py-2 text-[12px] font-light">Frozen Products</td>
@@ -274,7 +276,7 @@
                             </tr>
                             <tr class="border-b">
                                 <td class="px-2">2</td>
-                                <td class="py-2"><img src="../../resources/img/Products/rtc-chicken-lumpia.png"
+                                <td class="py-2"><img src="{{ asset('img/Products/rtc-chicken-lumpia.png') }}"
                                         alt="" class="w-16 h-16 rounded"></td>
                                 <td class="py-2 text-[12px] font-light">Ready to Cook Chicken Lumpia</td>
                                 <td class="py-2 text-[12px] font-light">Frozen Products</td>
@@ -324,7 +326,6 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="{{ asset('js/tailwind/dist_dashboard.js') }}"></script>
 </body>
 
 </html>

@@ -29,18 +29,29 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
-        if ($user->user_type === 'distributor') {
-            if ($user->status === 'approved') {
-                return redirect()->route('distributors.dashboard');
-            } elseif ($user->status === 'pending') {
-                Auth::logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-                return redirect()->route('auth.approval-waiting');
-            }
-        }
+        // Handle user type specific redirects
+        return match ($user->user_type) {
+            'admin' => redirect()->route('admin.dashboard'),
+            'retailer' => redirect()->route('retailers.dashboard'),
+            'distributor' => match ($user->status) {
+                'approved' => redirect()->route('distributors.dashboard'),
+                'pending' => $this->handlePendingDistributor($request),
+                default => redirect()->route('login')
+            },
+            default => redirect()->route('login')
+        };
+    }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+    /**
+     * Handle pending distributor logout and redirect
+     */
+    private function handlePendingDistributor(Request $request): RedirectResponse
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('auth.approval-waiting');
     }
 
     /**
