@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Retailers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Distributors;
-use App\Models\Product;
 
 
 class AllDistributorController extends Controller

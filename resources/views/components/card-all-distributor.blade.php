@@ -15,7 +15,7 @@
         <div class="mt-6 flex justify-between items-center">
             <a href="{{$route}}" 
                class="text-blue-500 hover:text-blue-700">
-                View Products
+                View Distributor
             </a>
         </div>
     </div>

@@ -10,6 +10,7 @@ use App\Http\Controllers\Retailers\CartController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Retailers\ProductController;
 use App\Http\Controllers\Retailers\AllDistributorController;
+use App\Http\Controllers\Retailers\AllProductController;
 use App\Http\Controllers\Distributors\OrderController;
 use App\Http\Controllers\Retailers\CheckoutController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -100,6 +101,9 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     //Nav Routes
     Route::get('/all-distributors', [AllDistributorController::class, 'index'])->name('all-distributor');
     Route::get('/distributor/{id}', [DistributorController::class, 'show'])->name('distributor.show');
+
+    Route::get('/all-products', [AllProductController::class, 'index'])->name('all-product');
+    Route::get('/products/{product}', [ProductDescController::class, 'show'])->name('products.show');
 });
 
 

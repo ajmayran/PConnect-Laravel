@@ -133,7 +133,7 @@
                 <!-- Changed links to spans or buttons -->
                 <a href="{{route('retailers.dashboard')}}" class="px-3 py-2 text-white cursor-pointer hover:text-green-400">HOME</a>
                 <a href="{{route('retailers.all-distributor')}}" class="px-3 py-2 text-white cursor-pointer hover:text-green-400">DISTRIBUTORS</a>
-                <span class="px-3 py-2 text-white cursor-pointer hover:text-green-400">PRODUCTS</span>
+                <a href="{{route('retailers.all-product')}}" class="px-3 py-2 text-white cursor-pointer hover:text-green-400">PRODUCTS</a>
             </div>
         </div>
     </div>
