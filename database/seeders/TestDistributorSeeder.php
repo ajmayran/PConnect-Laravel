@@ -14,8 +14,8 @@ class TestDistributorSeeder extends Seeder
         $user = User::create([
             'first_name' => 'Test',
             'last_name' => 'Distributor',
-            'email' => 'testdistributor@example.com',
-            'password' => bcrypt('password123'),
+            'email' => 'test@dist.com',
+            'password' => bcrypt('password'),
             'user_type' => 'distributor',
             'status' => 'approved', // Set status to approved
         ]);
@@ -26,8 +26,6 @@ class TestDistributorSeeder extends Seeder
             'company_name' => 'Test Company',
             'company_email' => 'testcompany@example.com',
             'company_profile_image' => '', // Set to empty string for testing
-
-
             'company_address' => '123 Test St',
             'company_phone_number' => '1234567890',
             'profile_completed' => false, // Initially set to false for testing

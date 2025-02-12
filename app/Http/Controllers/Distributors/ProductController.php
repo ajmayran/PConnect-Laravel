@@ -13,17 +13,22 @@ use App\Models\Category; // Import the Category model
 class ProductController extends Controller
 {
     public function index()
-    {
-        $products = Product::all();
-        $categories = Category::all(); // Fetch categories
-        return view('distributors.products.index', compact('products', 'categories'));
+{
+    $user = Auth::user();
+    $distributor = $user->distributor; // Get the distributor record
+
+    if (!$distributor) {
+        return back()->with('error', 'No distributor profile found.');
     }
 
-    public function show($id)
-    {
-        $product = Product::findOrFail($id);
-        return view('distributors.products.show', compact('product'));
-    }
+    $products = Product::where('distributor_id', $distributor->id) // Use distributor's ID
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    $categories = Category::all();
+
+    return view('distributors.products.index', compact('products', 'categories'));
+}
 
     public function create()
     {

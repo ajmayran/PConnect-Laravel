@@ -1,44 +1,17 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Distributors;
 
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Distributors;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Auth;
 
 class DistributorController extends Controller
 {
-    public function index()
-    {
-        $distributors = Distributors::with('user')->get();
-        $products = Product::with('distributor')
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
-
-        return view('retailers.dashboard', compact('distributors', 'products'));
-    }
-    public function show($id)
-    {
-        $distributor = Distributors::with(['products', 'products.category'])->findOrFail($id);
-        $categories = Category::all();
-        $selectedCategory = request('category', 'all');
-
-        $products = $distributor->products;
-        if ($selectedCategory !== 'all') {
-            $products = $products->where('category_id', $selectedCategory);
-        }
-
-        return view('retailers.distributor-page', compact('distributor', 'categories', 'products', 'selectedCategory'));
-    }
-    public function showProducts($id)
-    {
-        $distributor = Distributors::findOrFail($id); // Fetch the distributor
-        $products = $distributor->products()->paginate(10); // Fetch products with pagination
-
-        return view('distributors.products.index', compact('distributor', 'products')); // Pass data to the view
-    }
 
     public function create()
     {
@@ -73,5 +46,38 @@ class DistributorController extends Controller
     public function approvalWaiting()
     {
         return view('auth.approval-waiting');
+    }
+
+    public function show($id, Request $request)
+    {
+        $distributor = User::where('user_type', 'distributor')
+            ->where('id', $id)
+            ->firstOrFail();
+
+        // Get the selected category from the request or default to 'all'
+        $selectedCategory = $request->get('category', 'all');
+
+        // Get all categories
+        $categories = Category::all();
+
+        // Base query for products
+        $productsQuery = Product::where('distributor_id', $id)
+            ->where('status', 'active')
+            ->where('stock_quantity', '>', 0);
+
+        // Filter by category if one is selected
+        if ($selectedCategory !== 'all') {
+            $productsQuery->where('category_id', $selectedCategory);
+        }
+
+        // Get the products with pagination
+        $products = $productsQuery->paginate(12);
+
+        return view('retailers.distributor-page', [
+            'distributor' => $distributor,
+            'products' => $products,
+            'categories' => $categories,
+            'selectedCategory' => $selectedCategory
+        ]);
     }
 }

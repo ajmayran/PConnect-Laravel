@@ -1,41 +1,33 @@
 <?php
 
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProfileController;
-
-
-
-use App\Http\Controllers\DistributorController;
-use App\Http\Controllers\ProductDescController;
-
-
-use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\Distributor;
-
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Retailers\CartController;
 use App\Http\Controllers\Auth\SocialAuthController;
-use App\Http\Controllers\DistributorPageController;
+use App\Http\Controllers\Retailers\ProductController;
 use App\Http\Controllers\Distributors\OrderController;
+use App\Http\Controllers\Retailers\CheckoutController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Distributors\ReturnController;
-
-
-
+use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Distributors\MessageController;
-use App\Http\Controllers\Distributors\ProductController;
-
 use App\Http\Controllers\Distributors\DeliveryController;
-
 use App\Http\Controllers\Distributors\InsightsController;
+use App\Http\Controllers\Retailers\ProductDescController;
 use App\Http\Controllers\Distributors\InventoryController;
-
-
+use App\Http\Controllers\Retailers\RetailerOrderController;
+use App\Http\Controllers\Distributors\DistributorController;
 use App\Http\Controllers\Distributors\CancellationController;
 use App\Http\Controllers\Retailers\RetailerDashboardController;
+use App\Http\Controllers\Retailers\DistributorPageController;
 use App\Http\Controllers\Distributors\DistributorProfileController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
+
+
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -58,11 +50,11 @@ Route::get('/', function () {
 
 //Admin Routes
 Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function () {
-    Route::get('/admin', [AdminDashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('/admin', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/distributors/pending', [Distributor::class, 'pendingDistributors'])->name('pendingDistributors');
     Route::post('/admin/accept-distributor/{id}', [Distributor::class, 'acceptDistributor'])->name('acceptDistributor');
     Route::post('/admin/decline-distributor/{id}', [Distributor::class, 'declineDistributor'])->name('declineDistributor');
-    
+
 
     Route::get('/admin/download-credential/{id}', [AdminDashboardController::class, 'downloadCredential'])->name('downloadCredential');
 });
@@ -76,35 +68,34 @@ Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function (
 // Retailer Routes
 Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('retailers')->group(function () {
     Route::get('/dashboard', [RetailerDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/distributor/{id}', [DistributorController::class, 'show'])->name('distributor.show');
 
     // Product Routes
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-    Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
-    Route::get('/distributors/{id}/products', [DistributorController::class, 'showProducts'])->name('distributor-page');
-    
+    Route::get('/distributors/{id}', [DistributorPageController::class, 'show'])->name('distributor-page');
+    Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+    Route::get('/products/{product}', [ProductDescController::class, 'show'])->name('products.show');
 
-    // Cart Routes - Consolidated
-    Route::get('/', [CartController::class, 'index'])->name('cart.index');
-    Route::get('/{id}', [CartController::class, 'show'])->name('cart.show');
-    Route::post('/add', [CartController::class, 'add'])->name('cart.add');
-    Route::put('/{id}/update', [CartController::class, 'update'])->name('cart.update');
-    Route::delete('/{id}', [CartController::class, 'remove'])->name('cart.remove');
-
-
-
+    // Cart Routes 
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
+    Route::put('/cart/update/{cartDetail}', [CartController::class, 'update'])->name('cart.update');
+    Route::post('/cart/update-quantities', [CartController::class, 'updateQuantities'])->name('cart.update-quantities');
+    Route::delete('/cart/remove/{itemId}', [\App\Http\Controllers\Retailers\CartController::class, 'removeProduct'])->name('cart.remove-product');
+    Route::delete('/cart/delete/{cartId}', [\App\Http\Controllers\Retailers\CartController::class, 'deleteCart'])->name('cart.delete');
 
 
+    // Checkout Routes
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
+    Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
+    Route::get('/checkout/cancel', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
 
 
-
-
+    // Order Routes
+    Route::post('/orders', [RetailerOrderController::class, 'store'])->name('orders.store');
+    Route::get('/orders', [RetailerOrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [RetailerOrderController::class, 'show'])->name('orders.show');
 });
-
-
-
-
-
 
 
 
@@ -127,7 +118,10 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     // Product Routes   
     Route::get('/products', [ProductController::class, 'index'])->name('distributors.products.index');
     Route::get('/products/create', [ProductController::class, 'create'])->name('distributors.products.create');
-    Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+    Route::post('/products', [ProductController::class, 'store'])->name('distributors.products.store');
+    Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('distributors.products.edit');
+    Route::put('/products/{id}', [ProductController::class, 'update'])->name('distributors.products.update');
+    Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('distributors.products.destroy');
 
     // Order Routes
     Route::get('/orders', [OrderController::class, 'index'])->name('distributors.orders.index');
