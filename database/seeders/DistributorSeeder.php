@@ -6,7 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Distributors;
 
-class TestDistributorSeeder extends Seeder
+class DistributorSeeder extends Seeder
 {
     public function run()
     {
@@ -14,7 +14,7 @@ class TestDistributorSeeder extends Seeder
         $user = User::create([
             'first_name' => 'Test',
             'last_name' => 'Distributor',
-            'email' => 'test@dist.com',
+            'email' => 'test2@dist.com',
             'password' => bcrypt('password'),
             'user_type' => 'distributor',
             'status' => 'approved', // Set status to approved
@@ -23,10 +23,10 @@ class TestDistributorSeeder extends Seeder
         // Create a corresponding distributor record
         Distributors::create([
             'user_id' => $user->id,
-            'company_name' => 'Test Company',
+            'company_name' => 'Test22 Company',
             'company_email' => 'testcompany@example.com',
             'company_profile_image' => '', // Set to empty string for testing
-            'company_address' => '123 Test St',
+            'company_address' => '123456 Test St',
             'company_phone_number' => '1234567890',
             'profile_completed' => false, // Initially set to false for testing
         ]);

@@ -56,7 +56,7 @@ class User extends Authenticatable
     {
         return $this->hasOne(Distributors::class, 'user_id');
     }
-    
+
     protected function casts(): array
     {
         return [
@@ -73,5 +73,10 @@ class User extends Authenticatable
     public function products()
     {
         return $this->hasMany(Product::class);
+    }
+
+    public function retailerProfile()
+    {
+        return $this->hasOne(RetailerProfile::class);
     }
 }

@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Redirect;
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\RetailerProfile;
 
 class ProfileController extends Controller
 {
@@ -17,7 +18,7 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
-        return view('profile.edit', [
+        return view('retailers.profile.edit', [
             'user' => $request->user(),
         ]);
     }
@@ -25,22 +26,62 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(Request $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $validated = $request->validate([
+            'first_name'  => 'required|string|max:255',
+            'last_name'   => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'email'       => 'required|email|max:255',
+        ]);
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
+        $user = $request->user();
+        $user->update($validated);
 
-        $request->user()->save();
-
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        return back()->with('status', 'profile-updated');
     }
 
     /**
-     * Delete the user's account.
+     * Update the retailer's profile information.
      */
+    public function updateRetailerProfile(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'business_name' => ['required', 'string', 'max:255'],
+            'phone' => ['required', 'string', 'max:15'],
+            'address' => ['required', 'string'],
+            'profile_picture' => ['nullable', 'image', 'max:2048'],
+        ]);
+
+        $retailerProfile = $request->user()->retailerProfile;
+
+        if (!$retailerProfile) {
+            $retailerProfile = new RetailerProfile();
+            $retailerProfile->user_id = $request->user()->id;
+        }
+
+        $retailerProfile->business_name = $request->business_name;
+        $retailerProfile->phone = $request->phone;
+        $retailerProfile->address = $request->address;
+
+        if ($request->hasFile('profile_picture')) {
+            // Delete the old picture if it exists
+            if ($retailerProfile->profile_picture) {
+                Storage::disk('public')->delete($retailerProfile->profile_picture);
+            }
+            // Create a custom file name
+            $fileName = time() . '_' . $request->user()->id . '.' . $request->file('profile_picture')->getClientOriginalExtension();
+            // Store the file in the "profile_pictures" folder in the "public" disk
+            $path = $request->file('profile_picture')->storeAs('profile_pictures', $fileName, 'public');
+            $retailerProfile->profile_picture = $path;
+        }
+
+        $retailerProfile->save();
+
+        return Redirect::route('retailers.profile.edit')->with('status', 'retailer-profile-updated');
+    }
+
+
     public function destroy(Request $request): RedirectResponse
     {
         $request->validateWithBag('userDeletion', [
