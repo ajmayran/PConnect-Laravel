@@ -15,10 +15,11 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('distributor_id');
-            $table->enum('status', ['pending', 'processing', 'shipped', 'delivered', 'cancelled'])
+            $table->enum('status', ['pending', 'processing', 'delivered', 'cancelled'])
                 ->default('pending');
             $table->enum('payment_status', ['pending', 'paid', 'failed'])
                 ->default('pending');
+            $table->timestamp('status_updated_at');
             $table->text('landmark')->nullable();
             $table->timestamps();
 

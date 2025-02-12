@@ -71,6 +71,12 @@ Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function (
 Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('retailers')->group(function () {
     Route::get('/dashboard', [RetailerDashboardController::class, 'index'])->name('dashboard');
 
+    // Profile Routes
+    Route::put('retailers/profile/update-retailer', [ProfileController::class, 'updateRetailerProfile'])->name('profile.update.retailer');
+    Route::get('retailers/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('retailers/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('retailers/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
     // Product Routes
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::get('/distributors/{id}', [DistributorPageController::class, 'show'])->name('distributor-page');
@@ -160,11 +166,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::get('/approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])->name('auth.approval-waiting');
 });
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
+
 
 
 // Social Authentication Routes

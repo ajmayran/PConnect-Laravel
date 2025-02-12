@@ -18,7 +18,6 @@ return new class extends Migration
             $table->datetime('estimated_delivery')->nullable();
             $table->enum('status', [
                 'pending',
-                'picked_up',
                 'in_transit',
                 'out_for_delivery',
                 'delivered',

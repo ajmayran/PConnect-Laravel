@@ -22,13 +22,13 @@ class ProductFactory extends Factory
     {
 
         return [
-            'distributor_id' => 2, // Make sure this distributor exists
+            'distributor_id' => 1, // Make sure this distributor exists
             'product_name' => $this->faker->words(3, true),
             'description' => $this->faker->paragraph(),
             'price' => $this->faker->randomFloat(2, 10, 1000),
             'stock_quantity' => $this->faker->numberBetween(0, 1000),
             'minimum_purchase_qty' => $this->faker->numberBetween(1, 10),
-            'category_id' => 1, // Make sure this category exists
+            'category_id' => $this->faker->numberBetween(1, Category::count()),
             'image' => 'img/default-product.jpg',
         ];
     }

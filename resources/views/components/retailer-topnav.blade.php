@@ -28,7 +28,8 @@
             <div class="flex items-center">
                 <!-- Cart -->
                 <div class="relative">
-                    <a href="{{route('retailers.cart.index')}}" class="p-2 text-gray-500 hover:text-gray-700 hover:cursor-pointer">
+                    <a href="{{ route('retailers.cart.index') }}"
+                        class="p-2 text-gray-500 hover:text-gray-700 hover:cursor-pointer">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -92,7 +93,8 @@
                         <x-slot name="trigger">
                             <button class="flex items-center cursor-pointer">
                                 <img class="object-cover w-8 h-8 rounded-full"
-                                    src="{{ asset('img/products/rtc-chicken-bbq.png') }}" alt="Profile">
+                                    src="{{ Auth::user()->retailerProfile && Auth::user()->retailerProfile->profile_picture ? asset('storage/' . Auth::user()->retailerProfile->profile_picture) : asset('img/products/rtc-chicken-bbq.png') }}"
+                                    alt="Profile">
                                 <span class="ml-2 text-sm text-gray-700">{{ Auth::user()->first_name }}</span>
                                 <div class="ms-1">
                                     <svg class="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg"
@@ -106,7 +108,7 @@
                         </x-slot>
 
                         <x-slot name="content">
-                            <x-dropdown-link :href="route('profile.edit')">
+                            <x-dropdown-link :href="route('retailers.profile.edit')">
                                 {{ __('Profile') }}
                             </x-dropdown-link>
 

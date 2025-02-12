@@ -4,7 +4,7 @@
     <!-- Back Button -->
 
     <div class="container px-4 py-6 mx-auto">
-        <a href="{{ url()->previous() }}" class="flex items-center text-green-600 hover:text-green-700">
+        <a href="{{route('retailers.dashboard')}}" class="flex items-center text-green-600 hover:text-green-700">
 
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -44,12 +44,12 @@
     <div class="container mx-auto mb-6 bg-white rounded-lg shadow-lg">
         <div class="flex overflow-x-auto">
             <a href="{{ route('retailers.distributor-page', ['id' => $distributor->id]) }}"
-                class="px-6 py-3 {{ $selectedCategory === 'all' ? 'text-green-600 border-b-2 border-green-500' : 'text-gray-500 hover:text-gray-700' }}">
+                class="px-6 py-3 {{ $selectedCategory === 'all' ? 'text-green-600 border-b-2 border-green-500' : 'text-gray-500 hover:text-green-500' }}">
                 All Products
             </a>
             @foreach ($categories as $category)
                 <a href="{{ route('retailers.distributor-page', ['id' => $distributor->id, 'category' => $category->id]) }}"
-                    class="px-6 py-3 {{ $selectedCategory == $category->id ? 'text-green-600 border-b-2 border-green-500' : 'text-gray-500 hover:text-gray-700' }}">
+                    class="px-6 py-3 {{ $selectedCategory == $category->id ? 'text-green-600 border-b-2 border-green-500' : 'text-gray-500 hover:text-green-500' }}">
                     {{ $category->name }}
                 </a>
             @endforeach
