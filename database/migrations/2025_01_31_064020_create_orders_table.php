@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('retailer_id');
+            $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('distributor_id');
             $table->enum('status', ['pending', 'processing', 'shipped', 'delivered', 'cancelled'])
                 ->default('pending');
@@ -22,7 +22,7 @@ return new class extends Migration
             $table->text('landmark')->nullable();
             $table->timestamps();
 
-            $table->foreign('retailer_id')->references('id')->on('retailers')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('distributor_id')->references('id')->on('distributors')->onDelete('cascade');
         });
         Schema::create('order_details', function (Blueprint $table) {

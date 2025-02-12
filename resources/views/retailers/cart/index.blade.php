@@ -1,41 +1,361 @@
 <x-app-layout>
     <x-dashboard-nav />
-<div class="container">
-    <h1>Your Cart</h1>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($carts as $cart)
-            <tr>
-                <td>{{ $cart->product->name }}</td>
-                <td>
-                        <form action="{{ route('cart.update', $cart->id) }}" method="POST" style="display:inline;">
 
-                        @csrf
-                        @method('PUT')
-                        <input type="number" name="quantity" value="{{ $cart->quantity }}" min="1" required>
-                        <button type="submit" class="btn btn-secondary">Update</button>
-                    </form>
-                </td>
-                <td>${{ $cart->product->price }}</td>
-                <td>
-                    <form action="{{ route('cart.remove', $cart->id) }}" method="POST" style="display:inline;">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger">Remove</button>
-                    </form>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-    <a href="{{ route('checkout') }}" class="btn btn-primary">Proceed to Checkout</a>
-</div>
+    <div class="container px-4 py-6 mx-auto">
+        <h2 class="mb-6 text-3xl font-bold text-gray-800">Shopping Cart</h2>
+
+        @forelse($groupedItems as $distributorId => $items)
+            <div class="p-6 mb-6 bg-white rounded-lg shadow-md cart-group" data-distributor-id="{{ $distributorId }}"
+                data-cart-id="{{ $items->first()->cart->id }}">
+                <!-- Distributor Header with Clear Cart button -->
+                <div class="flex items-center justify-between pb-4 mb-4 border-b border-gray-200">
+                    <h3 class="text-xl font-semibold text-gray-700">
+                        {{ $items->first()->product->distributor->company_name }}
+                    </h3>
+                    <button onclick="deleteCart('{{ $items->first()->cart->id }}')"
+                        class="text-red-500 hover:text-red-700" title="Clear Cart">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Products Table -->
+                <table class="w-full">
+                    <thead class="border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Product</th>
+                            <th class="px-4 py-2 text-center">Price</th>
+                            <th class="px-4 py-2 text-center">Quantity</th>
+                            <th class="px-4 py-2 text-center">Subtotal</th>
+                            <th class="px-4 py-2 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($items as $item)
+                            <tr class="border-b border-gray-100" data-item-id="{{ $item->id }}"
+                                data-distributor-id="{{ $distributorId }}">
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center">
+                                        <img src="{{ $item->product->image ? Storage::url($item->product->image) : asset('img/default-product.jpg') }}"
+                                            class="object-cover w-16 h-16 mr-4 rounded"
+                                            onerror="this.src='{{ asset('img/default-product.jpg') }}'">
+                                        <div>
+                                            <h4 class="font-medium text-gray-800">{{ $item->product->product_name }}
+                                            </h4>
+                                            <p class="text-sm text-gray-500">SKU: {{ $item->product->sku }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-center" data-price="{{ $item->product->price }}">
+                                    ₱{{ number_format($item->product->price, 2) }}
+                                </td>
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center justify-center">
+                                        <button type="button" onclick="updateQuantity(this, 'decrease')"
+                                            class="px-2 py-1 text-gray-600 bg-gray-100 rounded-l hover:bg-green-100">
+                                            -
+                                        </button>
+                                        <input type="number" value="{{ $item->quantity }}"
+                                            min="{{ $item->product->minimum_purchase_qty }}"
+                                            class="w-16 px-2 py-1 text-center border-gray-200"
+                                            data-item-id="{{ $item->id }}"
+                                            data-minimum="{{ $item->product->minimum_purchase_qty }}"
+                                            onchange="validateQuantity(this)">
+                                        <button type="button" onclick="updateQuantity(this, 'increase')"
+                                            class="px-2 py-1 text-gray-600 bg-gray-100 rounded-r hover:bg-green-100">
+                                            +
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-center item-subtotal">
+                                    ₱{{ number_format($item->product->price * $item->quantity, 2) }}
+                                </td>
+                                <td class="px-4 py-4 text-center">
+                                    <button onclick="removeItem('{{ $item->id }}')"
+                                        class="p-2 text-red-500 rounded-full hover:bg-red-50">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="px-4 py-4 font-semibold text-right">
+                                Total Amount:
+                            </td>
+                            <td class="px-4 py-4 font-semibold text-center distributor-subtotal">
+                                ₱{{ number_format(
+                                    $items->sum(function ($item) {
+                                        return $item->product->price * $item->quantity;
+                                    }),
+                                    2,
+                                ) }}
+                            </td>
+                            <td class="px-4 py-4">
+                                <button onclick="proceedToCheckout('{{ $distributorId }}')"
+                                    class="w-full px-4 py-2 text-sm text-white bg-green-600 rounded hover:bg-green-700 lg:w-auto"
+                                    data-distributor-id="{{ $distributorId }}">
+                                    Proceed to Checkout
+                                </button>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        @empty
+            <div class="flex flex-col items-center justify-center p-12 bg-white rounded-lg shadow-md">
+                <svg class="w-16 h-16 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
+                    </path>
+                </svg>
+                <p class="mb-4 text-lg text-gray-600">Your cart is empty</p>
+                <a href="{{ route('retailers.dashboard') }}"
+                    class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
+                    Continue Shopping
+                </a>
+            </div>
+        @endforelse
+    </div>
+
+    <script>
+        let cartChanges = {};
+
+        function deleteCart(cartId) {
+            Swal.fire({
+                title: 'Delete Cart?',
+                text: 'Are you sure you want to clear your entire cart for this distributor?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Deleting cart...',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    fetch(`/retailers/cart/delete/${cartId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            }
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                const cartGroup = document.querySelector(`[data-cart-id="${cartId}"]`);
+                                if (cartGroup) {
+                                    cartGroup.remove();
+                                }
+                                updateCartTotal();
+                                Swal.fire({
+                                    title: 'Deleted!',
+                                    text: 'Your cart has been cleared.',
+                                    icon: 'success',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+                            } else {
+                                throw new Error(data.message || 'Failed to delete cart');
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: error.message || 'Failed to delete cart',
+                                icon: 'error',
+                                confirmButtonText: 'Ok'
+                            });
+                        });
+                }
+            });
+        }
+
+        function removeItem(itemId) {
+            Swal.fire({
+                title: 'Removing item...',
+                text: 'Please wait',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch(`/retailers/cart/remove/${itemId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
+                        if (itemElement) {
+                            const cartGroup = itemElement.closest('.cart-group');
+                            itemElement.remove();
+                            if (!cartGroup.querySelector('[data-item-id]')) {
+                                cartGroup.remove();
+                            } else {
+                                updateDistributorSubtotal(cartGroup.querySelector('tr'));
+                            }
+                            updateCartTotal();
+                            if (!document.querySelector('[data-item-id]')) {
+                                location.reload();
+                            }
+                        }
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'Item removed from cart',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        throw new Error(data.message || 'Failed to remove item');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: error.message || 'Failed to remove item',
+                        icon: 'error',
+                        confirmButtonText: 'Ok'
+                    });
+                });
+        }
+
+        function updateQuantity(button, action) {
+            const row = button.closest('tr');
+            const input = row.querySelector('input[type="number"]');
+            const currentQty = parseInt(input.value);
+            const minQty = parseInt(input.dataset.minimum);
+            const itemId = input.dataset.itemId;
+            let newQty = action === 'increase' ? currentQty + 1 : currentQty - 1;
+
+            if (newQty < minQty) {
+                askToRemoveItem(itemId, minQty);
+                return;
+            }
+
+            input.value = newQty;
+            updateItemSubtotal(row, newQty);
+            updateDistributorSubtotal(row);
+            updateCartTotal();
+        }
+
+        function updateItemSubtotal(row, quantity) {
+            const price = parseFloat(row.querySelector('[data-price]').dataset.price);
+            const subtotal = price * quantity;
+            row.querySelector('.item-subtotal').textContent =
+                `₱${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function updateDistributorSubtotal(row) {
+            const cartGroup = row.closest('.cart-group');
+            const items = cartGroup.querySelectorAll('.item-subtotal');
+            const subtotal = Array.from(items).reduce((sum, item) => {
+                let sub = parseFloat(item.textContent.replace('₱', '').replace(/,/g, ''));
+                return sum + sub;
+            }, 0);
+            cartGroup.querySelector('.distributor-subtotal').textContent =
+                `₱${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function updateCartTotal() {
+            const subtotals = document.querySelectorAll('.distributor-subtotal');
+            const total = Array.from(subtotals).reduce((sum, item) => {
+                let sub = parseFloat(item.textContent.replace('₱', '').replace(/,/g, ''));
+                return sum + sub;
+            }, 0);
+            // Optionally update a global cart total display
+        }
+
+        function askToRemoveItem(itemId, minQty) {
+            Swal.fire({
+                title: 'Remove Item?',
+                text: `Minimum purchase quantity is ${minQty}. Would you like to remove this item from your cart?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#EF4444',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: 'Yes, remove it',
+                cancelButtonText: 'No, keep it'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    removeItem(itemId);
+                } else {
+                    const input = document.querySelector(`input[data-item-id="${itemId}"]`);
+                    if (input) {
+                        input.value = minQty;
+                        const row = input.closest('tr');
+                        updateItemSubtotal(row, minQty);
+                        updateDistributorSubtotal(row);
+                        updateCartTotal();
+                    }
+                }
+            });
+        }
+
+
+
+        function proceedToCheckout(distributorId) {
+            window.location.href = `/retailers/checkout?distributor=${distributorId}`;
+        }
+
+        function validateQuantity(input) {
+            const itemId = input.dataset.itemId;
+            const minQty = parseInt(input.dataset.minimum);
+            let newQty = parseInt(input.value) || minQty;
+
+            if (newQty < minQty) {
+                Swal.fire({
+                    title: 'Warning!',
+                    text: `Minimum purchase quantity is ${minQty}`,
+                    icon: 'warning',
+                    confirmButtonText: 'Ok'
+                }).then(() => {
+                    input.value = minQty;
+                    newQty = minQty;
+                    cartChanges[itemId] = newQty;
+                    const row = input.closest('tr');
+                    updateItemSubtotal(row, newQty);
+                    updateDistributorSubtotal(row);
+                    updateCartTotal();
+                });
+            } else {
+                cartChanges[itemId] = newQty;
+                const row = input.closest('tr');
+                updateItemSubtotal(row, newQty);
+                updateDistributorSubtotal(row);
+                updateCartTotal();
+            }
+        }
+    </script>
 </x-app-layout>

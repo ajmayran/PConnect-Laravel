@@ -27,11 +27,6 @@ class Distributors extends Model
     {
         return $this->belongsTo(User::class);
     }
-
-    public function distributor()
-    {
-        return $this->hasOne(Distributors::class);
-    }
     
     public function products(): HasMany
     {

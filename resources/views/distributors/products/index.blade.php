@@ -1,11 +1,10 @@
 @php
     use Illuminate\Support\Facades\Storage;
 @endphp
-<style>
-    table {}
-</style>
+
 
 <x-app-layout>
+    {{-- <p>Number of Products: {{ $products->count() }}</p> --}}
     <div class="container px-4 py-8 mx-auto">
         <div class="flex items-center justify-between mb-6">
             <h1 class="text-3xl font-bold text-gray-800">Your Products</h1>
@@ -47,8 +46,8 @@
                         </th>
                         <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Stock
                         </th>
-                        <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Min.
-                            Purchase</th>
+                        <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                            Min.Purchase</th>
                         <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                             Category</th>
                         <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
@@ -65,8 +64,7 @@
                                         alt="{{ $product->product_name }}"
                                         class="object-cover w-16 h-16 rounded-lg shadow">
                                 @else
-                                    <img src="{{ asset('img/default-product.jpg') }}"
-                                        alt="Default Product Image"
+                                    <img src="{{ asset('img/default-product.jpg') }}" alt="Default Product Image"
                                         class="object-cover w-20 h-16 rounded-lg shadow">
                                 @endif
                             </td>
@@ -98,12 +96,12 @@
                                     Edit
                                 </a>
                                 <form action="{{ route('distributors.products.destroy', $product->id) }}"
-                                    method="POST" class="inline-block">
+                                    method="POST" class="inline-block" id="delete-form-{{ $product->id }}">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit"
-                                        class="inline-flex items-center px-3 py-1 text-sm font-medium text-white transition duration-200 bg-red-500 rounded-md hover:bg-red-600"
-                                        onclick="return confirm('Are you sure you want to delete this product?')">
+                                    <button type="button"
+                                        onclick="confirmDelete('{{ $product->id }}', '{{ $product->product_name }}')"
+                                        class="inline-flex items-center px-3 py-1 text-sm font-medium text-white transition duration-200 bg-red-500 rounded-md hover:bg-red-600">
                                         Delete
                                     </button>
                                 </form>
@@ -116,18 +114,43 @@
     </div>
     @push('scripts')
         <script>
-            function confirmDelete(productId) {
+            function confirmDelete(productId, productName) {
                 Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You won't be able to revert this!",
+                    title: 'Delete Product?',
+                    html: `Are you sure you want to delete <strong>${productName}</strong>?<br>This action cannot be undone.`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#EF4444',
                     cancelButtonColor: '#6B7280',
-                    confirmButtonText: 'Yes, delete it!',
-                    cancelButtonText: 'Cancel'
+                    confirmButtonText: '<i class="mr-2 fas fa-trash-alt"></i>Yes, delete it!',
+                    cancelButtonText: '<i class="mr-2 fas fa-times"></i>Cancel',
+                    reverseButtons: true,
+                    buttonsStyling: true,
+                    customClass: {
+                        confirmButton: 'swal2-confirm bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded mr-2',
+                        cancelButton: 'swal2-cancel bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded',
+                        title: 'text-xl font-bold text-gray-800',
+                        popup: 'rounded-lg shadow-xl border-2 border-gray-100'
+                    },
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInDown animate__faster'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutUp animate__faster'
+                    }
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        // Show loading state
+                        Swal.fire({
+                            title: 'Deleting...',
+                            html: 'Please wait while we delete the product.',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        // Submit the form
                         document.getElementById('delete-form-' + productId).submit();
                     }
                 });

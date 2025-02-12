@@ -3,60 +3,202 @@
 namespace App\Http\Controllers\Retailers;
 
 use App\Models\Cart;
-use App\Models\Order;
+use App\Models\Product;
+use App\Models\CartDetail;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
     public function index()
     {
-        if (!Auth::check()) {
-            return redirect('/login')->with('error', 'You must be logged in to view your cart.');
+        // Get all carts for the current user with their details
+        $carts = Cart::with(['details.product.distributor'])
+            ->where('user_id', Auth::id())
+            ->get();
+
+        // Group cart items by cart (which is already separated by distributor)
+        $groupedItems = collect();
+
+        foreach ($carts as $cart) {
+            if ($cart->details->isNotEmpty()) {
+                $groupedItems[$cart->distributor_id] = $cart->details;
+            }
         }
 
-        $carts = Cart::with('product')->where('user_id', Auth::id())->get();
-        return view('retailers.cart.index', compact('carts'));  // Updated view path
-    }
-
-    public function show($id)
-    {
-        $cart = Cart::where('user_id', Auth::id())->findOrFail($id);
-        return view('retailers.cart.show', compact('cart'));
+        return view('retailers.cart.index', [
+            'groupedItems' => $groupedItems,
+        ]);
     }
 
     public function add(Request $request)
     {
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1',
-        ]);
+        DB::beginTransaction();
 
-        $cart = Cart::updateOrCreate(
-            ['user_id' => Auth::id(), 'product_id' => $request->product_id],
-            ['quantity' => $request->quantity]
-        );
+        try {
+            $validated = $request->validate([
+                'product_id' => 'required|exists:products,id',
+                'quantity'   => 'required|integer|min:1'
+            ]);
 
-        return redirect()->route('retailers.cart.index')->with('success', 'Product added to cart successfully.');
+            $product = Product::findOrFail($validated['product_id']);
+
+            // Validate minimum purchase quantity
+            if ($validated['quantity'] < $product->minimum_purchase_qty) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => "Minimum purchase quantity is {$product->minimum_purchase_qty}"
+                ], 422);
+            }
+
+            // Validate stock availability
+            if ($validated['quantity'] > $product->stock_quantity) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => "Only {$product->stock_quantity} items available in stock"
+                ], 422);
+            }
+
+            // Find or create a cart specific to the product's distributor
+            $cart = Cart::firstOrCreate([
+                'user_id'        => Auth::id(),
+                'distributor_id' => $product->distributor_id,
+            ]);
+
+            // Check if the product already exists in the cart (cart detail)
+            $cartDetail = CartDetail::where('cart_id', $cart->id)
+                ->where('product_id', $product->id)
+                ->first();
+
+            if ($cartDetail) {
+                // Update the quantity for an existing product in the cart
+                $newQuantity = $cartDetail->quantity + $validated['quantity'];
+
+                // Make sure the new quantity is still meeting the minimum and stock requirements
+                if ($newQuantity < $product->minimum_purchase_qty) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Minimum purchase quantity is {$product->minimum_purchase_qty}"
+                    ], 422);
+                }
+
+                if ($newQuantity > $product->stock_quantity) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Only {$product->stock_quantity} items available in stock"
+                    ], 422);
+                }
+
+                $cartDetail->update([
+                    'quantity' => $newQuantity,
+                    'subtotal' => $newQuantity * $product->price
+                ]);
+            } else {
+                // Otherwise, create a new record in cart details for this product
+                CartDetail::create([
+                    'cart_id'    => $cart->id,
+                    'product_id' => $product->id,
+                    'quantity'   => $validated['quantity'],
+                    'subtotal'   => $product->price * $validated['quantity']
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Product added to cart successfully'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Add to cart error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to add product to cart: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
-    public function update(Request $request, $id)
+    public function removeProduct($itemId)
     {
-        $request->validate([
-            'quantity' => 'required|integer|min:1',
-        ]);
+        try {
+            // Retrieve the cart detail for the current user and given item ID
+            $cartDetail = \App\Models\CartDetail::whereHas('cart', function ($q) {
+                $q->where('user_id', Auth::id());
+            })->where('id', $itemId)->firstOrFail();
 
-        $cart = Cart::where('user_id', Auth::id())->where('id', $id)->firstOrFail();
-        $cart->update(['quantity' => $request->quantity]);
+            $cart = $cartDetail->cart;
+            $cartDetail->delete();
 
-        return redirect()->route('retailers.cart.index')->with('success', 'Cart updated successfully.');
+            // If no more products in the cart, remove the cart altogether
+            if ($cart->details()->count() === 0) {
+                $cart->delete();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Product removed successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Remove product error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to remove product: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
-    public function remove($id)
+    public function deleteCart($cartId)
     {
-        $cart = Cart::where('user_id', Auth::id())->where('id', $id)->firstOrFail();
-        $cart->delete();
-        return redirect()->route('retailers.cart.index')->with('success', 'Product removed from cart successfully.');
+        try {
+            // Retrieve the cart for the current user using the provided cart id
+            $cart = Cart::where('user_id', Auth::id())->findOrFail($cartId);
+
+            // Delete all cart details
+            $cart->details()->delete();
+            // Delete the cart itself
+            $cart->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cart deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Delete cart error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete cart: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function updateQuantities(Request $request)
+    {
+        try {
+            $items = $request->items;
+
+            foreach ($items as $item) {
+                $cartItem = Cart::findOrFail($item['id']);
+                $cartItem->update(['quantity' => $item['quantity']]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cart updated successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update cart: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

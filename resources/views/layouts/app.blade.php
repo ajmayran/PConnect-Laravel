@@ -21,30 +21,26 @@
 
 </head>
 
+
 <body class="font-sans antialiased">
     <div class="min-h-screen bg-gray-100 dark:bg-gray-200">
-        </head>
-
-        <body class="font-sans antialiased">
-            <div class="min-h-screen bg-gray-100 dark:bg-gray-200">
-                @stack('scripts')
-                <!-- Page Content -->
-                <main>
-                    {{ $slot }}
-                </main>
-            </div>
-            @if (session('success'))
-                <script>
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: "{{ session('success') }}",
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                </script>
-            @endif
-        </body>
-
+        @stack('scripts')
+        <!-- Page Content -->
+        <main>
+            {{ $slot }}
+        </main>
+    </div>
+    @if (session('success'))
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: "{{ session('success') }}",
+                timer: 3000,
+                showConfirmButton: false
+            });
+        </script>
+    @endif
+</body>
 
 </html>

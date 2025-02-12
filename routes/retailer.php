@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Controllers\DistributorPageController;
-use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Retailers\DistributorPageController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
