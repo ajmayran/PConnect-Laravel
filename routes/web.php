@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Retailers\CartController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Retailers\ProductController;
+use App\Http\Controllers\Retailers\AllDistributorController;
 use App\Http\Controllers\Distributors\OrderController;
 use App\Http\Controllers\Retailers\CheckoutController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -95,6 +96,10 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     Route::post('/orders', [RetailerOrderController::class, 'store'])->name('orders.store');
     Route::get('/orders', [RetailerOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [RetailerOrderController::class, 'show'])->name('orders.show');
+
+    //Nav Routes
+    Route::get('/all-distributors', [AllDistributorController::class, 'index'])->name('all-distributor');
+    Route::get('/distributor/{id}', [DistributorController::class, 'show'])->name('distributor.show');
 });
 
 
