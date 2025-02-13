@@ -1,6 +1,4 @@
 <?php
-
-
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\Distributor;
@@ -8,7 +6,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Retailers\CartController;
 use App\Http\Controllers\Auth\SocialAuthController;
-use App\Http\Controllers\Retailers\ProductController;
+use App\Http\Controllers\Retailers\RetailerProductController;
 use App\Http\Controllers\Retailers\AllDistributorController;
 use App\Http\Controllers\Retailers\AllProductController;
 use App\Http\Controllers\Distributors\OrderController;
@@ -28,8 +26,8 @@ use App\Http\Controllers\Retailers\RetailerDashboardController;
 use App\Http\Controllers\Retailers\DistributorPageController;
 use App\Http\Controllers\Distributors\DistributorProfileController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
-
-
+use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Middleware\CheckProductStatus;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -48,27 +46,21 @@ Route::get('/', function () {
     return view('index');
 });
 
-
-
-//Admin Routes
+// Admin Routes
 Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function () {
     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/distributors/pending', [Distributor::class, 'pendingDistributors'])->name('pendingDistributors');
     Route::post('/admin/accept-distributor/{id}', [Distributor::class, 'acceptDistributor'])->name('acceptDistributor');
     Route::post('/admin/decline-distributor/{id}', [Distributor::class, 'declineDistributor'])->name('declineDistributor');
-
+    Route::get('/admin/products/pending', [AdminProductController::class, 'pendingProducts'])->name('pendingProducts');
+    Route::post('/admin/approve-product/{id}', [AdminProductController::class, 'approveProduct'])->name('approveProduct');
+    Route::post('/admin/reject-product/{id}', [AdminProductController::class, 'rejectProduct'])->name('rejectProduct');
     Route::get('/admin/distributors/approved', [Distributor::class, 'approvedDistributors'])->name('approvedDistributors');
     Route::get('/admin/distributors/{id}/products', [Distributor::class, 'distributorProducts'])->name('distributorProducts');
     Route::delete('/admin/product/{id}/remove', [Distributor::class, 'removeProduct'])->name('removeProduct');
 
     Route::get('/admin/download-credential/{id}', [AdminDashboardController::class, 'downloadCredential'])->name('downloadCredential');
 });
-
-
-
-
-
-
 
 // Retailer Routes
 Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('retailers')->group(function () {
@@ -81,9 +73,9 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     Route::delete('retailers/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Product Routes
-    Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+    Route::get('/products', [RetailerProductController::class, 'index'])->name('products.index');
     Route::get('/distributors/{id}', [DistributorPageController::class, 'show'])->name('distributor-page');
-    Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+    Route::post('/products', [RetailerProductController::class, 'store'])->name('products.store');
     Route::get('/products/{product}', [ProductDescController::class, 'show'])->name('products.show');
 
     // Cart Routes 
@@ -91,16 +83,14 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
     Route::put('/cart/update/{cartDetail}', [CartController::class, 'update'])->name('cart.update');
     Route::post('/cart/update-quantities', [CartController::class, 'updateQuantities'])->name('cart.update-quantities');
-    Route::delete('/cart/remove/{itemId}', [\App\Http\Controllers\Retailers\CartController::class, 'removeProduct'])->name('cart.remove-product');
-    Route::delete('/cart/delete/{cartId}', [\App\Http\Controllers\Retailers\CartController::class, 'deleteCart'])->name('cart.delete');
-
+    Route::delete('/cart/remove/{itemId}', [CartController::class, 'removeProduct'])->name('cart.remove-product');
+    Route::delete('/cart/delete/{cartId}', [CartController::class, 'deleteCart'])->name('cart.delete');
 
     // Checkout Routes
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
     Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
     Route::get('/checkout/cancel', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
-
 
     // Order Routes
     Route::post('/orders', [RetailerOrderController::class, 'store'])->name('orders.store');
@@ -115,31 +105,23 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     Route::get('/products/{product}', [ProductDescController::class, 'show'])->name('products.show');
 });
 
-
-
-
-
-
-
-
-
+use App\Http\Controllers\Distributors\DistributorProductController;
 // Distributor Routes
 Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'profile.completed'])->group(function () {
-    Route::get('/distributors/setup', [DistributorProfileController::class, 'setup'])
-        ->name('distributors.setup');
-    Route::post('/profile/setup', [DistributorProfileController::class, 'updateSetup'])
-        ->name('profile.updateSetup');
+    Route::get('/distributors/setup', [DistributorProfileController::class, 'setup'])->name('distributors.setup');
+    Route::post('/profile/setup', [DistributorProfileController::class, 'updateSetup'])->name('profile.updateSetup');
 
     Route::get('/distributors', [DistributorDashboardController::class, 'index'])->name('distributors.index');
     Route::get('/dashboard', [DistributorDashboardController::class, 'dashboard'])->name('distributors.dashboard');
 
     // Product Routes   
-    Route::get('/products', [ProductController::class, 'index'])->name('distributors.products.index');
-    Route::get('/products/create', [ProductController::class, 'create'])->name('distributors.products.create');
-    Route::post('/products', [ProductController::class, 'store'])->name('distributors.products.store');
-    Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('distributors.products.edit');
-    Route::put('/products/{id}', [ProductController::class, 'update'])->name('distributors.products.update');
-    Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('distributors.products.destroy');
+    Route::get('/products', [DistributorProductController::class, 'index'])->name('distributors.products.index');
+    Route::get('/products/create', [DistributorProductController::class, 'create'])->name('distributors.products.create');
+    Route::post('/products', [DistributorProductController::class, 'store'])->name('distributors.products.store');
+
+    Route::get('/products/{id}/edit', [DistributorProductController::class, 'edit'])->name('distributors.products.edit');
+    Route::put('/products/{id}', [DistributorProductController::class, 'update'])->name('distributors.products.update');
+    Route::delete('/products/{id}', [DistributorProductController::class, 'destroy'])->name('distributors.products.destroy');
 
     // Order Routes
     Route::get('/orders', [OrderController::class, 'index'])->name('distributors.orders.index');
@@ -169,9 +151,6 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::get('/approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])->name('auth.approval-waiting');
 });
 
-
-
-
 // Social Authentication Routes
 Route::get('auth/facebook', [SocialAuthController::class, 'facebookRedirect'])->name('auth.facebook');
 Route::get('auth/facebook/callback', [SocialAuthController::class, 'facebookCallback']);
@@ -179,6 +158,5 @@ Route::get('auth/facebook/callback', [SocialAuthController::class, 'facebookCall
 Route::get('auth/google', [SocialAuthController::class, 'googleRedirect'])->name('auth.google');
 Route::get('auth/google/callback', [SocialAuthController::class, 'googleCallback']);
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
-
 
 require __DIR__ . '/auth.php';

@@ -67,10 +67,13 @@ class Distributor extends Controller
 }
 
 public function distributorProducts($id)
-{
-    $distributor = User::with('products')->findOrFail($id);
-    return view('admin.distributors.products', compact('distributor'));
-}
+    {
+        $distributor = User::with(['products' => function ($query) {
+            $query->where('status', 'accepted');
+        }])->findOrFail($id);
+
+        return view('admin.distributors.products', compact('distributor'));
+    }
 
 public function removeProduct(Request $request, $id)
 {
@@ -78,5 +81,20 @@ public function removeProduct(Request $request, $id)
     $product->delete();
 
     return redirect()->back()->with('success', 'Product removed successfully. Reason: ' . $request->input('reason'));
+}
+
+public function pendingProducts()
+{
+    $pendingProducts = Product::where('status', 'pending')->get();
+    return view('admin.products.pending', compact('pendingProducts'));
+}
+
+
+public function rejectProduct(Request $request, $id)
+{
+    $product = Product::findOrFail($id);
+    $product->update(['status' => 'rejected', 'rejection_reason' => $request->input('reason')]);
+
+    return redirect()->back()->with('success', 'Product rejected successfully. Reason: ' . $request->input('reason'));
 }
 }

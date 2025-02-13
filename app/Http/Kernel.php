@@ -48,6 +48,6 @@ class Kernel extends HttpKernel
         'retailer' => \App\Http\Middleware\RetailerMiddleware::class,
         'approved' => \App\Http\Middleware\ApprovedDistributor::class,
         'checkRole' => \App\Http\Middleware\CheckRole::class,
-        'profile.completed' => \App\Http\Middleware\EnsureProfileIsCompleted::class
+        'profile.completed' => \App\Http\Middleware\EnsureProfileIsCompleted::class,
     ];
 }

@@ -6,33 +6,35 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Category; // Import the Category model
+use App\Models\Category;
 
-class ProductController extends Controller
+class DistributorProductController extends Controller
 {
-    public function index()
-{
-    $user = Auth::user();
-    $distributor = $user->distributor; // Get the distributor record
+    public function index(): RedirectResponse|View
+    {
+        $user = Auth::user();
+        $distributor = $user->distributor;
 
-    if (!$distributor) {
-        return back()->with('error', 'No distributor profile found.');
+        if (!$distributor) {
+            return back()->with('error', 'No distributor profile found.');
+        }
+
+        $products = Product::where('distributor_id', $distributor->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $categories = Category::all();
+
+        return view('distributors.products.index', compact('products', 'categories'));
     }
-
-    $products = Product::where('distributor_id', $distributor->id) // Use distributor's ID
-        ->orderBy('created_at', 'desc')
-        ->get();
-
-    $categories = Category::all();
-
-    return view('distributors.products.index', compact('products', 'categories'));
-}
 
     public function create()
     {
-        $categories = Category::all(); // Fetch categories
+        $categories = Category::all();
         return view('distributors.products.create', compact('categories'));
     }
 
@@ -76,12 +78,13 @@ class ProductController extends Controller
                 'minimum_purchase_qty' => $validatedData['minimum_purchase_qty'],
                 'category_id' => $validatedData['category_id'],
                 'image' => $validatedData['image'] ?? null,
+                'status' => 'pending', // Set status to pending
             ]);
 
             Log::info('Product created', ['product_id' => $product->id]);
 
             return redirect()->route('distributors.products.index')
-                ->with('success', 'Product created successfully');
+                ->with('success', 'Product created successfully and is pending approval.');
         } catch (\Exception $e) {
             Log::error('Product creation failed: ' . $e->getMessage());
             return back()->with('error', 'Failed to create product. Please try again.');
@@ -92,45 +95,48 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
         $categories = Category::all();
+
         return view('distributors.products.edit', compact('product', 'categories'));
     }
 
     public function update(Request $request, $id)
     {
-        $validatedData = $request->validate([
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'product_name' => 'required',
-            'description' => 'required',
+        $product = Product::findOrFail($id);
+
+        $request->validate([
+            'product_name' => 'required|string|max:255',
+            'description' => 'required|string',
             'price' => 'required|numeric',
             'stock_quantity' => 'required|integer',
             'minimum_purchase_qty' => 'required|integer',
             'category_id' => 'required|exists:categories,id',
+            'image' => 'nullable|image|max:2048',
         ]);
 
-        $product = Product::findOrFail($id);
+        $product->update([
+            'product_name' => $request->product_name,
+            'description' => $request->description,
+            'price' => $request->price,
+            'stock_quantity' => $request->stock_quantity,
+            'minimum_purchase_qty' => $request->minimum_purchase_qty,
+            'category_id' => $request->category_id,
+        ]);
 
         if ($request->hasFile('image')) {
-            // Delete old image
-            if ($product->image && file_exists(public_path($product->image))) {
-                unlink(public_path($product->image));
-            }
-
-            $image = $request->file('image');
-            $imageName = time() . '_' . $image->getClientOriginalName();
-            $image->move(public_path('storage/products'), $imageName);
-
-            $validatedData['image'] = 'storage/products/' . $imageName;
+            $file = $request->file('image');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = Storage::disk('public')->putFileAs('products', $file, $filename);
+            $product->image = $path;
         }
-        $product->update($request->all());
-        return redirect()->route('distributors.products.index')  // Updated route name
-            ->with('success', 'Product updated successfully.');
+
+        return redirect()->route('distributors.products.index')->with('success', 'Product updated successfully.');
     }
 
     public function destroy($id)
     {
         $product = Product::findOrFail($id);
         $product->delete();
-        return redirect()->route('distributors.products.index')
-            ->with('success', 'Product deleted successfully.');
+
+        return redirect()->route('distributors.products.index')->with('success', 'Product deleted successfully.');
     }
 }
