@@ -105,6 +105,10 @@
                     <a href="./distributors/bannedDist.php"
                         class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Banned</a>
                 </li>
+                <li class="mb-4">
+                    <a href="{{ route('admin.approvedDistributors') }}"
+                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Manage</a>
+                </li>
             </ul>
         </li>
         <li class="mb-1 group">

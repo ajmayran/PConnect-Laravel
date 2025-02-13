@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Product;
 
 class Distributor extends Controller
 {
@@ -57,4 +58,25 @@ class Distributor extends Controller
             return back()->with('error', 'Error downloading file: ' . $e->getMessage());
         }
     }
+    public function approvedDistributors()
+{
+    $approvedDistributors = User::where('user_type', 'distributor')
+        ->where('status', 'approved')
+        ->get();
+    return view('admin.distributors.approved', compact('approvedDistributors'));
+}
+
+public function distributorProducts($id)
+{
+    $distributor = User::with('products')->findOrFail($id);
+    return view('admin.distributors.products', compact('distributor'));
+}
+
+public function removeProduct(Request $request, $id)
+{
+    $product = Product::findOrFail($id);
+    $product->delete();
+
+    return redirect()->back()->with('success', 'Product removed successfully. Reason: ' . $request->input('reason'));
+}
 }
