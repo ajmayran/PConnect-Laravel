@@ -92,8 +92,8 @@
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
                             <button class="flex items-center cursor-pointer">
-                                <img class="object-cover w-8 h-8 rounded-full"
-                                    src="{{ Auth::user()->retailerProfile && Auth::user()->retailerProfile->profile_picture ? asset('storage/' . Auth::user()->retailerProfile->profile_picture) : asset('img/products/rtc-chicken-bbq.png') }}"
+                                <img class="object-cover w-8 h-8 rounded-full border"
+                                    src="{{ Auth::user()->retailerProfile && Auth::user()->retailerProfile->profile_picture ? asset('storage/' . Auth::user()->retailerProfile->profile_picture) : asset('img/default-profile.png') }}"
                                     alt="Profile">
                                 <span class="ml-2 text-sm text-gray-700">{{ Auth::user()->first_name }}</span>
                                 <div class="ms-1">
