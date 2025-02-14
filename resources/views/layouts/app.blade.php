@@ -27,7 +27,7 @@
         @stack('scripts')
         <!-- Page Content -->
         <main>
-            @yield('content')
+            {{ $slot }}
         </main>
     </div>
     @if (session('success'))

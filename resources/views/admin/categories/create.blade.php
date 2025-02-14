@@ -1,6 +1,4 @@
-@extends('layouts.app')
-
-@section('content')
+<x-app-layout>
 <div class="container">
     <h1>Add New Category</h1>
     <form action="{{ route('categories.store') }}" method="POST">
@@ -12,4 +10,4 @@
         <button type="submit" class="btn btn-primary">Create Category</button>
     </form>
 </div>
-@endsection
+</x-app-layout>

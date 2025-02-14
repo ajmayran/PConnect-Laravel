@@ -1,7 +1,4 @@
-{{-- filepath: /c:/Users/nunez/Documents/PConnect-Laravel/resources/views/admin/products/pending.blade.php --}}
-@extends('layouts.app')
-
-@section('content')
+<x-app-layout>
     @if (session('success'))
         <div class="relative px-4 py-3 text-green-700 bg-green-100 border border-green-400 rounded" role="alert">
             <span class="block sm:inline">{{ session('success') }}</span>
@@ -22,41 +19,55 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                     ID
                                 </th>
-                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                     Name
                                 </th>
-                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                     Description
                                 </th>
-                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                     Price
                                 </th>
-                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($pendingProducts as $product)
+                            @foreach ($pendingProducts as $product)
                                 <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->id }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->name }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->description }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->price }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->id }}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->name }}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                        {{ $product->description }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->price }}
+                                    </td>
                                     <td class="px-6 py-4 text-sm whitespace-nowrap">
-                                        <form action="{{ route('admin.approveProduct', $product->id) }}" method="POST" style="display:inline;">
+                                        <form action="{{ route('admin.approveProduct', $product->id) }}" method="POST"
+                                            style="display:inline;">
                                             @csrf
-                                            <button type="submit" class="px-4 py-2 font-medium text-white bg-green-600 rounded hover:bg-green-700">
+                                            <button type="submit"
+                                                class="px-4 py-2 font-medium text-white bg-green-600 rounded hover:bg-green-700">
                                                 Approve
                                             </button>
                                         </form>
-                                        <form action="{{ route('admin.rejectProduct', $product->id) }}" method="POST" style="display:inline;">
+                                        <form action="{{ route('admin.rejectProduct', $product->id) }}" method="POST"
+                                            style="display:inline;">
                                             @csrf
-                                            <input type="text" name="reason" placeholder="Reason for rejection" required class="border rounded px-2 py-1">
-                                            <button type="submit" class="px-4 py-2 font-medium text-white bg-red-600 rounded hover:bg-red-700">
+                                            <input type="text" name="reason" placeholder="Reason for rejection"
+                                                required class="px-2 py-1 border rounded">
+                                            <button type="submit"
+                                                class="px-4 py-2 font-medium text-white bg-red-600 rounded hover:bg-red-700">
                                                 Reject
                                             </button>
                                         </form>
@@ -69,4 +80,4 @@
             </div>
         </div>
     </div>
-@endsection
+</x-app-layout>

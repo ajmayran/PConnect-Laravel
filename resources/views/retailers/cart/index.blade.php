@@ -1,4 +1,3 @@
-<!-- filepath: /C:/xampp/htdocs/PConnect-Laravel/resources/views/retailers/cart/index.blade.php -->
 <x-app-layout>
     <x-dashboard-nav />
 
