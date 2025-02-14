@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable
 {
@@ -52,7 +53,7 @@ class User extends Authenticatable
      * @return array<string, string>
      */
 
-    public function distributor()
+    public function distributor(): HasOne
     {
         return $this->hasOne(Distributors::class, 'user_id');
     }
@@ -72,7 +73,7 @@ class User extends Authenticatable
 
     public function products()
     {
-        return $this->hasMany(Product::class);
+        return $this->hasMany(Product::class, 'distributor_id');
     }
 
     public function retailerProfile()

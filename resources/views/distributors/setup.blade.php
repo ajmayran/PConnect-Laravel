@@ -1,4 +1,4 @@
-<x-app-layout>
+@extends('layouts.app')
     <div class="container">
         <h1>Profile Setup</h1>
 
@@ -44,4 +44,3 @@
             <button type="submit" class="btn btn-primary">Complete Setup</button>
         </form>
     </div>
-</x-app-layout>

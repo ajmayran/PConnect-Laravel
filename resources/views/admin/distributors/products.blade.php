@@ -1,4 +1,4 @@
-{{-- filepath: /c:/Users/nunez/Documents/PConnect-Laravel/resources/views/admin/products/pending.blade.php --}}
+{{-- filepath: /c:/Users/nunez/Documents/PConnect-Laravel/resources/views/admin/distributors/products.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
@@ -15,7 +15,7 @@
     <div class="container px-4 py-8 mx-auto">
         <div class="overflow-hidden bg-white rounded-lg shadow-lg">
             <div class="px-6 py-4 bg-gray-800">
-                <h1 class="text-2xl font-bold text-white">Pending Products</h1>
+                <h1 class="text-2xl font-bold text-white">Products of {{ $distributor->first_name }} {{ $distributor->last_name }}</h1>
             </div>
             <div class="p-6">
                 <div class="overflow-x-auto">
@@ -40,24 +40,19 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($pendingProducts as $product)
+                            @foreach($distributor->products as $product)
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->id }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->product_name }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->description }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->price }}</td>
                                     <td class="px-6 py-4 text-sm whitespace-nowrap">
-                                        <form action="{{ route('admin.approveProduct', $product->id) }}" method="POST" style="display:inline;">
+                                        <form action="{{ route('admin.removeProduct', $product->id) }}" method="POST" style="display:inline;">
                                             @csrf
-                                            <button type="submit" class="px-4 py-2 font-medium text-white bg-green-600 rounded hover:bg-green-700">
-                                                Approve
-                                            </button>
-                                        </form>
-                                        <form action="{{ route('admin.rejectProduct', $product->id) }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            <input type="text" name="reason" placeholder="Reason for rejection" required class="border rounded px-2 py-1">
+                                            @method('DELETE')
+                                            <input type="text" name="reason" placeholder="Reason for removal" required class="border rounded px-2 py-1">
                                             <button type="submit" class="px-4 py-2 font-medium text-white bg-red-600 rounded hover:bg-red-700">
-                                                Reject
+                                                Remove
                                             </button>
                                         </form>
                                     </td>

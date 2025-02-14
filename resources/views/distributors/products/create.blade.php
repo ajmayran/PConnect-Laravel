@@ -1,4 +1,4 @@
-<x-app-layout>
+@extends('layouts.app')
     <div class="container mt-4">
         <div class="row">
             <div class="col-md-8 offset-md-2">
@@ -64,4 +64,3 @@
             </div>
         </div>
     </div>
-</x-app-layout>

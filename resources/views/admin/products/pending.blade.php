@@ -43,7 +43,7 @@
                             @foreach($pendingProducts as $product)
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->id }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->product_name }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->name }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->description }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->price }}</td>
                                     <td class="px-6 py-4 text-sm whitespace-nowrap">

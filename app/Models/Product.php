@@ -20,7 +20,9 @@ class Product extends Model
         'stock_quantity',
         'minimum_purchase_qty',
         'category_id',
-        'image'
+        'image',
+        'status',
+        'rejection_reason'
     ];
 
     protected $casts = [
@@ -42,10 +44,5 @@ class Product extends Model
     public function distributor(): BelongsTo
     {
         return $this->belongsTo(Distributors::class, 'distributor_id');
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
     }
 }
