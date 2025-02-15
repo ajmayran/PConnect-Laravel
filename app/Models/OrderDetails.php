@@ -10,7 +10,7 @@ class OrderDetails extends Model
         'order_id',
         'product_id',
         'quantity',
-        'total_amount',
+        'subtotal',
         'delivery_address',
     ];
 

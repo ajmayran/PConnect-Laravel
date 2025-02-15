@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('retailer_profile', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->string('profile_picture');
+            $table->string('profile_picture')->nullable();;
             $table->string('business_name');
             $table->string('phone');
             $table->text('address');

@@ -26,10 +26,22 @@ class RetailerOrdersController extends Controller
     public function placeOrder(Request $request, $distributorId)
     {
         try {
+
+            $request->validate([
+                'delivery_option' => 'required|in:default,other',
+                'new_delivery_address' => 'nullable|required_if:delivery_option,other|string',
+            ]);
+
             $user = Auth::user();
-            $deliveryAddress = $request->input('delivery_option') === 'default'
-                ? $user->retailerProfile->address
-                : $request->input('new_delivery_address');
+
+            if ($request->input('delivery_option') === 'default') {
+                if (!$user->retailerProfile || !$user->retailerProfile->address) {
+                    return redirect()->back()->with('error', 'No default delivery address found. Please provide a new address.');
+                }
+                $deliveryAddress = $user->retailerProfile->address;
+            } else {
+                $deliveryAddress = $request->input('new_delivery_address');
+            }
 
             // Find the cart
             $cart = Cart::where('user_id', $user->id)
@@ -78,10 +90,22 @@ class RetailerOrdersController extends Controller
     public function placeOrderAll(Request $request)
     {
         try {
+
+            $request->validate([
+                'delivery_option' => 'required|in:default,other',
+                'new_delivery_address' => 'nullable|required_if:delivery_option,other|string',
+            ]);
+
             $user = Auth::user();
-            $deliveryAddress = $request->input('delivery_option') === 'default'
-                ? $user->retailerProfile->address
-                : $request->input('new_delivery_address');
+
+            if ($request->input('delivery_option') === 'default') {
+                if (!$user->retailerProfile || !$user->retailerProfile->address) {
+                    return redirect()->back()->with('error', 'No default delivery address found. Please provide a new address.');
+                }
+                $deliveryAddress = $user->retailerProfile->address;
+            } else {
+                $deliveryAddress = $request->input('new_delivery_address');
+            }
 
             $carts = $request->input('carts');
             if (!$carts) {

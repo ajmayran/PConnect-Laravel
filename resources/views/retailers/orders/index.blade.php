@@ -1,14 +1,14 @@
 <x-app-layout>
 
-<x-dashboard-nav />
+    <x-dashboard-nav />
     <div class="container py-8 mx-auto">
         <h1 class="mb-6 text-2xl font-bold">My Orders</h1>
 
-        @if($orders->isEmpty())
+        @if ($orders->isEmpty())
             <p class="p-4 text-gray-600">No orders found.</p>
         @else
             <div class="space-y-6">
-                @foreach($orders as $order)
+                @foreach ($orders as $order)
                     <div class="p-6 bg-white rounded-lg shadow">
                         <div class="flex items-center justify-between mb-4">
                             <div>
@@ -35,7 +35,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($order->orderDetails as $detail)
+                                    @foreach ($order->orderDetails as $detail)
                                         <tr class="border-b">
                                             <td class="px-4 py-3">{{ $detail->product->product_name }}</td>
                                             <td class="px-4 py-3 text-center">{{ $detail->quantity }}</td>
@@ -57,7 +57,7 @@
                         </div>
 
                         <div class="mt-4 text-sm text-gray-600">
-                            Delivery Address: {{ $order->orderDetails->first()->delivery_address }}
+                            Delivery Address: {{ optional($order->orderDetails->first())->delivery_address }}
                         </div>
                     </div>
                 @endforeach
