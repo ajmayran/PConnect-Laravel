@@ -3,31 +3,33 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\Distributor;
 use App\Http\Controllers\ProfileController;
+use App\Http\Middleware\CheckProductStatus;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Retailers\CartController;
 use App\Http\Controllers\Auth\SocialAuthController;
-use App\Http\Controllers\Retailers\RetailerProductController;
-use App\Http\Controllers\Retailers\AllDistributorController;
-use App\Http\Controllers\Retailers\AllProductController;
+use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Distributors\OrderController;
 use App\Http\Controllers\Retailers\CheckoutController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Distributors\ReturnController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Distributors\MessageController;
+use App\Http\Controllers\Retailers\AllProductController;
 use App\Http\Controllers\Distributors\DeliveryController;
 use App\Http\Controllers\Distributors\InsightsController;
 use App\Http\Controllers\Retailers\ProductDescController;
 use App\Http\Controllers\Distributors\InventoryController;
 use App\Http\Controllers\Retailers\RetailerOrderController;
 use App\Http\Controllers\Distributors\DistributorController;
+use App\Http\Controllers\Retailers\AllDistributorController;
+use App\Http\Controllers\Retailers\RetailerOrdersController;
 use App\Http\Controllers\Distributors\CancellationController;
-use App\Http\Controllers\Retailers\RetailerDashboardController;
 use App\Http\Controllers\Retailers\DistributorPageController;
+use App\Http\Controllers\Retailers\RetailerProductController;
+use App\Http\Controllers\Retailers\RetailerDashboardController;
+use App\Http\Controllers\Distributors\DistributorProductController;
 use App\Http\Controllers\Distributors\DistributorProfileController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
-use App\Http\Controllers\Admin\AdminProductController;
-use App\Http\Middleware\CheckProductStatus;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -87,25 +89,26 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     Route::delete('/cart/delete/{cartId}', [CartController::class, 'deleteCart'])->name('cart.delete');
 
     // Checkout Routes
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
-    Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
-    Route::get('/checkout/cancel', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
+    Route::get('/checkout-all', [CheckoutController::class, 'checkoutAll'])->name('checkout.all');
+    Route::get('/checkout/{distributorId}', [CheckoutController::class, 'checkout'])->name('checkout.index');
+    Route::post('/checkout/placeOrderAll', [RetailerOrdersController::class, 'placeOrderAll'])->name('checkout.placeOrderAll');
+    Route::post('/checkout/placeOrder/{distributorId}', [RetailerOrdersController::class, 'placeOrder'])->name('checkout.placeOrder');
 
     // Order Routes
-    Route::post('/orders', [RetailerOrderController::class, 'store'])->name('orders.store');
-    Route::get('/orders', [RetailerOrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{order}', [RetailerOrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders', [RetailerOrdersController::class, 'store'])->name('orders.store');
+    Route::get('/orders', [RetailerOrdersController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [RetailerOrdersController::class, 'show'])->name('orders.show');
 
     //Nav Routes
     Route::get('/all-distributors', [AllDistributorController::class, 'index'])->name('all-distributor');
     Route::get('/distributor/{id}', [DistributorController::class, 'show'])->name('distributor.show');
 
+    //
     Route::get('/all-products', [AllProductController::class, 'index'])->name('all-product');
     Route::get('/products/{product}', [ProductDescController::class, 'show'])->name('products.show');
 });
 
-use App\Http\Controllers\Distributors\DistributorProductController;
+
 // Distributor Routes
 Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'profile.completed'])->group(function () {
     Route::get('/distributors/setup', [DistributorProfileController::class, 'setup'])->name('distributors.setup');
@@ -152,6 +155,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
 });
 
 // Social Authentication Routes
+
 Route::get('auth/facebook', [SocialAuthController::class, 'facebookRedirect'])->name('auth.facebook');
 Route::get('auth/facebook/callback', [SocialAuthController::class, 'facebookCallback']);
 
