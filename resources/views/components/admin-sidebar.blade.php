@@ -126,12 +126,18 @@
             </a>
             <ul class="pl-7 mt-2 hidden group-[.selected]:block">
                 <li class="mb-4">
-                    <a href="./support/tickets.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Tickets</a>
+                    <a href="{{ route('admin.tickets.index') }}"
+                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Pending Tickets</a>
                 </li>
-                <li class="mb-4">
-                    <a href="./support/resolved.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Resolved</a>
+                <li class="mb-1 group">
+                    <a href="{{ route('admin.tickets.resolved') }}" class="flex items-center py-2 px-4 hover:bg-green-500 hover:text-gray-100 rounded-md">
+                        <span class="text-sm">Resolved Tickets</span>
+                    </a>
+                </li>
+                <li class="mb-1 group">
+                    <a href="{{ route('admin.tickets.rejected') }}" class="flex items-center py-2 px-4 hover:bg-green-500 hover:text-gray-100 rounded-md">
+                        <span class="text-sm">Rejected Tickets</span>
+                    </a>
                 </li>
             </ul>
         </li>

@@ -1,4 +1,7 @@
-<x-app-layout>
+{{-- filepath: /c:/Users/nunez/Documents/PConnect-Laravel/resources/views/retailers/dashboard.blade.php --}}
+@extends('layouts.app')
+
+@section('content')
     <x-dashboard-nav />
 
     <!-- Distributors Section -->
@@ -66,4 +69,4 @@
     </section>
 
     <x-footer />
-</x-app-layout>
+@endsection

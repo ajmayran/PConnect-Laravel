@@ -46,6 +46,8 @@ Route::get('/', function () {
     return view('index');
 });
 
+use App\Http\Controllers\Admin\AdminTicketController;
+
 // Admin Routes
 Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function () {
     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('dashboard');
@@ -60,12 +62,26 @@ Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function (
     Route::delete('/admin/product/{id}/remove', [Distributor::class, 'removeProduct'])->name('removeProduct');
 
     Route::get('/admin/download-credential/{id}', [AdminDashboardController::class, 'downloadCredential'])->name('downloadCredential');
+
+    // Tickets Routes
+    Route::get('/admin/tickets', [AdminTicketController::class, 'index'])->name('tickets.index');
+    Route::get('/admin/tickets/{id}', [AdminTicketController::class, 'show'])->name('tickets.show');
+    Route::get('/admin/tickets/resolved', [AdminTicketController::class, 'resolved'])->name('tickets.resolved');
+    Route::get('/admin/tickets/rejected', [AdminTicketController::class, 'rejected'])->name('tickets.rejected');
+    Route::post('/admin/tickets/{id}/resolve', [AdminTicketController::class, 'resolve'])->name('tickets.resolve');
+    Route::post('/admin/tickets/{id}/reject', [AdminTicketController::class, 'reject'])->name('tickets.reject');
 });
+
+use App\Http\Controllers\Retailer\RetailerTicketController;
 
 // Retailer Routes
 Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('retailers')->group(function () {
     Route::get('/dashboard', [RetailerDashboardController::class, 'index'])->name('dashboard');
 
+    // Ticket Routes
+    Route::get('/retailer/tickets/create', [RetailerTicketController::class, 'create'])->name('tickets.create');
+    Route::post('/retailer/tickets', [RetailerTicketController::class, 'store'])->name('tickets.store');
+    
     // Profile Routes
     Route::put('retailers/profile/update-retailer', [ProfileController::class, 'updateRetailerProfile'])->name('profile.update.retailer');
     Route::get('retailers/profile', [ProfileController::class, 'edit'])->name('profile.edit');

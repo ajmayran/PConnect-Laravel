@@ -1,3 +1,4 @@
+{{-- filepath: /c:/Users/nunez/Documents/PConnect-Laravel/resources/views/components/retailer-topnav.blade.php --}}
 <nav class="bg-white border-b border-gray-100 shadow-sm">
     <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
         <!-- Top Navigation Bar -->
@@ -38,7 +39,6 @@
                 </div>
 
                 <!-- Notifications -->
-
                 <div class="relative ml-4">
                     <button onclick="toggleNotifications()" class="p-2 text-gray-500 hover:text-gray-700">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,8 +61,6 @@
                         </div>
                     </div>
                 </div>
-
-
 
                 <script>
                     function toggleNotifications() {
@@ -110,6 +108,10 @@
                         <x-slot name="content">
                             <x-dropdown-link :href="route('retailers.profile.edit')">
                                 {{ __('Profile') }}
+                            </x-dropdown-link>
+
+                            <x-dropdown-link :href="route('retailers.tickets.create')">
+                                {{ __('Create Ticket') }}
                             </x-dropdown-link>
 
                             <!-- Authentication -->

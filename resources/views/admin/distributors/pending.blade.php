@@ -1,4 +1,4 @@
-{{-- filepath: /c:/Users/nunez/Documents/PConnect-Laravel/resources/views/admin/products/pending.blade.php --}}
+{{-- filepath: /c:/Users/nunez/Documents/PConnect-Laravel/resources/views/admin/distributors/pending.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
@@ -15,7 +15,7 @@
     <div class="container px-4 py-8 mx-auto">
         <div class="overflow-hidden bg-white rounded-lg shadow-lg">
             <div class="px-6 py-4 bg-gray-800">
-                <h1 class="text-2xl font-bold text-white">Pending Products</h1>
+                <h1 class="text-2xl font-bold text-white">Pending Distributors</h1>
             </div>
             <div class="p-6">
                 <div class="overflow-x-auto">
@@ -26,13 +26,13 @@
                                     ID
                                 </th>
                                 <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                                    Name
+                                    First Name
                                 </th>
                                 <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                                    Description
+                                    Last Name
                                 </th>
                                 <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                                    Price
+                                    Email
                                 </th>
                                 <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                     Actions
@@ -40,22 +40,24 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($pendingProducts as $product)
+                            @foreach($pendingDistributors as $distributor)
                                 <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->id }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->product_name }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->description }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->price }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $distributor->id }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $distributor->first_name }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $distributor->last_name }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $distributor->email }}</td>
                                     <td class="px-6 py-4 text-sm whitespace-nowrap">
-                                        <form action="{{ route('admin.approveProduct', $product->id) }}" method="POST" style="display:inline;">
+                                        <a href="{{ route('admin.distributorProducts', $distributor->id) }}" class="font-medium text-blue-600 hover:text-blue-900">
+                                            View Products
+                                        </a>
+                                        <form action="{{ route('admin.acceptDistributor', $distributor->id) }}" method="POST" style="display:inline;">
                                             @csrf
                                             <button type="submit" class="px-4 py-2 font-medium text-white bg-green-600 rounded hover:bg-green-700">
                                                 Approve
                                             </button>
                                         </form>
-                                        <form action="{{ route('admin.rejectProduct', $product->id) }}" method="POST" style="display:inline;">
+                                        <form action="{{ route('admin.declineDistributor', $distributor->id) }}" method="POST" style="display:inline;">
                                             @csrf
-                                            <input type="text" name="reason" placeholder="Reason for rejection" required class="border rounded px-2 py-1">
                                             <button type="submit" class="px-4 py-2 font-medium text-white bg-red-600 rounded hover:bg-red-700">
                                                 Reject
                                             </button>
