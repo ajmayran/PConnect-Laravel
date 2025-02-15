@@ -11,17 +11,7 @@
                     </div>
                 </div>
 
-                <!-- Search -->
-                <div class="flex items-center ml-6">
-                    <input type="text" placeholder="Search for items..."
-                        class="px-4 py-2 border-gray-300 w-96 border-y focus:ring-green-500 focus:border-green-500">
-                    <button class="px-6 py-2.5 text-white bg-green-500 rounded-r hover:bg-green-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </button>
-                </div>
+                
             </div>
 
             <!-- Right Side -->
@@ -59,10 +49,58 @@
                                 <p class="text-xs text-gray-500">2 hours ago</p>
                             </div>
                         </div>
+                        <div class="p-4 text-center border-t border-gray-200">
+                            <button onclick="openNotificationModal()" class="text-sm text-green-600 hover:text-green-700">See All Notifications</button>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Add the modal for all notifications -->
+                <div id="allNotificationsModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+                    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                        <!-- Background overlay -->
+                        <div class="fixed inset-0 transition-opacity" aria-hidden="true" onclick="closeNotificationModal()">
+                            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                        </div>
 
+                        <!-- Modal panel -->
+                        <div class="relative inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6" onclick="event.stopPropagation()">
+                            <div class="absolute top-0 right-0 pt-4 pr-4">
+                                <button onclick="closeNotificationModal()" class="text-gray-400 hover:text-gray-500">
+                                    <span class="sr-only">Close</span>
+                                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div class="sm:flex sm:items-start">
+                                <div class="w-full mt-3 text-center sm:mt-0 sm:text-left">
+                                    <h3 class="text-lg font-medium leading-6 text-gray-900">All Notifications</h3>
+                                    <div class="mt-4 divide-y divide-gray-200 max-h-[60vh] overflow-y-auto">
+                                        <!-- Notification Items -->
+                                        @for ($i = 1; $i <= 3; $i++)
+                                            <div class="py-4">
+                                                <div class="flex items-start">
+                                                    <div class="flex-shrink-0 pt-0.5">
+                                                        <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                    </div>
+                                                    <div class="ml-3 w-0 flex-1">
+                                                        <p class="text-sm font-medium text-gray-900">Order #{{1234 + $i}} Update</p>
+                                                        <p class="mt-1 text-sm text-gray-500">Your order has been shipped!</p>
+                                                        <p class="mt-1 text-xs text-gray-400">2 hours ago</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endfor
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <script>
                     function toggleNotifications() {
@@ -83,6 +121,46 @@
                             !event.target.closest('button') &&
                             !document.getElementById('notificationsPopup').classList.contains('hidden')) {
                             closeAll();
+                        }
+                    });
+
+                    function openNotificationModal() {
+                        document.getElementById('allNotificationsModal').classList.remove('hidden');
+                        document.getElementById('notificationsPopup').classList.add('hidden');
+                    }
+
+                    function closeNotificationModal() {
+                        document.getElementById('allNotificationsModal').classList.add('hidden');
+                    }
+
+                    // Update the existing click event listener
+                    document.addEventListener('click', function(event) {
+                        if (!event.target.closest('#notificationsPopup') &&
+                            !event.target.closest('#allNotificationsModal') &&
+                            !event.target.closest('button')) {
+                            closeAll();
+                            closeNotificationModal();
+                        }
+                    });
+
+                    // Add escape key listener for modal
+                    document.addEventListener('keydown', function(event) {
+                        if (event.key === 'Escape') {
+                            closeNotificationModal();
+                        }
+                    });
+
+                    // Close modal when clicking outside
+                    document.getElementById('allNotificationsModal').addEventListener('click', function(event) {
+                        if (event.target === this) {
+                            closeNotificationModal();
+                        }
+                    });
+
+                    // Close on escape key
+                    document.addEventListener('keydown', function(event) {
+                        if (event.key === 'Escape') {
+                            closeNotificationModal();
                         }
                     });
                 </script>
