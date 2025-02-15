@@ -100,9 +100,12 @@
                             </td>
                             <td class="px-4 py-4">
                                 <button onclick="proceedToCheckout('{{ $distributorId }}')"
-                                    class="w-full px-4 py-2 text-sm text-white bg-green-600 rounded hover:bg-green-700 lg:w-auto"
-                                    data-distributor-id="{{ $distributorId }}">
-                                    Proceed to Checkout
+                                    class="flex items-center justify-center w-full gap-2 px-4 py-2 text-sm text-white bg-green-600 rounded hover:bg-green-700 lg:w-auto">
+                                    <span>Checkout</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                    </svg>
                                 </button>
                             </td>
                         </tr>
@@ -124,8 +127,38 @@
                 </a>
             </div>
         @endforelse
-    </div>
 
+        @if (count($groupedItems) > 0)
+            <div class="flex justify-end mt-6">
+                <div class="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xl font-semibold text-gray-800">Total All Carts:</span>
+                        <span class="text-xl font-bold text-gray-900" id="globalCartTotal">
+                            ₱{{ number_format(
+                                $groupedItems->flatMap(function ($items) {
+                                        return $items->map(function ($item) {
+                                            return $item->product->price * $item->quantity;
+                                        });
+                                    })->sum(),
+                                2,
+                            ) }}
+                        </span>
+                    </div>
+                    @if (count($groupedItems) > 1)
+                        <button onclick="proceedToCheckoutAll()"
+                            class="flex items-center justify-center w-full gap-2 px-6 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700">
+                            <span>Checkout All Items</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                        </button>
+                    @endif
+                </div>
+            </div>
+        @endif
+    </div>
+    </div>
     <script>
         let cartChanges = {};
 
@@ -316,7 +349,14 @@
                 let sub = parseFloat(item.textContent.replace('₱', '').replace(/,/g, ''));
                 return sum + sub;
             }, 0);
-            // Optionally update a global cart total display
+            const globalTotalElement = document.getElementById('globalCartTotal');
+            if (globalTotalElement) {
+                globalTotalElement.textContent = `₱${total.toLocaleString('en-US', { 
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 2 
+        })}`;
+            }
+
         }
 
         function askToRemoveItem(itemId, minQty) {
@@ -346,7 +386,37 @@
         }
 
         function proceedToCheckout(distributorId) {
-            window.location.href = `/retailers/checkout?distributor=${distributorId}`;
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Preparing your checkout...',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Use the named route for checkout
+            setTimeout(() => {
+                window.location.href = `/retailers/checkout/${distributorId}`;
+            }, 1500);
+        }
+
+        function proceedToCheckoutAll() {
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Preparing your checkout...',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Use the named route for checkout all
+            setTimeout(() => {
+                window.location.href = '/retailers/checkout-all';
+            }, 1500);
         }
 
         function validateQuantity(input) {
