@@ -15,10 +15,18 @@ Route::middleware('guest')->group(function () {
     Route::get('approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])
         ->name('auth.approval-waiting');
 
-    Route::get('register', [RegisteredUserController::class, 'create'])
-        ->name('register');
+    Route::get('register/retailer', [RegisteredUserController::class, 'createRetailer'])
+        ->name('register.retailer');
+    Route::post('register/retailer', [RegisteredUserController::class, 'store']);
 
-    Route::post('register', [RegisteredUserController::class, 'store']);
+    Route::get('register/distributor', [RegisteredUserController::class, 'createDistributor'])
+        ->name('register.distributor');
+    Route::post('register/distributor', [RegisteredUserController::class, 'store']);
+
+    // Route::get('register', [RegisteredUserController::class, 'create'])
+    //     ->name('register');
+
+    // Route::post('register', [RegisteredUserController::class, 'store']);
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
@@ -36,16 +44,6 @@ Route::middleware('guest')->group(function () {
 
     Route::post('reset-password', [NewPasswordController::class, 'store'])
         ->name('password.store');
-});
-
-
-Route::middleware(['auth'])->group(function () {
-    // Retailer routes
-    Route::middleware(['retailer'])->group(function () {
-        Route::get('/retailer/dashboard', function () {
-            return view('retailer.dashboard');
-        })->name('retailer.dashboard');
-    });
 });
 
 

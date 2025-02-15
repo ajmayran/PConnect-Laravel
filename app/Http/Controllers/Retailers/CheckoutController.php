@@ -3,26 +3,31 @@
 namespace App\Http\Controllers\Retailers;
 
 use App\Models\Cart;
+use App\Models\CartDetail;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Controller;
 
 class CheckoutController extends Controller
 {
-    public function index()
+    public function checkout($distributorId)
     {
-        $cart = Cart::with(['details.product'])
-            ->where('user_id',Auth::id()) 
-            ->first();
+        
+        $user = Auth::user();
+        $cart = Cart::where('user_id', $user->id)->where('distributor_id', $distributorId)->first();
+        $checkoutProducts = CartDetail::where('cart_id', $cart->id)->get();
+        $grandTotal = $checkoutProducts->sum('subtotal');
 
-        if (!$cart) {
-            return redirect()->route('retailers.cart.index')
-                ->with('error', 'Your cart is empty');
-        }
+        return view('retailers.checkout.index', compact('checkoutProducts', 'grandTotal', 'user'));
+    }
 
-        return view('retailers.checkout.index', [
-            'cart' => $cart,
-            'total' => $cart->total
-        ]);
+    public function checkoutAll()
+    {
+        $user = Auth::user();
+        $carts = Cart::where('user_id', $user->id)->get();
+        $checkoutProducts = CartDetail::whereIn('cart_id', $carts->pluck('id'))->get();
+        $grandTotal = $checkoutProducts->sum('subtotal');
+
+        return view('retailers.checkout.all', compact('checkoutProducts', 'grandTotal', 'user'));
     }
 }

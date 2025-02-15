@@ -68,7 +68,7 @@ class User extends Authenticatable
 
     public function credential()
     {
-        return $this->hasOne(Credential::class);
+        return $this->hasMany(Credential::class);
     }
 
     public function products()
@@ -79,5 +79,10 @@ class User extends Authenticatable
     public function retailerProfile()
     {
         return $this->hasOne(RetailerProfile::class);
+    }
+
+    public function cart()
+    {
+        return $this->hasOne(Cart::class);
     }
 }
