@@ -1,4 +1,4 @@
-@extends('layouts.app')
+
     <div class="container px-4 py-8 mx-auto">
         <div class="max-w-3xl mx-auto">
             <div class="flex items-center justify-between mb-6">

@@ -121,7 +121,7 @@
                     </path>
                 </svg>
                 <p class="mb-4 text-lg text-gray-600">Your cart is empty</p>
-                <a href="{{ route('retailers.dashboard') }}"
+                <a href="{{ route('retailers.all-product') }}"
                     class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
                     Continue Shopping
                 </a>

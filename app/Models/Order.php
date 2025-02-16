@@ -12,8 +12,7 @@ class Order extends Model
         'distributor_id',
         'status',
         'payment_status',
-        'status_updated_at',
-        'landmark',
+        'status_updated_at'
     ];
 
     public function user()

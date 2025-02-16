@@ -29,7 +29,7 @@ class ProductFactory extends Factory
             'stock_quantity' => $this->faker->numberBetween(0, 1000),
             'minimum_purchase_qty' => $this->faker->numberBetween(1, 10),
             'category_id' => $this->faker->numberBetween(1, Category::count()),
-            'image' => 'img/default-product.jpg',
+            'image' => null,
         ];
     }
 }
