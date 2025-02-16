@@ -12,7 +12,7 @@
                 </div>
 
                 <!-- Search -->
-                <div class="flex items-center ml-6">
+                {{-- <div class="flex items-center ml-6">
                     <input type="text" placeholder="Search for items..."
                         class="px-4 py-2 border-gray-300 w-96 border-y focus:ring-green-500 focus:border-green-500">
                     <button class="px-6 py-2.5 text-white bg-green-500 rounded-r hover:bg-green-600">
@@ -21,7 +21,7 @@
                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </button>
-                </div>
+                </div> --}}
             </div>
 
             <!-- Right Side -->
@@ -92,7 +92,7 @@
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
                             <button class="flex items-center cursor-pointer">
-                                <img class="object-cover w-8 h-8 rounded-full border"
+                                <img class="object-cover w-8 h-8 border rounded-full"
                                     src="{{ Auth::user()->retailerProfile && Auth::user()->retailerProfile->profile_picture ? asset('storage/' . Auth::user()->retailerProfile->profile_picture) : asset('img/default-profile.png') }}"
                                     alt="Profile">
                                 <span class="ml-2 text-sm text-gray-700">{{ Auth::user()->first_name }}</span>
