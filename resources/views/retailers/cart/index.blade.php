@@ -385,7 +385,34 @@
             });
         }
 
-        function proceedToCheckout(distributorId) {
+        async function updateCartQuantities() {
+            const items = [];
+            document.querySelectorAll('input[type="number"][data-item-id]').forEach(input => {
+                items.push({
+                    cart_detail_id: input.dataset.itemId,
+                    quantity: parseInt(input.value)
+                });
+            });
+
+            try {
+                const response = await fetch('/retailers/cart/update-quantities', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({
+                        items
+                    })
+                });
+                return response.ok;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        async function proceedToCheckout(distributorId) {
+            await updateCartQuantities();
             Swal.fire({
                 title: 'Processing...',
                 text: 'Preparing your checkout...',
@@ -402,7 +429,8 @@
             }, 1500);
         }
 
-        function proceedToCheckoutAll() {
+        async function proceedToCheckoutAll() {
+            await updateCartQuantities();
             Swal.fire({
                 title: 'Processing...',
                 text: 'Preparing your checkout...',

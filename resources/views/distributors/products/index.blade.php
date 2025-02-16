@@ -3,13 +3,13 @@
 @endphp
 
 <x-distributor-layout>
-    <div class="container p-4 mx-auto overflow-y-auto" style="height: 100vh;">
+    <div class="container p-4 mx-auto">
         <span class="absolute text-3xl text-white cursor-pointer top-5 left-4 lg:hidden" onclick="toggleSidebar()">
             <i class="px-2 bg-gray-900 rounded-md bi bi-filter-left"></i>
         </span>
         <div class="container px-4 py-8 mx-auto">
             <div class="flex items-center justify-between mb-6">
-                <h1 class="text-3xl font-bold text-gray-800">Your Products</h1>
+                <h1 class="text-3xl font-bold text-gray-800">My Products</h1>
                 <a href="{{ route('distributors.products.create') }}"
                     class="px-4 py-2 font-bold text-white transition duration-200 bg-green-500 rounded-lg hover:bg-green-600">
                     Add New Product

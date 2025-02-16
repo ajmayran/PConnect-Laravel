@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Http\Controllers\Admin\Distributor;
 use Illuminate\Database\Eloquent\Model;
 
 class CartDetail extends Model

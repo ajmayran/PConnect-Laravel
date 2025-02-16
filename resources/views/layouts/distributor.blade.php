@@ -61,7 +61,6 @@
 <body class="bg-gray-100">
     @stack('scripts')
     <!-- Page Content -->
-    <!-- Sidebar Toggle Button (Mobile) -->
     <span class="absolute text-4xl text-white cursor-pointer top-5 left-4" onclick="toggleSidebar()">
         <i class="px-2 bg-gray-900 rounded-md bi bi-filter-left"></i>
     </span>
@@ -70,7 +69,7 @@
     <x-distributor-sidebar />
 
     <!-- Main Content -->
-    <div id="main-content" class="p-4 transition-all duration-300 ease-in-out">
+    <div id="main-content" class="min-h-screen p-4 transition-all duration-300 ease-in-out">
         {{ $slot }}
     </div>
     @include('components.footer')

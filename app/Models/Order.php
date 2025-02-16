@@ -12,7 +12,12 @@ class Order extends Model
         'distributor_id',
         'status',
         'payment_status',
-        'status_updated_at'
+        'status_updated_at',
+        'reject_reason',
+    ];
+
+    protected $casts = [
+        'status_updated_at' => 'datetime',
     ];
 
     public function user()
@@ -28,5 +33,10 @@ class Order extends Model
     public function orderDetails()
     {
         return $this->hasMany(OrderDetails::class);
+    }
+
+    public function delivery()
+    {
+        return $this->hasOne(Delivery::class);
     }
 }
