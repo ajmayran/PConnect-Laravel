@@ -24,22 +24,16 @@
             </div>
         </form>
 
-        <section class="py-16 bg-gray-50 mt-10 mb-24">
-            <div class="container mx-auto px-6">
-                <h2 class="text-3xl font-bold text-center text-gray-800 mb-10">Our Trusted Distributors</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <section class="py-16 mt-10 mb-24 bg-gray-50">
+            <div class="container px-6 mx-auto">
+                <h2 class="mb-10 text-3xl font-bold text-center text-gray-800">Our Trusted Distributors</h2>
+                <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
                     @forelse ($distributors as $distributor)
                         <x-card-all-distributor route="{{ route('retailers.distributor-page', $distributor->id) }}"
-                            imagepath="{{ asset('storage/distributors/jacob.png') }}" distributor_name="Jacob Trading"
-                            distributor_desc="lorem ipsum" address="Guiwan">
-                        </x-card-all-distributor>
-                        <x-card-all-distributor route="{{ route('retailers.distributor-page', $distributor->id) }}"
-                            imagepath="{{ asset('storage/distributors/jacob.png') }}" distributor_name="Jacob Trading"
-                            distributor_desc="lorem ipsum" address="Guiwan">
-                        </x-card-all-distributor>
-                        <x-card-all-distributor route="{{ route('retailers.distributor-page', $distributor->id) }}"
-                            imagepath="{{ asset('storage/distributors/jacob.png') }}" distributor_name="Jacob Trading"
-                            distributor_desc="lorem ipsum" address="Guiwan">
+                            imagepath="{{ $distributor->company_profile_image ? asset('storage/' . $distributor->company_profile_image) : asset('img/default-distributor.jpg') }}" 
+                            distributor_name="{{ $distributor->company_name }}"
+                            distributor_desc="{{ $distributor->description }}" 
+                            address="{{ $distributor->company_address }}">
                         </x-card-all-distributor>
                     @empty
                         <div class="text-center text-gray-500 col-span-full">

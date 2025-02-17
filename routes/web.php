@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\Distributor;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Retailers\CartController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Distributors\OrderController;
+use App\Http\Controllers\Distributors\TruckController;
 use App\Http\Controllers\Retailers\CheckoutController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Distributors\ReturnController;
@@ -87,6 +89,7 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     Route::post('/cart/update-quantities', [CartController::class, 'updateQuantities'])->name('cart.update-quantities');
     Route::delete('/cart/remove/{itemId}', [CartController::class, 'removeProduct'])->name('cart.remove-product');
     Route::delete('/cart/delete/{cartId}', [CartController::class, 'deleteCart'])->name('cart.delete');
+    Route::post('/cart/update-quantities', [CartController::class, 'updateQuantities'])->name('cart.update-quantities');
 
     // Checkout Routes
     Route::get('/checkout-all', [CheckoutController::class, 'checkoutAll'])->name('checkout.all');
@@ -128,7 +131,8 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
 
     // Order Routes
     Route::get('/orders', [OrderController::class, 'index'])->name('distributors.orders.index');
-    Route::get('/orders/{id}', [OrderController::class, 'show'])->name('distributors.orders.show');
+    Route::post('/orders/{order}/accept', [OrderController::class, 'acceptOrder'])->name('orders.accept');
+    Route::post('/orders/{order}/reject', [OrderController::class, 'rejectOrder'])->name('orders.reject');
 
     // Return Routes
     Route::get('/returns', [ReturnController::class, 'index'])->name('distributors.returns.index');
@@ -138,7 +142,8 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
 
     // Delivery Routes
     Route::get('/delivery', [DeliveryController::class, 'index'])->name('distributors.delivery.index');
-
+    Route::patch('/delivery/{delivery}/status', [DeliveryController::class, 'updateStatus'])->name('distributors.delivery.update-status');
+    
     // Inventory Routes
     Route::get('/inventory', [InventoryController::class, 'index'])->name('distributors.inventory.index');
 
@@ -147,6 +152,18 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
 
     // Insights Routes
     Route::get('/insights', [InsightsController::class, 'index'])->name('distributors.insights.index');
+
+    // Truck Routes
+    Route::get('/trucks', [TruckController::class, 'index'])->name('distributors.trucks.index');
+    Route::get('/trucks/create', [TruckController::class, 'create'])->name('distributors.trucks.create');
+    Route::post('/trucks', [TruckController::class, 'store'])->name('distributors.trucks.store');
+    Route::get('/trucks/{truck}', [TruckController::class, 'show'])->name('distributors.trucks.show');
+    Route::get('/trucks/{truck}/edit', [TruckController::class, 'edit'])->name('distributors.trucks.edit');
+    Route::put('/trucks/{truck}', [TruckController::class, 'update'])->name('distributors.trucks.update');
+    Route::delete('/trucks/{truck}', [TruckController::class, 'destroy'])->name('distributors.trucks.destroy');
+    Route::post('/delivery/{delivery}/assign-truck', [TruckController::class, 'assignDelivery'])->name('distributors.delivery.assign-truck');
+
+
 
     Route::get('/distributors/create', [DistributorController::class, 'create'])->name('distributors.create');
     Route::post('/distributors', [DistributorController::class, 'store'])->name('distributors.store');

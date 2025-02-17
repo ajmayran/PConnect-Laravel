@@ -10,8 +10,6 @@
                         <img class="w-auto h-10" src="{{ asset('img/Pconnect Logo.png') }}" alt="PConnect">
                     </div>
                 </div>
-
-                
             </div>
 
             <!-- Right Side -->
@@ -170,7 +168,7 @@
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
                             <button class="flex items-center cursor-pointer">
-                                <img class="object-cover w-8 h-8 rounded-full border"
+                                <img class="object-cover w-8 h-8 border rounded-full"
                                     src="{{ Auth::user()->retailerProfile && Auth::user()->retailerProfile->profile_picture ? asset('storage/' . Auth::user()->retailerProfile->profile_picture) : asset('img/default-profile.png') }}"
                                     alt="Profile">
                                 <span class="ml-2 text-sm text-gray-700">{{ Auth::user()->first_name }}</span>
@@ -210,10 +208,18 @@
     <div class="bg-gray-800">
         <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="flex justify-center space-x-8">
-                <!-- Changed links to spans or buttons -->
-                <a href="{{route('retailers.dashboard')}}" class="px-3 py-2 text-white cursor-pointer hover:text-green-400">HOME</a>
-                <a href="{{route('retailers.all-distributor')}}" class="px-3 py-2 text-white cursor-pointer hover:text-green-400">DISTRIBUTORS</a>
-                <a href="{{route('retailers.all-product')}}" class="px-3 py-2 text-white cursor-pointer hover:text-green-400">PRODUCTS</a>
+                <a href="{{ route('retailers.dashboard') }}"
+                    class="px-3 py-2 cursor-pointer {{ request()->routeIs('retailers.dashboard') ? 'text-green-400 font-bold' : 'text-white hover:text-green-400' }}">
+                    HOME
+                </a>
+                <a href="{{ route('retailers.all-distributor') }}"
+                    class="px-3 py-2 cursor-pointer {{ request()->routeIs('retailers.all-distributor') ? 'text-green-400 font-bold' : 'text-white hover:text-green-400' }}">
+                    DISTRIBUTORS
+                </a>
+                <a href="{{ route('retailers.all-product') }}"
+                    class="px-3 py-2 cursor-pointer {{ request()->routeIs('retailers.all-product') ? 'text-green-400 font-bold' : 'text-white hover:text-green-400' }}">
+                    PRODUCTS
+                </a>
             </div>
         </div>
     </div>

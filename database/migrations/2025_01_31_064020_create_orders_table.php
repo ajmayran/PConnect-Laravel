@@ -15,10 +15,11 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('distributor_id');
-            $table->enum('status', ['pending', 'processing', 'delivered', 'cancelled'])
+            $table->enum('status', ['pending', 'processing', 'completed', 'cancelled', 'rejected'])
                 ->default('pending');
             $table->enum('payment_status', ['pending', 'paid', 'failed'])
                 ->default('pending');
+            $table->text('reject_reason')->nullable();
             $table->timestamp('status_updated_at');
             $table->timestamps();
 

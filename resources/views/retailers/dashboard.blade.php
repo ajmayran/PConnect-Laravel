@@ -60,7 +60,7 @@
                     <a href="{{ route('retailers.distributor-page', $distributor->id) }}"
                         class="flex flex-col items-center p-6 transition-all duration-300 bg-white border border-gray-100 shadow-md hover:shadow-xl rounded-xl group">
                         <img class="w-24 h-24 mb-4 transition-transform duration-300 rounded-full shadow-md group-hover:scale-110"
-                            src="{{ $distributor->company_profile_image ? asset('storage/' . $distributor->company_profile_image) : asset('img/default-logo.png') }}"
+                            src="{{ $distributor->company_profile_image ? asset('storage/' . $distributor->company_profile_image) : asset('img/default-distributor.jpg') }}"
                             alt="Distributor {{ $distributor->user?->name ?? 'Unknown' }}">
                         <h3 class="text-lg font-bold text-gray-800">{{ $distributor->company_name }}</h3>
                     </a>
