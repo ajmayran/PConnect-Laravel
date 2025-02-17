@@ -1,6 +1,54 @@
 <x-app-layout>
     <x-dashboard-nav />
 
+    <form class="max-w-2xl mx-auto p-4">
+        <div class="flex gap-0">
+            <!-- Dropdown Button -->
+            <button id="dropdown-button" data-dropdown-toggle="dropdown"
+                class="flex-shrink-0 inline-flex items-center py-3 px-4 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-50 focus:ring-2 focus:ring-green-500 focus:z-10"
+                type="button">
+                All categories
+                <svg class="w-2.5 h-2.5 ms-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="m1 1 4 4 4-4" />
+                </svg>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div id="dropdown" class="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow-lg w-44">
+                <ul class="py-2 text-sm text-gray-700" aria-labelledby="dropdown-button">
+                    <li>
+                        <button type="button"
+                            class="inline-flex w-full px-4 py-2 hover:bg-gray-100 hover:text-green-500">
+                            Distributor
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button"
+                            class="inline-flex w-full px-4 py-2 hover:bg-gray-100 hover:text-green-500">
+                            Product
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Search Input -->
+            <div class="relative w-full">
+                <input type="search" id="search-dropdown"
+                    class="block p-3 w-full z-20 text-sm text-gray-900 bg-white border border-s-0 border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    placeholder="Search Products, Distributors..." required />
+                <button type="submit"
+                    class="absolute top-0 end-0 h-full p-3 text-sm font-medium text-white bg-green-500 rounded-r-lg border border-green-500 hover:bg-green-600 focus:ring-2 focus:outline-none focus:ring-green-300">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                    </svg>
+                    <span class="sr-only">Search</span>
+                </button>
+            </div>
+        </div>
+    </form>
+
     <!-- Distributors Section -->
     <section class="py-8 bg-gray-50">
         <div class="container px-4 mx-auto">
