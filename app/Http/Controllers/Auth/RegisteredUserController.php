@@ -18,9 +18,14 @@ class RegisteredUserController extends Controller
     /**
      * Display the registration view.
      */
-    public function create(): View
+    public function createRetailer(): View
     {
-        return view('auth.register');
+        return view('auth.register-retailer');
+    }
+
+    public function createDistributor(): View
+    {
+        return view('auth.register-distributor');
     }
 
     /**
@@ -37,6 +42,7 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'user_type' => ['required', 'in:retailer,distributor'],
             'credentials' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
+            'credentials2' => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
@@ -61,6 +67,15 @@ class RegisteredUserController extends Controller
                 'file_path' => $filePath,
             ]);
         }
+
+        if ($request->hasFile('credentials2')) {
+            $filePath2 = $request->file('credentials2')->store('credentials', 'public');
+            Credential::create([
+                'user_id'   => $user->id,
+                'file_path' => $filePath2,
+            ]);
+        }
+
 
         event(new Registered($user));
 

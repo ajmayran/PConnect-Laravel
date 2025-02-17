@@ -12,11 +12,12 @@ class DistributorSeeder extends Seeder
     {
         // Create a test user
         $user = User::create([
-            'first_name' => 'Test',
+            'first_name' => 'Test22',
             'last_name' => 'Distributor',
-            'email' => 'test2@dist.com',
+            'email' => 'test22@dist.com',
             'password' => bcrypt('password'),
             'user_type' => 'distributor',
+            'profile_completed' => true, // Set profile_completed to true
             'status' => 'approved', // Set status to approved
         ]);
 
@@ -24,7 +25,7 @@ class DistributorSeeder extends Seeder
         Distributors::create([
             'user_id' => $user->id,
             'company_name' => 'Test22 Company',
-            'company_email' => 'testcompany@example.com',
+            'company_email' => 'test22company@example.com',
             'company_profile_image' => '', // Set to empty string for testing
             'company_address' => '123456 Test St',
             'company_phone_number' => '1234567890',
