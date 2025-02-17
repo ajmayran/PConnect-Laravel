@@ -6,6 +6,226 @@
         <div class="container p-4 mx-auto">
             <h1 class="mb-4 text-xl font-semibold text-center sm:text-2xl">Cancellations</h1>
 
+            <!-- Tabs and Search Section -->
+            <div class="p-4 mb-6 bg-white rounded-lg shadow-sm">
+                <!-- Tabs -->
+                <div class="flex justify-between mb-4 border-b">
+                    <div class="flex space-x-4">
+                        <button id="customerTab"
+                            class="px-4 py-2 text-green-600 border-b-2 border-green-500 tab-button">
+                            Customer Cancellations
+                        </button>
+                        <button id="myTab" class="px-4 py-2 text-gray-500 hover:text-green-600 tab-button">
+                            My Cancellations
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search and Export -->
+                <div class="flex items-center justify-between">
+                    <div class="relative">
+                        <input type="search" placeholder="Search orders..."
+                            class="px-4 py-2 pr-8 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <button class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <button class="px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600">
+                        <svg class="inline-block w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Export Reports
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tables Container -->
+            <div class="overflow-hidden bg-white rounded-lg shadow-sm">
+                <!-- Customer Cancellations Table -->
+                <div id="customerCancellations" class="tab-content">
+                    <div class="p-4">
+                        <h2 class="mb-4 text-sm text-gray-600">Customer Cancels: </h2>
+                        <table class="w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th
+                                        class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                        Order ID</th>
+                                    <th
+                                        class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                        Amount</th>
+                                    <th
+                                        class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                        Customer</th>
+                                    <th
+                                        class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                        Date</th>
+                                    <th
+                                        class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                        Status</th>
+                                    <th
+                                        class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                        Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach ($customerCancellations ?? [] as $order)
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ $order->id }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            ₱{{ number_format($order->total_amount, 2) }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ $order->customer_name }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            {{ $order->created_at->format('M d, Y') }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span
+                                                class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">
+                                                Cancelled
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <button onclick="showOrderDetails({{ $order->id }})"
+                                                class="text-blue-600 hover:text-blue-900">
+                                                View Details
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- My Cancellations Table -->
+                <div id="myCancellations" class="hidden tab-content">
+                    <div class="p-4">
+                        <h2 class="mb-4 text-sm text-gray-600">My Cancels: </h2>
+                        <table class="w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th
+                                        class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                        Order ID</th>
+                                    <th
+                                        class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                        Amount</th>
+                                    <th
+                                        class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                        Customer</th>
+                                    <th
+                                        class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                        Date</th>
+                                    <th
+                                        class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                        Reason</th>
+                                    <th
+                                        class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                        Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach ($myCancellations ?? [] as $order)
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ $order->id }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            ₱{{ number_format($order->total_amount, 2) }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ $order->customer_name }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            {{ $order->created_at->format('M d, Y') }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ $order->cancel_reason }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <button onclick="showOrderDetails({{ $order->id }})"
+                                                class="text-blue-600 hover:text-blue-900">
+                                                View Details
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Order Details Modal -->
+    <div id="orderDetailsModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+
+            <div
+                class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="px-4 pt-5 pb-4 bg-white sm:p-6 sm:pb-4">
+                    <!-- Modal content will be dynamically populated -->
+                </div>
+                <div class="px-4 py-3 bg-gray-50 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" onclick="closeModal()"
+                        class="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching functionality
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active state from all tabs
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('text-green-600', 'border-b-2', 'border-green-500');
+                    btn.classList.add('text-gray-500');
+                });
+
+                // Add active state to clicked tab
+                button.classList.add('text-green-600', 'border-b-2', 'border-green-500');
+                button.classList.remove('text-gray-500');
+
+                // Show corresponding content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+
+                if (button.id === 'customerTab') {
+                    document.getElementById('customerCancellations').classList.remove('hidden');
+                } else {
+                    document.getElementById('myCancellations').classList.remove('hidden');
+                }
+            });
+        });
+
+        // Modal functionality
+        function showOrderDetails(orderId) {
+            document.getElementById('orderDetailsModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('orderDetailsModal').classList.add('hidden');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('orderDetailsModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeModal();
+            }
+        });
+
+        // Close modal with escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+
 </x-distributor-layout>
