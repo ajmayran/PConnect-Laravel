@@ -40,7 +40,7 @@
                 <div>
                     <x-text-input id="email"
                         class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-green-500 focus:border-green-500"
-                        type="email" name="email" :value="old('email')" placeholder="Email" required />
+                        type="email" name="email" :value="old('email')" placeholder="Email Address" required />
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                 </div>
 

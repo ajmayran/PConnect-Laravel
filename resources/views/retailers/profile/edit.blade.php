@@ -44,7 +44,7 @@
                                 </label>
                                 <input id="business_name" name="business_name" type="text" required autofocus autocomplete="business_name"
                                     value="{{ old('business_name', $user->retailerProfile->business_name ?? '') }}"
-                                    class="block w-full mt-1 border-gray-300 rounded-md ">
+                                    class="block w-full mt-1 border-gray-300 dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600 rounded-md shadow-sm">
                             </div>
 
                             <div class="mb-4">
@@ -53,14 +53,15 @@
                                 </label>
                                 <input id="phone" name="phone" type="number" required autofocus autocomplete="phone"
                                     value="{{ old('phone', $user->retailerProfile->phone ?? '') }}"
-                                    class="block w-full mt-1 border-gray-300 rounded-md">
+                                    class="block w-full mt-1 border-gray-300 dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600 rounded-md shadow-sm">
                             </div>
 
                             <div class="mb-4">
                                 <label for="address" class="block text-sm font-medium text-gray-700">
                                     Address
                                 </label>
-                                <textarea id="address" name="address" required autofocus autocomplete="address" class="block w-full mt-1 border-gray-300 rounded-md">{{ old('address', $user->retailerProfile->address ?? '') }}</textarea>
+                                <textarea id="address" name="address" required autofocus autocomplete="address" 
+                                class="block w-full mt-1border-gray-300 dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600 rounded-md shadow-sm">{{ old('address', $user->retailerProfile->address ?? '') }}</textarea>
                             </div>
 
                             <x-primary-button type="submit">{{ __('Save') }}</x-primary-button>

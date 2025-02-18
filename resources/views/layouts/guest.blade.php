@@ -5,7 +5,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         
-
         <title>PConnect</title>
         <script src="https://unpkg.com/iconify-icon/dist/iconify-icon.min.js"></script>
 
@@ -17,11 +16,19 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased text-gray-900">
-        <div class="flex flex-col items-center min-h-screen pt-6 bg-gray-100 sm:justify-center sm:pt-0 dark:bg-gray-900">
+        <div class="flex flex-col items-center min-h-screen pt-6 bg-gradient-to-r from-green-400 to-green-600 sm:justify-center sm:pt-0 dark:bg-gray-900">
 
-            <div class="w-full px-6 py-4 mt-6 overflow-hidden bg-white shadow-md sm:max-w-md dark:bg-gray-800 sm:rounded-lg">
+            <div class="w-full px-6 py-4 mt-6 overflow-hidden bg-gradient-to-r from-green-400 to-green-600 shadow-md sm:max-w-md sm:rounded-lg">
                 {{ $slot }}
             </div>
+
         </div>
     </body>
+<style>
+    @media (min-width: 640px) {
+        .sm\:max-w-md {
+            max-width: 100%;
+        }
+    }
+</style>
 </html>
