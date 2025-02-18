@@ -46,7 +46,7 @@
 
     <div class="my-2 bg-gray-600 h-[1px]"></div>
 
-    <a href="{{ route('distributors.products.index') }}"  class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.products.index') ? 'bg-green-600' : 'hover:bg-green-600' }}">
+    <a href="{{ route('distributors.products.index') }}"  class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.products.index')|| request()->routeIs('distributors.products.create')||request()->routeIs('distributors.products.edit') ? 'bg-green-600' : 'hover:bg-green-600' }}">
         <div class="flex items-center">
             <iconify-icon icon="dashicons:products" class="text-xl icon"></iconify-icon>
             <span class="ml-4 font-normal text-gray-200">My Products</span>

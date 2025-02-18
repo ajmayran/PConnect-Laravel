@@ -1,14 +1,26 @@
-<div class="container flex gap-2  mx-auto">
-    <div class="w-1/4 h-screen pt-5 shadow-md bg-white sm:rounded-lg ">
-      <h2 class="p-4 mb-4 text-xl font-bold text-center">Account</h2>
+<div class="container flex gap-2 mx-auto">
+    <div class="w-1/4 h-screen pt-5 bg-white shadow-md sm:rounded-lg ">
+        <h2 class="p-4 mb-4 text-xl font-bold text-center">Account</h2>
         <ul class="text-center tab-list space-y">
-            <li class="p-2 cursor-pointer tab-item hover:bg-gray-200">Profile</li>
-            <li class="p-2 cursor-pointer tab-item hover:bg-gray-200 ">Address</li>
-            <li class="p-2 cursor-pointer tab-item hover:bg-gray-200 ">Change Password</li>
-            <li class="p-2 cursor-pointer tab-item hover:bg-gray-200 ">My Purchase</li>
-            <li class="p-2 cursor-pointer tab-item hover:bg-gray-200 " >Notifications</li>
-            <li class="p-2 cursor-pointer tab-item hover:bg-gray-200 ">Messages</li>
-            <li class="p-2 cursor-pointer tab-item hover:bg-gray-200">My Voucher</li>
-            <li class="p-2 mt-2 font-bold text-red-500 cursor-pointer tab-item hover:bg-gray-200">Log Out</li>
+            <li
+                class="p-2 cursor-pointer tab-item hover:bg-green-200 {{ request()->routeIs('retailers.profile.edit') ? 'bg-gray-200 p-2 m-2 rounded-lg' : '' }}">
+                <a href="{{ route('retailers.profile.edit') }}">Profile</a>
+            </li>
+            <li
+                class="p-2 m-2 cursor-pointer tab-item hover:bg-green-200 {{ request()->routeIs('retailers.profile.my-purchase') ? 'bg-gray-200 p-2 m-2 rounded-lg' : '' }}">
+                <a href="{{ route('retailers.profile.my-purchase') }}">My Purchase</a>
+            </li>
+            <li class="p-2 m-2 cursor-pointer tab-item hover:bg-green-200">Notifications</li>
+            <li class="p-2 m-2 cursor-pointer tab-item hover:bg-green-200">Messages</li>
+            <li
+                class="p-2 m-2 cursor-pointer tab-item hover:bg-green-200 {{ request()->routeIs('retailers.profile.settings') ? 'bg-gray-200 p-2 m-2 rounded-lg' : '' }}">
+                <a href="{{ route('retailers.profile.settings') }}">Settings</a>
+            </li>
+            <li class="p-2 m-2 font-bold text-red-500 cursor-pointer tab-item hover:bg-green-200">
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit">Log Out</button>
+                </form>
+            </li>
         </ul>
     </div>

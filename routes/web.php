@@ -75,7 +75,8 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     Route::get('retailers/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('retailers/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('retailers/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
+    Route::get('profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
+    Route::get('profile/my-purchase', [RetailerOrdersController::class, 'myPurchases'])->name('profile.my-purchase');
     // Product Routes
     Route::get('/products', [RetailerProductController::class, 'index'])->name('products.index');
     Route::get('/distributors/{id}', [DistributorPageController::class, 'show'])->name('distributor-page');
@@ -124,7 +125,6 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::get('/products', [DistributorProductController::class, 'index'])->name('distributors.products.index');
     Route::get('/products/create', [DistributorProductController::class, 'create'])->name('distributors.products.create');
     Route::post('/products', [DistributorProductController::class, 'store'])->name('distributors.products.store');
-
     Route::get('/products/{id}/edit', [DistributorProductController::class, 'edit'])->name('distributors.products.edit');
     Route::put('/products/{id}', [DistributorProductController::class, 'update'])->name('distributors.products.update');
     Route::delete('/products/{id}', [DistributorProductController::class, 'destroy'])->name('distributors.products.destroy');
@@ -143,7 +143,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     // Delivery Routes
     Route::get('/delivery', [DeliveryController::class, 'index'])->name('distributors.delivery.index');
     Route::patch('/delivery/{delivery}/status', [DeliveryController::class, 'updateStatus'])->name('distributors.delivery.update-status');
-    
+
     // Inventory Routes
     Route::get('/inventory', [InventoryController::class, 'index'])->name('distributors.inventory.index');
 

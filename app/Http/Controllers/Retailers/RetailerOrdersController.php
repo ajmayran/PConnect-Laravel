@@ -172,4 +172,23 @@ class RetailerOrdersController extends Controller
             return redirect()->back()->with('error', 'An error occurred while placing the order: ' . $e->getMessage());
         }
     }
+
+    public function myPurchases()
+    {
+        $orders = Order::with(['orderDetails.product'])
+            ->where('user_id', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('retailers.profile.my-purchase', compact('orders'));
+    }
+
+    public function show(Order $order)
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        return view('retailers.orders.show', compact('order'));
+    }
 }
