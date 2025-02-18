@@ -1,22 +1,17 @@
 <x-app-layout>
     <x-retailer-topnav />
 
-    <form class="max-w-2xl mx-auto p-4">
+    <form class="max-w-2xl p-4 mx-auto">
         <div class="relative">
-            <input 
-                type="search" 
-                id="search" 
-                name="search"
-                class="block p-3 w-full text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500" 
-                placeholder="Search products by name..." 
-                required 
-            />
-            <button 
-                type="submit" 
-                class="absolute top-0 end-0 h-full p-3 text-sm font-medium text-white bg-green-500 rounded-r-lg border border-green-500 hover:bg-green-600 focus:ring-2 focus:outline-none focus:ring-green-300"
-            >
-                <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+            <input type="search" id="search" name="search"
+                class="block w-full p-3 text-sm text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                placeholder="Search products by name..." required />
+            <button type="submit"
+                class="absolute top-0 h-full p-3 text-sm font-medium text-white bg-green-500 border border-green-500 rounded-r-lg end-0 hover:bg-green-600 focus:ring-2 focus:outline-none focus:ring-green-300">
+                <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 20 20">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
                 </svg>
                 <span class="sr-only">Search</span>
             </button>
@@ -42,22 +37,27 @@
     </section>
 
     <div class="container p-4 mx-auto">
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             @forelse ($products as $product)
-                <div class="overflow-hidden bg-white rounded-lg shadow-lg">
-                    <a href="{{ route('retailers.products.show', $product->id) }}">
-                        <div class="aspect-w-1 aspect-h-1">
-                            <img src="{{ $product->image ? Storage::url($product->image) : asset('img/default-product.jpg') }}"
+                <div
+                    class="flex flex-col h-full overflow-hidden transition-transform duration-300 bg-white rounded-lg shadow-lg hover:scale-[1.02]">
+                    <a href="{{ route('retailers.products.show', $product->id) }}" class="flex flex-col h-full">
+                        <div class="relative w-full h-48 sm:h-40">
+                            <img src="{{ $product->image ? asset('storage/products/' . basename($product->image)) : asset('img/default-product.jpg') }}"
                                 alt="{{ $product->product_name }}"
                                 onerror="this.src='{{ asset('img/default-product.jpg') }}'"
-                                class="object-cover w-full h-full">
+                                class="absolute inset-0 object-contain w-full h-full p-3">
                         </div>
-                        <div class="p-4">
-                            <h3 class="text-lg font-bold text-gray-900">{{ $product->product_name }}</h3>
-                            <p class="text-sm text-gray-500">{{ $product->distributor->company_name }}</p>
-                            <p class="mt-2 text-lg font-bold text-green-600">₱{{ number_format($product->price, 2) }}
-                            </p>
-                            <p class="text-sm text-gray-500">Stock: {{ $product->stock_quantity }}</p>
+                        <div class="flex flex-col flex-grow p-4">
+                            <h3 class="mb-2 text-sm font-bold text-gray-900 line-clamp-2">{{ $product->product_name }}
+                            </h3>
+                            <p class="text-xs text-gray-500">{{ $product->distributor->company_name }}</p>
+                            <div class="flex-grow"></div>
+                            <div class="mt-4">
+                                <p class="text-lg font-bold text-green-600">₱{{ number_format($product->price, 2) }}
+                                </p>
+                                <p class="text-xs text-gray-500">Stock: {{ $product->stock_quantity }}</p>
+                            </div>
                         </div>
                     </a>
                 </div>
@@ -67,9 +67,24 @@
                 </div>
             @endforelse
         </div>
+    </div>
 
+    <div class="container p-4 mx-auto">
         <div class="mt-8">
-            {{ $products->links() }}
+            <div class="flex items-center justify-between">
+                <!-- Pagination Results Info -->
+                <div class="text-sm text-gray-600">
+                    {!! __('Showing :first to :last of :total results', [
+                        'first' => $products->firstItem() ?? 0,
+                        'last' => $products->lastItem() ?? 0,
+                        'total' => $products->total(),
+                    ]) !!}
+                </div>
+                <!-- Pagination Links -->
+                <div>
+                    {{ $products->onEachSide(1)->links() }}
+                </div>
+            </div>
         </div>
     </div>
     @include('components.footer')

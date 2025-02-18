@@ -15,17 +15,28 @@ class Product extends Model
         'distributor_id',
         'product_name',
         'description',
+        'image',
+        'category_id',
+
+        'brand',
+        'sku',
+        'attributes',
+        'expiry_date',
+        'weight',
+
         'price',
         'stock_quantity',
         'minimum_purchase_qty',
-        'category_id',
-        'image',
+        'wholesale_prices',
+      
         'status',
-        'rejection_reason'
+        'rejection_reason',
+        'price_updated_at',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
+        'weight' => 'decimal:2',
         'stock_quantity' => 'integer',
         'minimum_purchase_qty' => 'integer',
     ];

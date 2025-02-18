@@ -1,7 +1,3 @@
-@php
-    use Illuminate\Support\Facades\Storage;
-@endphp
-
 <x-distributor-layout>
     <div class="container p-4 mx-auto">
         <span class="absolute text-3xl text-white cursor-pointer top-5 left-4 lg:hidden" onclick="toggleSidebar()">
