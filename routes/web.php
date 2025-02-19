@@ -159,6 +159,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
 
     // Insights Routes
     Route::get('/insights', [InsightsController::class, 'index'])->name('distributors.insights.index');
+    Route::get('/distributor/insights', [InsightsController::class, 'index'])->name('distributors.insights');
 
     // Truck Routes
     Route::get('/trucks', [TruckController::class, 'index'])->name('distributors.trucks.index');
