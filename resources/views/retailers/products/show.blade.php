@@ -19,7 +19,7 @@
                         <!-- Product Image -->
                         <div class="md:w-1/2">
                             <div class="aspect-w-4 aspect-h-3">
-                                <img src="{{ $product->image ? Storage::url($product->image) : asset('img/default-product.jpg') }}"
+                                <img src="{{ $product->image ? asset('storage/products/' . basename($product->image)) : asset('img/default-product.jpg') }}"
                                     alt="{{ $product->product_name }}" class="object-cover w-full h-full"
                                     onerror="this.src='{{ asset('img/default-product.jpg') }}'">
                             </div>

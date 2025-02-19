@@ -43,8 +43,8 @@
                     <h2 class="mb-4 text-2xl font-bold">Retailer Profile</h2>
                     <div class="flex items-center space-x-4">
                         <img class="object-cover w-16 h-16 rounded-full"
-                            src="{{ isset($user->retailerProfile->profile_picture) ? asset('storage/' . $user->retailerProfile->profile_picture) : asset('default-profile.png') }}"
-                            alt="Profile Image">
+                            src="{{ Auth::user()->retailerProfile && Auth::user()->retailerProfile->profile_picture ? asset('storage/' . Auth::user()->retailerProfile->profile_picture) : asset('img/default-profile.png') }}"
+                            alt="Profile">
                         <div>
                             <p class="font-bold text-gray-800">
                                 {{ $user->first_name }} {{ $user->last_name }}

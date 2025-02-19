@@ -38,9 +38,10 @@
                                 data-distributor-id="{{ $distributorId }}">
                                 <td class="px-4 py-4">
                                     <div class="flex items-center">
-                                        <img src="{{ $item->product->image ? Storage::url($item->product->image) : asset('img/default-product.jpg') }}"
+                                        <img src="{{ $item->product->image ? asset('storage/products/' . basename($item->product->image)) : asset('img/default-product.jpg') }}"
                                             class="object-cover w-16 h-16 mr-4 rounded"
-                                            onerror="this.src='{{ asset('img/default-product.jpg') }}'">
+                                            onerror="this.src='{{ asset('img/default-product.jpg') }}'"
+                                            alt="{{ $item->product->product_name }}">
                                         <div>
                                             <h4 class="font-medium text-gray-800">{{ $item->product->product_name }}
                                             </h4>
