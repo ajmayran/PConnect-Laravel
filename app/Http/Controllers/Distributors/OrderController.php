@@ -6,81 +6,86 @@ use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Cart; // Import the Cart model
+use App\Models\Delivery;
+use App\Models\Product;
+use Illuminate\Support\Facades\DB;
+
 
 class OrderController extends Controller
 {
+
+    const STATUS_PENDING = 'pending';
+    const STATUS_PROCESSING = 'processing';
+    const STATUS_REJECTED = 'rejected';
+
     public function index()
     {
-        $orders = Order::all();
+        $distributorId = Auth::user()->distributor->id;
+        $orders = Order::with(['orderDetails.product', 'user.retailerProfile']) // 'user' is the retailer who ordered
+            ->where('distributor_id', $distributorId)
+            ->where('status', self::STATUS_PENDING)
+            ->latest()
+            ->get()
+            ->map(function ($order) {
+                $order->formatted_id = $order->formatted_order_id;
+                return $order;
+            });
+
         return view('distributors.orders.index', compact('orders'));
     }
 
-    public function store(Request $request)
+    public function acceptOrder(Request $request, Order $order)
     {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'total_amount' => 'required|numeric',
-            'status' => 'required|string',
-        ]);
 
-        $order = Order::create($request->all());
-
-        // Delete the cart items for the user after order creation
-        Cart::where('user_id', $request->user_id)->delete();
-
-        return redirect()->route('orders.index')->with('success', 'Order created successfully.');
-    }
-
-    public function edit($id)
-    {
-        $order = Order::findOrFail($id);
-        return view('orders.edit', compact('order'));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'total_amount' => 'required|numeric',
-            'status' => 'required|string',
-        ]);
-
-        $order = Order::findOrFail($id);
-        $order->update($request->all());
-        return redirect()->route('orders.index')->with('success', 'Order updated successfully.');
-    }
-
-    public function destroy($id)
-    {
-        $order = Order::findOrFail($id);
-
-        // Check if the order can be canceled
-        if ($order->status !== 'delivered') {
-            $order->delete();
-            return redirect()->route('orders.index')->with('success', 'Order canceled successfully.');
+        if ($order->status !== self::STATUS_PENDING) {
+            return redirect()->back()->with('error', 'Only pending orders can be accepted.');
         }
 
-        return redirect()->route('orders.index')->with('error', 'Cannot cancel a delivered order.');
+        DB::transaction(function () use ($order) {
+            // Update each product quantity based on the order details
+            foreach ($order->orderDetails as $detail) {
+                $product = $detail->product;
+                // Deduct the ordered quantity (ensure your business logic prevents negative inventory)
+                $product->stock_quantity = max(0, $product->stock_quantity - $detail->quantity);
+                $product->save();
+            }
+            $order->status = self::STATUS_PROCESSING;
+            $order->status_updated_at = now();
+            $order->save();
+
+            $trackingNumber = 'TRK-' . strtoupper(uniqid());
+            // Generate a new delivery record
+            Delivery::create([
+                'order_id'      => $order->id,
+                'tracking_number'  => $trackingNumber,
+                'status'        => 'pending',
+                'created_at' => now(),
+                'updated_at' => now()
+
+                // Add additional fields as per your Delivery model
+            ]);
+        });
+
+        return redirect()->back()->with('success', 'Order accepted successfully.');
     }
 
-    public function confirmOrder(Request $request)
+    // Reject order: capture a reason, update order status and timestamp.
+    public function rejectOrder(Request $request, Order $order)
     {
-        // Validate the request
-        $request->validate([
-            'total_amount' => 'required|numeric',
-            'delivery_address' => 'required|string',
+        if ($order->status !== self::STATUS_PENDING) {
+            return redirect()->back()->with('error', 'Only pending orders can be rejected.');
+        }
+
+        $data = $request->validate([
+            'reject_reason' => 'required|string|max:255',
         ]);
 
-        // Create the order
-        $order = Order::create([
-            'user_id' => Auth::id(),
-            'total_amount' => $request->total_amount,
-            'status' => 'pending',
+        $order->update([
+            'status' => self::STATUS_REJECTED,
+            'reject_reason' => $data['reject_reason'],
+            'status_updated_at' => now()
         ]);
 
-        // Delete the cart items for the user
-        Cart::where('user_id', Auth::id())->delete();
-
-        return redirect()->route('orders.index')->with('success', 'Order placed successfully.');
+        return redirect()->back()->with('success', 'Order rejected successfully.');
     }
 }

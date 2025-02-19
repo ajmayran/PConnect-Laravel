@@ -1,7 +1,4 @@
-{{-- filepath: /c:/Users/nunez/Documents/PConnect-Laravel/resources/views/distributors/tickets/create.blade.php --}}
-@extends('layouts.app')
-
-@section('content')
+<x-app-layout>
     <div class="container px-4 py-8 mx-auto">
         <div class="overflow-hidden bg-white rounded-lg shadow-lg">
             <div class="px-6 py-4 bg-gray-800">
@@ -25,4 +22,4 @@
             </div>
         </div>
     </div>
-@endsection
+</x-app-layout>

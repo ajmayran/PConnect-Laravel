@@ -1,7 +1,4 @@
-{{-- filepath: /c:/Users/nunez/Documents/PConnect-Laravel/resources/views/admin/distributors/approved.blade.php --}}
-@extends('layouts.app')
-
-@section('content')
+<x-app-layout>
     @if (session('error'))
         <div class="relative px-4 py-3 text-red-700 bg-red-100 border border-red-400 rounded" role="alert">
             <span class="block sm:inline">{{ session('error') }}</span>
@@ -66,4 +63,4 @@
             </div>
         </div>
     </div>
-@endsection
+</x-app-layout>

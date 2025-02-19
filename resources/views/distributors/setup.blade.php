@@ -1,46 +1,82 @@
-@extends('layouts.app')
-    <div class="container">
-        <h1>Profile Setup</h1>
+<x-app-layout>
+    <div class="min-h-screen py-12 bg-gray-50">
+        <div class="max-w-2xl px-6 mx-auto">
+            <div class="p-8 bg-white rounded-lg shadow-md">
+                <!-- Header -->
+                <div class="pb-6 mb-6 border-b border-gray-200">
+                    <h1 class="text-2xl font-semibold text-gray-800">Company Profile Setup</h1>
+                    <p class="mt-2 text-sm text-gray-600">Please complete your company profile information.</p>
+                </div>
 
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+                <!-- Alerts -->
+                @if ($errors->any())
+                    <div class="p-4 mb-6 text-sm text-red-800 rounded-lg bg-red-50">
+                        <ul class="ml-4 list-disc">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
-        @if (session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
-            </div>
-        @endif
+                <!-- Form -->
+                <form action="{{ route('profile.updateSetup') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+                    @csrf
+                    
+                    <!-- Company Profile Image -->
+                    <div>
+                        <label for="company_profile_image" class="block mb-2 text-sm font-medium text-gray-700">
+                            Company Logo
+                        </label>
+                        <input type="file" id="company_profile_image" name="company_profile_image" accept="image/*"
+                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                    </div>
 
-        <form action="{{ route('profile.updateSetup') }}" method="POST" enctype="multipart/form-data">
-            @csrf
-            <div class="form-group">
-                <label for="company_profile_image">Company Profile Image</label>
-                <input type="file" class="form-control" id="company_profile_image" name="company_profile_image">
+                    <!-- Company Name -->
+                    <div>
+                        <label for="company_name" class="block mb-2 text-sm font-medium text-gray-700">
+                            Company Name
+                        </label>
+                        <input type="text" id="company_name" name="company_name" required
+                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                    </div>
+
+                    <!-- Company Email -->
+                    <div>
+                        <label for="company_email" class="block mb-2 text-sm font-medium text-gray-700">
+                            Company Email
+                        </label>
+                        <input type="email" id="company_email" name="company_email" required
+                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                    </div>
+
+                    <!-- Company Address -->
+                    <div>
+                        <label for="company_address" class="block mb-2 text-sm font-medium text-gray-700">
+                            Company Address
+                        </label>
+                        <input type="text" id="company_address" name="company_address" required
+                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                    </div>
+
+                    <!-- Company Phone Number -->
+                    <div>
+                        <label for="company_phone_number" class="block mb-2 text-sm font-medium text-gray-700">
+                            Company Phone Number
+                        </label>
+                        <input type="text" id="company_phone_number" name="company_phone_number" required
+                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-4">
+                        <button type="submit" 
+                            class="w-full px-4 py-2 text-sm font-medium text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            Complete Setup
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div class="form-group">
-                <label for="company_name">Company Name</label>
-                <input type="text" class="form-control" id="company_name" name="company_name" required>
-            </div>
-            <div class="form-group">
-                <label for="company_email">Company Email</label>
-                <input type="email" class="form-control" id="company_email" name="company_email" required>
-            </div>
-            <div class="form-group">
-                <label for="company_address">Company Address</label>
-                <input type="text" class="form-control" id="company_address" name="company_address" required>
-            </div>
-            <div class="form-group">
-                <label for="company_phone_number">Company Phone Number</label>
-                <input type="text" class="form-control" id="company_phone_number" name="company_phone_number"
-                    required>
-            </div>
-            <button type="submit" class="btn btn-primary">Complete Setup</button>
-        </form>
+        </div>
     </div>
+</x-app-layout>

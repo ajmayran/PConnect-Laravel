@@ -4,7 +4,7 @@
     <!-- Back Button -->
 
     <div class="container px-4 py-6 mx-auto">
-        <a href="{{route('retailers.dashboard')}}" class="flex items-center text-green-600 hover:text-green-700">
+        <a href="{{ route('retailers.dashboard') }}" class="flex items-center text-green-600 hover:text-green-700">
 
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -18,10 +18,7 @@
         <div class="flex items-center justify-between">
             <div class="flex items-center">
                 <img class="object-cover w-24 h-24 rounded-full shadow-lg"
-                    src="{{ $distributor->company_profile_image
-                        ? asset('storage/' . $distributor->company_profile_image)
-                        : asset('img/default-logo.png') }}"
-                    alt="Distributor {{ $distributor->company_name }}">
+                    src="{{ $distributor->company_profile_image ? asset('storage/' . $distributor->company_profile_image) : asset('img/default-distributor.jpg') }}">
                 <div class="ml-6">
                     <h1 class="text-2xl font-bold text-gray-800">{{ $distributor->company_name }}</h1>
                     <p class="text-gray-600">{{ $distributor->company_address }}</p>
@@ -29,6 +26,7 @@
             </div>
 
             <div class="flex space-x-4">
+                <x-modal-review :distributor="$distributor" :reviews="$distributor->reviews" />
                 <button class="flex items-center px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -69,28 +67,21 @@
                     </div>
                     <div class="text-left">
                         <h3 class="text-lg font-bold">{{ Str::limit($product->product_name, 15) }}</h3>
-                        <p class="text-[12px] text-gray-500">Min purchase qty: {{ $product->minimum_purchase_qty }}</p>
+                        <p class="text-[12px] text-gray-500">Min purchase qty: {{ $product->minimum_purchase_qty }}
+                        </p>
                         <p class="text-[12px] text-gray-500">Stocks: {{ $product->stock_quantity }}</p>
-                        <div class="flex flex-col items-center mt-4">
+                        <div class="flex justify-between mt-4">
                             <span
                                 class="text-lg font-bold text-green-600">₱{{ number_format($product->price, 2) }}</span>
-                            <form action="{{ route('retailers.cart.add') }}" method="POST"
-                                class="flex items-center mt-2">
-                                @csrf
-                                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                <input type="number" name="quantity" value="{{ $product->minimum_purchase_qty }}"
-                                    min="{{ $product->minimum_purchase_qty }}" max="{{ $product->stock_quantity }}"
-                                    class="w-16 text-center border border-gray-300 rounded focus:ring focus:ring-green-200">
-                                <button type="submit"
-                                    class="px-2 py-2 ml-2 text-sm text-white bg-green-500 rounded hover:bg-green-700">
-                                    Add to Cart
-                                </button>
-                            </form>
+                            <a href="{{ route('retailers.products.show', $product->id) }}"
+                                class="mt-1 text-sm hover:text-green-500">View
+                                Details →   
+                            </a>
+                            <input type="hidden" name="product_id" value="{{ $product->id }}">
                         </div>
                     </div>
                 </div>
-            @empty
-                <div class="col-span-5 py-8 text-center">
+            @empty <div class="col-span-5 py-8 text-center">
                     <p class="text-gray-500">No products found in this category.</p>
                 </div>
             @endforelse

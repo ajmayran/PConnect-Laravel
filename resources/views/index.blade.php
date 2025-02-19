@@ -1,5 +1,4 @@
-@extends('layouts.app')
-
+<x-app-layout>
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
@@ -7,7 +6,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Laravel</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <title>PConnect</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -31,7 +31,7 @@
             border-bottom: 2px solid rgb(38, 113, 38);
         }
     </style>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/index.js'])
 </head>
 
 <body>
@@ -69,8 +69,7 @@
                             class="pb-1 text-lg text-green-500 align-middle"></iconify-icon>Notifications</a><span
                         class="px-4 font-light text-gray-500 opacity-50">|</span>
                 </div>
-                <a href="{{ route('register') }}"
-                    class="pb-1 font-sans text-sm text-gray-800 hover:text-green-500">Signup</a><span
+                <a href="#  " id="signUpModalBtn"  class="pb-1 font-sans text-sm text-gray-800 hover:text-green-500">Signup</a><span
                     class="px-4 font-light text-gray-500 opacity-50">|</span>
                 <a href="{{ route('login') }}"
                     class="pb-1 font-sans text-sm text-gray-800 hover:text-green-500">Login</a>
@@ -250,9 +249,63 @@
             </div>
         </div>
     </section>
-    <script src="{{ asset('js/tailwind/user_dash.js') }}"></script>
+    
+    <!-- Modal for Registration Options -->
+    <div id="signUpModal"
+        class="fixed inset-0 flex items-center justify-center transition-opacity duration-300 bg-black bg-opacity-50 opacity-0 pointer-events-none">
+        <div id="modalContent"
+            class="p-6 transition-all duration-300 transform scale-95 bg-white rounded-lg shadow-xl w-96">
+            <h2 class="mb-4 text-xl font-bold text-center">Register As</h2>
+            <div class="flex space-x-4">
+                <a href="{{ route('register.retailer') }}"
+                    class="w-1/2 px-4 py-2 text-center text-white transition-colors duration-500 bg-green-500 rounded hover:bg-green-700">
+                    Retailer
+                </a>
+                <a href="{{ route('register.distributor') }}"
+                    class="w-1/2 px-4 py-2 text-center text-white transition-colors duration-500 bg-blue-500 rounded hover:bg-blue-700">
+                    Distributor
+                </a>
+            </div>
+            <button id="closeSignUpModal" class="block mx-auto mt-4 text-red-500">
+                Cancel
+            </button>
+        </div>
+    </div>
 </body>
 @include('components.footer')
+<script>
+    const signUpModal = document.getElementById('signUpModal');
+    const modalContent = document.getElementById('modalContent');
+    const signUpModalBtn = document.getElementById('signUpModalBtn');
+    const closeSignUpModal = document.getElementById('closeSignUpModal');
+
+    // Function to show the modal with transition
+    function showModal() {
+        signUpModal.classList.remove('pointer-events-none');
+        signUpModal.classList.remove('opacity-0');
+        modalContent.classList.remove('scale-95');
+    }
+
+    // Function to hide the modal with transition
+    function hideModal() {
+        signUpModal.classList.add('opacity-0');
+        modalContent.classList.add('scale-95');
+        // Disable clicks after the transition ends
+        setTimeout(() => {
+            signUpModal.classList.add('pointer-events-none');
+        }, 300);
+    }
+
+    signUpModalBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        showModal();
+    });
+
+    closeSignUpModal.addEventListener('click', function() {
+        hideModal();
+    });
+</script>
 
 
 </html>
+</x-app-layout>

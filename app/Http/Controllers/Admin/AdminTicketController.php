@@ -28,12 +28,12 @@ class AdminTicketController extends Controller
     }
 
     public function reject(Request $request, $id)
-    {
-        $request->validate(['rejection_reason' => 'required|string']);
-        $ticket = Ticket::findOrFail($id);
-        $ticket->update(['status' => 'rejected', 'rejection_reason' => $request->rejection_reason]);
-        return redirect()->route('admin.tickets.index')->with('success', 'Ticket rejected successfully.');
-    }
+{
+    $request->validate(['rejection_reason' => 'required|string']);
+    $ticket = Ticket::findOrFail($id);
+    $ticket->update(['status' => 'rejected', 'rejection_reason' => $request->rejection_reason]);
+    return redirect()->route('admin.tickets.index')->with('success', 'Ticket rejected successfully.');
+}
 
     public function resolved()
     {

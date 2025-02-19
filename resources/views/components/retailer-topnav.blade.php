@@ -11,18 +11,6 @@
                         <img class="w-auto h-10" src="{{ asset('img/Pconnect Logo.png') }}" alt="PConnect">
                     </div>
                 </div>
-
-                <!-- Search -->
-                <div class="flex items-center ml-6">
-                    <input type="text" placeholder="Search for items..."
-                        class="px-4 py-2 border-gray-300 w-96 border-y focus:ring-green-500 focus:border-green-500">
-                    <button class="px-6 py-2.5 text-white bg-green-500 rounded-r hover:bg-green-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </button>
-                </div>
             </div>
 
             <!-- Right Side -->
@@ -59,9 +47,11 @@
                                 <p class="text-xs text-gray-500">2 hours ago</p>
                             </div>
                         </div>
+                        <div class="p-4 text-center border-t border-gray-200">
+                            <button onclick="openNotificationModal()" class="text-sm text-green-600 hover:text-green-700">See All Notifications</button>
+                        </div>
                     </div>
                 </div>
-
                 <script>
                     function toggleNotifications() {
                         const popup = document.getElementById('notificationsPopup');
@@ -83,6 +73,46 @@
                             closeAll();
                         }
                     });
+
+                    function openNotificationModal() {
+                        document.getElementById('allNotificationsModal').classList.remove('hidden');
+                        document.getElementById('notificationsPopup').classList.add('hidden');
+                    }
+
+                    function closeNotificationModal() {
+                        document.getElementById('allNotificationsModal').classList.add('hidden');
+                    }
+
+                    // Update the existing click event listener
+                    document.addEventListener('click', function(event) {
+                        if (!event.target.closest('#notificationsPopup') &&
+                            !event.target.closest('#allNotificationsModal') &&
+                            !event.target.closest('button')) {
+                            closeAll();
+                            closeNotificationModal();
+                        }
+                    });
+
+                    // Add escape key listener for modal
+                    document.addEventListener('keydown', function(event) {
+                        if (event.key === 'Escape') {
+                            closeNotificationModal();
+                        }
+                    });
+
+                    // Close modal when clicking outside
+                    document.getElementById('allNotificationsModal').addEventListener('click', function(event) {
+                        if (event.target === this) {
+                            closeNotificationModal();
+                        }
+                    });
+
+                    // Close on escape key
+                    document.addEventListener('keydown', function(event) {
+                        if (event.key === 'Escape') {
+                            closeNotificationModal();
+                        }
+                    });
                 </script>
 
                 <!-- Profile Section with Dropdown -->
@@ -90,7 +120,7 @@
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
                             <button class="flex items-center cursor-pointer">
-                                <img class="object-cover w-8 h-8 rounded-full border"
+                                <img class="object-cover w-8 h-8 border rounded-full"
                                     src="{{ Auth::user()->retailerProfile && Auth::user()->retailerProfile->profile_picture ? asset('storage/' . Auth::user()->retailerProfile->profile_picture) : asset('img/default-profile.png') }}"
                                     alt="Profile">
                                 <span class="ml-2 text-sm text-gray-700">{{ Auth::user()->first_name }}</span>
@@ -134,10 +164,18 @@
     <div class="bg-gray-800">
         <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="flex justify-center space-x-8">
-                <!-- Changed links to spans or buttons -->
-                <a href="{{route('retailers.dashboard')}}" class="px-3 py-2 text-white cursor-pointer hover:text-green-400">HOME</a>
-                <a href="{{route('retailers.all-distributor')}}" class="px-3 py-2 text-white cursor-pointer hover:text-green-400">DISTRIBUTORS</a>
-                <a href="{{route('retailers.all-product')}}" class="px-3 py-2 text-white cursor-pointer hover:text-green-400">PRODUCTS</a>
+                <a href="{{ route('retailers.dashboard') }}"
+                    class="px-3 py-2 cursor-pointer {{ request()->routeIs('retailers.dashboard') ? 'text-green-400 font-bold' : 'text-white hover:text-green-400' }}">
+                    HOME
+                </a>
+                <a href="{{ route('retailers.all-distributor') }}"
+                    class="px-3 py-2 cursor-pointer {{ request()->routeIs('retailers.all-distributor') ? 'text-green-400 font-bold' : 'text-white hover:text-green-400' }}">
+                    DISTRIBUTORS
+                </a>
+                <a href="{{ route('retailers.all-product') }}"
+                    class="px-3 py-2 cursor-pointer {{ request()->routeIs('retailers.all-product') ? 'text-green-400 font-bold' : 'text-white hover:text-green-400' }}">
+                    PRODUCTS
+                </a>
             </div>
         </div>
     </div>

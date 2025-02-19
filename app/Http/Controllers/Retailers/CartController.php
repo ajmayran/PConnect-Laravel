@@ -182,23 +182,45 @@ class CartController extends Controller
 
     public function updateQuantities(Request $request)
     {
+        DB::beginTransaction();
         try {
-            $items = $request->items;
+            $validated = $request->validate([
+                'items' => 'required|array',
+                'items.*.cart_detail_id' => 'required|exists:cart_details,id',
+                'items.*.quantity' => 'required|integer|min:1'
+            ]);
 
-            foreach ($items as $item) {
-                $cartItem = Cart::findOrFail($item['id']);
-                $cartItem->update(['quantity' => $item['quantity']]);
+            foreach ($validated['items'] as $item) {
+                $cartDetail = CartDetail::findOrFail($item['cart_detail_id']);
+                $product = $cartDetail->product;
+
+                // Validate minimum purchase quantity
+                if ($item['quantity'] < $product->minimum_purchase_qty) {
+                    throw new \Exception("Minimum purchase quantity for {$product->product_name} is {$product->minimum_purchase_qty}");
+                }
+
+                // Validate stock availability
+                if ($item['quantity'] > $product->stock_quantity) {
+                    throw new \Exception("Only {$product->stock_quantity} items available in stock for {$product->product_name}");
+                }
+
+                $cartDetail->update([
+                    'quantity' => $item['quantity'],
+                    'subtotal' => $item['quantity'] * $product->price
+                ]);
             }
 
+            DB::commit();
             return response()->json([
                 'success' => true,
-                'message' => 'Cart updated successfully'
+                'message' => 'Cart quantities updated successfully'
             ]);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update cart: ' . $e->getMessage()
-            ], 500);
+                'message' => $e->getMessage()
+            ], 400);
         }
     }
 }

@@ -14,16 +14,17 @@ class DistributorSeeder extends Seeder
         $user = User::create([
             'first_name' => 'Test',
             'last_name' => 'Distributor',
-            'email' => 'test2@dist.com',
+            'email' => 'test@dist.com',
             'password' => bcrypt('password'),
             'user_type' => 'distributor',
+            'profile_completed' => true, // Set profile_completed to true
             'status' => 'approved', // Set status to approved
         ]);
 
         // Create a corresponding distributor record
         Distributors::create([
             'user_id' => $user->id,
-            'company_name' => 'Test22 Company',
+            'company_name' => 'Test Company',
             'company_email' => 'testcompany@example.com',
             'company_profile_image' => '', // Set to empty string for testing
             'company_address' => '123456 Test St',

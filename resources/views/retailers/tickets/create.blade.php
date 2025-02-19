@@ -1,7 +1,5 @@
 {{-- filepath: /c:/Users/nunez/Documents/PConnect-Laravel/resources/views/retailers/tickets/create.blade.php --}}
-@extends('layouts.app')
-
-@section('content')
+<x-app-layout>
     <div class="container px-4 py-8 mx-auto">
         <h1 class="text-2xl font-bold">Create Ticket</h1>
         @if (session('success'))
@@ -31,4 +29,4 @@
             </div>
         </div>
     </div>
-@endsection
+</x-app-layout>

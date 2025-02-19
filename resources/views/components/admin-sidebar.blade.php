@@ -1,5 +1,14 @@
-{{-- filepath: /c:/Users/nunez/Documents/PConnect-Laravel/resources/views/components/admin-sidebar.blade.php --}}
-<div class="fixed top-0 left-0 z-50 w-64 h-full p-4 transition-transform sidebar-menu" style="background-color: #abebc6;">
+<x-app-layout>
+    @if (session('success'))
+        <div class="relative px-4 py-3 text-green-700 bg-green-100 border border-green-400 rounded" role="alert">
+            <span class="block sm:inline">{{ session('success') }}</span>
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="relative px-4 py-3 text-red-700 bg-red-100 border border-red-400 rounded" role="alert">
+            <span class="block sm:inline">{{ session('error') }}</span>
+        </div>
+    @endif<div class="fixed top-0 left-0 z-50 w-64 h-full p-4 transition-transform sidebar-menu" style="background-color: #abebc6;">
     <a href="#" class="flex items-center pb-4 border-b border-b-gray-800">
         <img src="\img\Pconnect Logo.png" alt="Logo" class="object-cover w-8 h-8">
         <span class="ml-3 text-lg font-bold">PConnect</span>
@@ -148,3 +157,4 @@
         </li>
     </ul>
 </div>
+</x-app-layout>

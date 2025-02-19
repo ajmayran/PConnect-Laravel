@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\Distributors;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -16,17 +15,29 @@ class Product extends Model
         'distributor_id',
         'product_name',
         'description',
+        'image',
+        'category_id',
+
+        'brand',
+        'sku',
+        'attributes',
+        'expiry_date',
+        'weight',
+
         'price',
         'stock_quantity',
+        'stock_updated_at',
         'minimum_purchase_qty',
-        'category_id',
-        'image',
+        'wholesale_prices',
+      
         'status',
-        'rejection_reason'
+        'rejection_reason',
+        'price_updated_at',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
+        'weight' => 'decimal:2',
         'stock_quantity' => 'integer',
         'minimum_purchase_qty' => 'integer',
     ];

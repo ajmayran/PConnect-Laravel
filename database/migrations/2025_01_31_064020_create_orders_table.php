@@ -15,12 +15,12 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('distributor_id');
-            $table->enum('status', ['pending', 'processing', 'delivered', 'cancelled'])
+            $table->enum('status', ['pending', 'processing', 'completed', 'cancelled', 'rejected'])
                 ->default('pending');
             $table->enum('payment_status', ['pending', 'paid', 'failed'])
                 ->default('pending');
+            $table->text('reject_reason')->nullable();
             $table->timestamp('status_updated_at');
-            $table->text('landmark')->nullable();
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
@@ -31,8 +31,11 @@ return new class extends Migration
             $table->unsignedBigInteger('order_id');
             $table->unsignedBigInteger('product_id');
             $table->integer('quantity');
-            $table->decimal('total_amount', 10, 2);
+            $table->decimal('subtotal', 10, 2);
+            $table->string('delivery_address');
+
             $table->timestamps();
+
             
             $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');

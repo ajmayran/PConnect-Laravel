@@ -13,6 +13,8 @@ class RetailerProfile extends Model
         'business_name',
         'phone',
         'address',
+        'profile_picture', // Assuming this is the column for the profile picture
+        'bir_image', // Add this field to the fillable array
     ];
 
     public function user()
