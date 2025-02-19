@@ -3,7 +3,7 @@
         
         <!-- Login Form Card - Increased width -->
         <div class="p-5 flex flex-row w-full h-full  bg-white shadow-2xl rounded-3xl" style="height: 90%; width: 80%;">
-            <div class="w-1/2 p-4 border rounded-2xl" style="background-image: url('img/retailer_graphic.png'); background-position: center;">
+            <div class="w-1/2 p-4 border rounded-2xl" style="background-image: url('img/welcome2.png'); background-position: center;">
                 <button class="shadow-2xl px-5 py-2 bg-gray-800 hover:bg-gray-600 text-white rounded-3xl font-sans text-base cursor-pointer transition duration-300 ease-in-out inline-flex items-center">
                     <span class="mr-2">&larr;</span>
                     Back to website
@@ -13,7 +13,7 @@
                 <!-- Header -->
                 <div class="text-center">
                     <h2 class="text-3xl font-bold text-gray-900">Login</h2>
-                    <p class="mt-2 text-sm text-gray-600">Welcome back! Please enter your details</p>
+                    <p class="mt-2 text-2xl text-gray-600">Welcome back! Please enter your details</p>
                 </div>
 
                 <!-- Session Status -->
