@@ -47,7 +47,7 @@ Route::get('/', function () {
 });
 
 use App\Http\Controllers\Admin\AdminTicketController;
-
+use App\Http\Controllers\Admin\AllRetailerController;
 // Admin Routes
 Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function () {
     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('dashboard');
@@ -58,18 +58,26 @@ Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function (
     Route::post('/admin/approve-product/{id}', [AdminProductController::class, 'approveProduct'])->name('approveProduct');
     Route::post('/admin/reject-product/{id}', [AdminProductController::class, 'rejectProduct'])->name('rejectProduct');
     Route::get('/admin/distributors/approved', [Distributor::class, 'approvedDistributors'])->name('approvedDistributors');
-    Route::get('/admin/distributors/{id}/products', [Distributor::class, 'distributorProducts'])->name('distributorProducts');
-    Route::delete('/admin/product/{id}/remove', [Distributor::class, 'removeProduct'])->name('removeProduct');
 
     Route::get('/admin/download-credential/{id}', [AdminDashboardController::class, 'downloadCredential'])->name('downloadCredential');
+    Route::get('/admin/distributors/all', [Distributor::class, 'allDistributors'])->name('allDistributors');
 
     // Tickets Routes
     Route::get('/admin/tickets', [AdminTicketController::class, 'index'])->name('tickets.index');
-    Route::get('/admin/tickets/{id}', [AdminTicketController::class, 'show'])->name('tickets.show');
     Route::get('/admin/tickets/resolved', [AdminTicketController::class, 'resolved'])->name('tickets.resolved');
     Route::get('/admin/tickets/rejected', [AdminTicketController::class, 'rejected'])->name('tickets.rejected');
+    Route::get('/admin/tickets/{id}', [AdminTicketController::class, 'show'])->name('tickets.show');
     Route::post('/admin/tickets/{id}/resolve', [AdminTicketController::class, 'resolve'])->name('tickets.resolve');
     Route::post('/admin/tickets/{id}/reject', [AdminTicketController::class, 'reject'])->name('tickets.reject');
+
+    // All Products Route
+    Route::get('/admin/products/all', [AdminProductController::class, 'allProducts'])->name('allProducts');
+    Route::get('/admin/distributor/{id}/products', [AdminProductController::class, 'distributorProducts'])->name('distributorProducts');
+
+    // Retailer Routes
+    Route::get('/admin/retailers', [AllRetailerController::class, 'allRetailers'])->name('allRetailers');
+    Route::delete('/admin/product/{id}/remove', [AdminProductController::class, 'removeProduct'])->name('removeProduct');
+
 });
 
 use App\Http\Controllers\Retailer\RetailerTicketController;
@@ -120,7 +128,7 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     Route::get('/all-products', [AllProductController::class, 'index'])->name('all-product');
     Route::get('/products/{product}', [ProductDescController::class, 'show'])->name('products.show');
 });
-
+use App\Http\Controllers\Distributors\DistributorTicketController;
 use App\Http\Controllers\Distributors\DistributorProductController;
 // Distributor Routes
 Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'profile.completed'])->group(function () {
@@ -165,6 +173,10 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::post('/distributors', [DistributorController::class, 'store'])->name('distributors.store');
 
     Route::get('/approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])->name('auth.approval-waiting');
+
+    // Ticket Routes
+    Route::get('/tickets/create', [DistributorTicketController::class, 'create'])->name('tickets.create');
+    Route::post('/tickets', [DistributorTicketController::class, 'store'])->name('tickets.store');
 });
 
 // Social Authentication Routes

@@ -8,30 +8,25 @@
                 <h1 class="text-2xl font-bold text-white">Ticket Details</h1>
             </div>
             <div class="p-6">
-                <div class="mb-4">
-                    <h2 class="text-xl font-bold">Title: {{ $ticket->subject }}</h2>
-                    <p class="text-gray-700">User: {{ $ticket->user->id}}</p>
-                    <p class="text-gray-700">First Name: {{ $ticket->user->first_name}}</p>
-                    <p class="text-gray-700">Last Name: {{ $ticket->user->last_name}}</p>
-                    <p class="text-gray-700">Content: {{ $ticket->content }}</p>
-                </div>
-                <div class="flex space-x-4">
-                    <form action="{{ route('admin.tickets.resolve', $ticket->id) }}" method="POST">
+                <h2 class="text-xl font-bold">{{ $ticket->subject }}</h2>
+                <p>{{ $ticket->content }}</p>
+
+                @if ($ticket->status === 'rejected')
+                    <div class="mt-4">
+                        <h3 class="text-lg font-bold text-red-600">Rejection Reason</h3>
+                        <p>{{ $ticket->rejection_reason }}</p>
+                    </div>
+                @else
+                    <form action="{{ route('admin.tickets.resolve', $ticket->id) }}" method="POST" class="mt-4">
                         @csrf
-                        @method('PUT')
-                        <button type="submit" class="px-4 py-2 font-medium text-white bg-green-600 rounded hover:bg-green-700">
-                            Resolve
-                        </button>
+                        <button type="submit" class="px-4 py-2 text-white bg-green-500 rounded-md hover:bg-green-700">Resolve</button>
                     </form>
-                    <form action="{{ route('admin.tickets.reject', $ticket->id) }}" method="POST">
+
+                    <form action="{{ route('admin.tickets.reject', $ticket->id) }}" method="POST" class="mt-4">
                         @csrf
-                        @method('PUT')
-                        <input type="text" name="rejection_reason" placeholder="Reason for rejection" required class="border rounded px-2 py-1">
-                        <button type="submit" class="px-4 py-2 font-medium text-white bg-red-600 rounded hover:bg-red-700">
-                            Reject
-                        </button>
+                        <button type="submit" class="px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-700">Reject</button>
                     </form>
-                </div>
+                @endif
             </div>
         </div>
     </div>

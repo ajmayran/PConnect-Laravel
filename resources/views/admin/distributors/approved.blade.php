@@ -10,7 +10,7 @@
     <div class="container px-4 py-8 mx-auto">
         <div class="overflow-hidden bg-white rounded-lg shadow-lg">
             <div class="px-6 py-4 bg-gray-800">
-                <h1 class="text-2xl font-bold text-white">Approved Distributors</h1>
+                <h1 class="text-2xl font-bold text-white">Distributors</h1>
             </div>
             <div class="p-6">
                 <div class="overflow-x-auto">
@@ -30,6 +30,15 @@
                                     Email
                                 </th>
                                 <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                    Company Name
+                                </th>
+                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                    Address
+                                </th>
+                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                    Phone Number
+                                </th>
+                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                     Actions
                                 </th>
                             </tr>
@@ -41,8 +50,11 @@
                                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $distributor->first_name }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $distributor->last_name }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $distributor->email }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $distributor->distributor->company_name }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $distributor->distributor->company_address }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $distributor->distributor->company_phone_number }}</td>
                                     <td class="px-6 py-4 text-sm whitespace-nowrap">
-                                        <a href="{{ route('admin.distributorProducts', $distributor->id) }}" class="font-medium text-blue-600 hover:text-blue-900">
+                                        <a href="{{ route('admin.distributorProducts', $distributor->distributor->id) }}" class="font-medium text-blue-600 hover:text-blue-900">
                                             View Products
                                         </a>
                                     </td>

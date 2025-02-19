@@ -21,6 +21,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'user_id',
         'first_name',
         'last_name',
         'middle_name',
@@ -56,7 +57,7 @@ class User extends Authenticatable
 
     public function distributor(): HasOne
     {
-        return $this->hasOne(Distributors::class, 'user_id');
+        return $this->hasOne(Distributors::class);
     }
 
     protected function casts(): array
@@ -74,11 +75,15 @@ class User extends Authenticatable
 
     public function products()
     {
-        return $this->hasMany(Product::class, 'distributor_id');
+        return $this->hasMany(Product::class, 'user_id');
     }
 
     public function retailerProfile()
     {
-        return $this->hasOne(RetailerProfile::class);
+        return $this->hasOne(RetailerProfile::class, 'user_id');
+    }
+    public function retailers()
+    {
+        return $this->hasOne(retailers::class, 'user_id');
     }
 }

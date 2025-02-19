@@ -30,7 +30,7 @@ class Distributors extends Model
     
     public function products(): HasMany
     {
-        return $this->hasMany(Product::class, 'distributor_id');
+        return $this->hasMany(Product::class, 'user_id');
     }
 
     public function getProfilePhotoUrlAttribute()

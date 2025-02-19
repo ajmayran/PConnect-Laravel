@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
-use Illuminate\Support\Facades\Storage;
 use App\Models\Product;
+use App\Models\Distributors;
+use Illuminate\Support\Facades\Storage;
 
 class Distributor extends Controller
 {
@@ -49,7 +50,7 @@ class Distributor extends Controller
 
             $filePath = storage_path('app/public/credentials/' . $distributor->credential->file_path);
 
-            if (!Storage::disk('public')->exists('credentials/' . $distributor->credential->file_path)) {
+            if (Storage::disk('public')->exists('credentials/' . $distributor->credential->file_path)) {
                 return back()->with('error', 'Credential file is missing from storage.');
             }
 
@@ -58,43 +59,41 @@ class Distributor extends Controller
             return back()->with('error', 'Error downloading file: ' . $e->getMessage());
         }
     }
+
     public function approvedDistributors()
-{
-    $approvedDistributors = User::where('user_type', 'distributor')
-        ->where('status', 'approved')
-        ->get();
-    return view('admin.distributors.approved', compact('approvedDistributors'));
-}
-
-public function distributorProducts($id)
     {
-        $distributor = User::with(['products' => function ($query) {
-            $query->where('status', 'accepted');
-        }])->findOrFail($id);
-
-        return view('admin.distributors.products', compact('distributor'));
+        $distributors = Distributors::with('user')->get();
+        $approvedDistributors = User::where('user_type', 'distributor')
+            ->where('status', 'approved')
+            ->get();
+        return view('admin.distributors.approved', compact('approvedDistributors', 'distributors'));
     }
 
-public function removeProduct(Request $request, $id)
-{
-    $product = Product::findOrFail($id);
-    $product->delete();
+    public function removeProduct(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+        $product->delete();
 
-    return redirect()->back()->with('success', 'Product removed successfully. Reason: ' . $request->input('reason'));
-}
+        return redirect()->back()->with('success', 'Product removed successfully. Reason: ' . $request->input('reason'));
+    }
 
-public function pendingProducts()
-{
-    $pendingProducts = Product::where('status', 'pending')->get();
-    return view('admin.products.pending', compact('pendingProducts'));
-}
+    public function pendingProducts()
+    {
+        $pendingProducts = Product::where('status', 'pending')->get();
+        return view('admin.products.pending', compact('pendingProducts'));
+    }
 
+    public function rejectProduct(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+        $product->update(['status' => 'rejected', 'rejection_reason' => $request->input('reason')]);
 
-public function rejectProduct(Request $request, $id)
-{
-    $product = Product::findOrFail($id);
-    $product->update(['status' => 'rejected', 'rejection_reason' => $request->input('reason')]);
+        return redirect()->back()->with('success', 'Product rejected successfully. Reason: ' . $request->input('reason'));
+    }
 
-    return redirect()->back()->with('success', 'Product rejected successfully. Reason: ' . $request->input('reason'));
-}
+    public function allDistributors()
+    {
+        $distributors = Distributors::with('user')->get();
+        return view('admin.distributors.all', compact('distributors'));
+    }
 }

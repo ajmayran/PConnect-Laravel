@@ -1,3 +1,4 @@
+{{-- filepath: /c:/Users/nunez/Documents/PConnect-Laravel/resources/views/components/admin-sidebar.blade.php --}}
 <div class="fixed top-0 left-0 z-50 w-64 h-full p-4 transition-transform sidebar-menu" style="background-color: #abebc6;">
     <a href="#" class="flex items-center pb-4 border-b border-b-gray-800">
         <img src="\img\Pconnect Logo.png" alt="Logo" class="object-cover w-8 h-8">
@@ -20,18 +21,13 @@
             </a>
             <ul class="pl-7 mt-2 hidden group-[.selected]:block">
                 <li class="mb-4">
-                    <a href="#"
+                    <a href="{{ route('admin.allProducts') }}"
                         class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">All
                         Products</a>
                 </li>
                 <li class="mb-4">
                     <a href="{{ route('admin.pendingProducts') }}"
                         class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Pending
-                        Products</a>
-                </li>
-                <li class="mb-4">
-                    <a href="#"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Removed
                         Products</a>
                 </li>
             </ul>
@@ -81,6 +77,10 @@
                         class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Banned
                         Retailers</a>
                 </li>
+                <li class="mb-4">
+                    <a href="{{ route('admin.allRetailers') }}"
+                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">All Retailers</a>
+                </li>
             </ul>
         </li>
         <li class="mb-1 group">
@@ -96,19 +96,6 @@
                     <a href="{{ route('admin.pendingDistributors') }}"
                         class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Pending
                         Distributor</a>
-                </li>
-                <li class="mb-4">
-                    <a href="./distributors/activeDist.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Active
-                        Distributor</a>
-                </li>
-                <li class="mb-4">
-                    <a href="./distributors/restrictedDist.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Restricted</a>
-                </li>
-                <li class="mb-4">
-                    <a href="./distributors/bannedDist.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Banned</a>
                 </li>
                 <li class="mb-4">
                     <a href="{{ route('admin.approvedDistributors') }}"
