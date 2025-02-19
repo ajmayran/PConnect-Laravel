@@ -23,6 +23,101 @@ class RetailerOrdersController extends Controller
         return view('retailers.orders.index', compact('orders'));
     }
 
+    public function toPay()
+    {
+        $user = Auth::user();
+        $orders = Order::where('user_id', $user->id)
+            ->where('status', 'processing')
+            ->with(['distributor', 'orderDetails.product'])
+            ->latest()
+            ->get();
+
+        return view('retailers.orders.to-pay', compact('orders'));
+    }
+
+    public function toReceive()
+    {
+        $user = Auth::user();
+        $orders = Order::where('user_id', $user->id)
+            ->where('status', 'processing')
+            ->whereHas('delivery', function ($query) {
+                $query->where('status', 'out_for_delivery');
+            })
+            ->with(['distributor', 'orderDetails.product', 'delivery'])
+            ->latest()
+            ->get();
+
+        return view('retailers.orders.to-receive', compact('orders'));
+    }
+
+    public function completed()
+    {
+        $user = Auth::user();
+        $orders = Order::where('user_id', $user->id)
+            ->where('status', 'completed')
+
+            ->with(['distributor', 'orderDetails.product'])
+            ->latest()
+            ->get();
+
+        return view('retailers.orders.completed', compact('orders'));
+    }
+
+    public function cancelled()
+    {
+        $user = Auth::user();
+        $orders = Order::where('user_id', $user->id)
+            ->whereIn('status', ['cancelled', 'rejected'])
+            ->with(['distributor', 'orderDetails.product'])
+            ->latest()
+            ->get();
+
+        return view('retailers.orders.cancelled', compact('orders'));
+    }
+
+
+    public function returned()
+    {
+        $user = Auth::user();
+        $orders = Order::where('user_id', $user->id)
+            ->whereIn('status', ['returned'])
+            ->with(['distributor', 'orderDetails.product'])
+            ->latest()
+            ->get();
+
+        return view('retailers.orders.returned', compact('orders'));
+    }
+
+    public function cancel(Request $request, Order $order)
+    {
+        if ($order->status !== 'pending') {
+            return back()->with('error', 'Only pending orders can be cancelled.');
+        }
+
+        $reason = $request->input('cancel_reason');
+        if ($reason === 'other') {
+            $reason = $request->input('custom_reason');
+        }
+
+        $order->update([
+            'status' => 'cancelled',
+            'status_updated_at' => now(),
+            'cancel_reason' => $reason
+        ]);
+
+        return back()->with('success', 'Order cancelled successfully.');
+    }
+    // public function return(Order $order)
+    // {
+    //     if ($order->status !== 'completed') {
+    //         return back()->with('error', 'Only completed orders can be returned.');
+    //     }
+
+    //     // Add return logic here
+
+    //     return back()->with('success', 'Return request submitted successfully.');
+    // }
+
     public function placeOrder(Request $request, $distributorId)
     {
         try {
@@ -57,7 +152,7 @@ class RetailerOrdersController extends Controller
                 'user_id' => $user->id,
                 'distributor_id' => $distributorId,
                 'status' => 'pending',
-                'payment_status' => 'pending',
+                'payment_status' => 'unpaid',
                 'status_updated_at' => now(),
             ]);
 
@@ -135,7 +230,7 @@ class RetailerOrdersController extends Controller
                 $order = Order::create([
                     'user_id' => $user->id,
                     'distributor_id' => $distributorId,
-                    'payment_status' => 'pending',
+                    'payment_status' => 'unpaid',
                     'status' => 'pending',
                     'status_updated_at' => now(),
                 ]);

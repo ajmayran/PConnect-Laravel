@@ -45,7 +45,7 @@ class ProfileController extends Controller
         $user = $request->user();
         $user->update($validated);
 
-        return back()->with('status', 'profile-updated');
+        return back()->with('success', 'Profile information updated successfully!');
     }
 
     /**
@@ -85,7 +85,7 @@ class ProfileController extends Controller
 
         $retailerProfile->save();
 
-        return Redirect::route('retailers.profile.edit')->with('status', 'retailer-profile-updated');
+        return back()->with('success', 'Retailer profile updated successfully!');
     }
 
 

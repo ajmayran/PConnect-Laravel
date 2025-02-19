@@ -24,18 +24,13 @@ class TruckController extends Controller
             ->with(['order.user', 'order.orderDetails'])
             ->latest('truck_delivery.started_at')
             ->get();
-    
-        return view('distributors.trucks.show', compact('truck', 'deliveries'));
-    }
 
-    public function create()
-    {
-        return view('distributors.trucks.create');
+        return view('distributors.trucks.show', compact('truck', 'deliveries'));
     }
 
     public function edit(Trucks $truck)
     {
-        return view('distributors.trucks.edit', compact('truck'));
+        return response()->json($truck);
     }
 
     public function update(Request $request, Trucks $truck)

@@ -105,6 +105,13 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     Route::post('/orders', [RetailerOrdersController::class, 'store'])->name('orders.store');
     Route::get('/orders', [RetailerOrdersController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [RetailerOrdersController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order}/cancel', [RetailerOrdersController::class, 'cancel'])->name('orders.cancel');
+    Route::post('/orders/{order}/return', [RetailerOrdersController::class, 'return'])->name('orders.return');
+    Route::get('/orders/to-pay', [RetailerOrdersController::class, 'toPay'])->name('orders.to-pay');
+    Route::get('/orders/to-receive', [RetailerOrdersController::class, 'toReceive'])->name('orders.to-receive');
+    Route::get('/orders/completed', [RetailerOrdersController::class, 'completed'])->name('orders.completed');
+    Route::get('/orders/cancelled', [RetailerOrdersController::class, 'cancelled'])->name('orders.cancelled');
+    Route::get('/orders/returned', [RetailerOrdersController::class, 'cancelled'])->name('orders.returned');
 
     //Nav Routes
     Route::get('/all-distributors', [AllDistributorController::class, 'index'])->name('all-distributor');
@@ -139,6 +146,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::get('/orders', [OrderController::class, 'index'])->name('distributors.orders.index');
     Route::post('/orders/{order}/accept', [OrderController::class, 'acceptOrder'])->name('orders.accept');
     Route::post('/orders/{order}/reject', [OrderController::class, 'rejectOrder'])->name('orders.reject');
+    Route::get('/orders/{id}/details', [OrderController::class, 'getOrderDetails'])->name('orders.details');
 
     // Return Routes
     Route::get('/returns', [ReturnController::class, 'index'])->name('distributors.returns.index');
@@ -162,7 +170,6 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
 
     // Truck Routes
     Route::get('/trucks', [TruckController::class, 'index'])->name('distributors.trucks.index');
-    Route::get('/trucks/create', [TruckController::class, 'create'])->name('distributors.trucks.create');
     Route::post('/trucks', [TruckController::class, 'store'])->name('distributors.trucks.store');
     Route::get('/trucks/{truck}', [TruckController::class, 'show'])->name('distributors.trucks.show');
     Route::get('/trucks/{truck}/edit', [TruckController::class, 'edit'])->name('distributors.trucks.edit');

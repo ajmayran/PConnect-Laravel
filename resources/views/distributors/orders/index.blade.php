@@ -1,81 +1,108 @@
 <x-distributor-layout>
-        <span class="absolute text-3xl text-white cursor-pointer top-5 left-4 lg:hidden" onclick="toggleSidebar()">
-            <i class="px-2 bg-gray-900 rounded-md bi bi-filter-left"></i>
-        </span>
+    <span class="absolute text-3xl text-white cursor-pointer top-5 left-4 lg:hidden" onclick="toggleSidebar()">
+        <i class="px-2 bg-gray-900 rounded-md bi bi-filter-left"></i>
+    </span>
 
-        <div class="container p-4 mx-auto">
-            <h1 class="mb-6 text-2xl font-bold text-center text-gray-800 sm:text-3xl">Orders Management</h1>
+    <div class="container p-4 mx-auto">
+        <h1 class="mb-6 text-2xl font-bold text-center text-gray-800 sm:text-3xl">Orders Management</h1>
 
-            @if ($orders->isEmpty())
-                <div class="p-8 text-center bg-white rounded-lg shadow-sm">
-                    <p class="text-gray-600 sm:text-lg">No orders found.</p>
-                </div>
-            @else
-                <div class="overflow-x-auto bg-white rounded-lg shadow-sm">
-                    <table class="min-w-full text-sm divide-y divide-gray-200">
-                        <thead>
-                            <tr class="bg-gray-50">
-                                <th class="px-4 py-3 font-medium text-left text-gray-700">Order ID</th>
-                                <th class="px-4 py-3 font-medium text-left text-gray-700">Retailer Name</th>
-                                <th class="px-4 py-3 font-medium text-left text-gray-700">Total Amount</th>
-                                <th class="px-4 py-3 font-medium text-left text-gray-700">Date and Time</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            @foreach ($orders as $order)
-                                <tr onclick="openModal(this)" data-order-id="{{ $order->id }}"
-                                    data-retailer='@json($order->user)'
-                                    data-details='@json($order->orderDetails)'
-                                    data-created-at="{{ $order->created_at->format('F d, Y h:i A') }}"
-                                    class="transition-colors cursor-pointer hover:bg-gray-50">
-                                    <td class="px-4 py-3">{{ $order->formatted_order_id }}</td>
-                                    <td class="px-4 py-3">
-                                        {{ $order->user->first_name }} {{ $order->user->last_name }}
-                                    </td>
-                                    <td class="px-4 py-3 font-medium text-blue-600">
-                                        ₱{{ number_format(optional($order->orderDetails)->sum('subtotal') ?: 0, 2) }}
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                                            <span
-                                                class="font-medium text-gray-700">{{ $order->created_at->format('F d, Y') }}</span>
-                                            <span
-                                                class="px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
-                                                {{ $order->created_at->format('h:i A') }}
-                                            </span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
+        <!-- Order Status Tabs -->
+        <div class="flex mb-4 border-b">
+            <a href="?status=pending"
+                class="px-4 py-2 -mb-px font-semibold 
+                      @if (request('status') === 'pending' || !request('status')) text-green-500 border-green-500 
+                      @else text-gray-600 border-transparent @endif 
+                      border-b-2">
+                Pending
+            </a>
+            <a href="?status=processing"
+                class="px-4 py-2 -mb-px font-semibold 
+                      @if (request('status') === 'processing') text-green-500 border-green-500
+                      @else text-gray-600 border-transparent @endif  
+                      border-b-2">
+                Processing
+            </a>
+            <a href="?status=rejected"
+                class="px-4 py-2 -mb-px font-semibold 
+                      @if (request('status') === 'rejected') text-green-500 border-green-500
+                      @else text-gray-600 border-transparent @endif  
+                      border-b-2">
+                Rejected
+            </a>
         </div>
-        
 
-        <!-- Main Order Modal -->
-        <div id="orderModal"
-            class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
-            <div class="w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl md:w-3/4 sm:w-3/4">
-                <!-- Modal Header -->
-                <div class="sticky top-0 z-10 flex items-center justify-between p-4 bg-white border-b">
-                    <h2 class="text-xl font-bold text-gray-800" id="modalTitle">Order Details</h2>
-                    <button onclick="closeModal()"
-                        class="p-2 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
+        @if ($orders->isEmpty())
+            <div class="p-8 text-center bg-white rounded-lg shadow-sm">
+                <p class="text-gray-600 sm:text-lg">No orders found.</p>
+            </div>
+        @else
+            <div class="overflow-x-auto bg-white rounded-lg shadow-sm">
+                <table class="min-w-full text-sm divide-y divide-gray-200">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-3 font-medium text-left text-gray-700">Order ID</th>
+                            <th class="px-4 py-3 font-medium text-left text-gray-700">Retailer Name</th>
+                            <th class="px-4 py-3 font-medium text-left text-gray-700">Total Amount</th>
+                            <th class="px-4 py-3 font-medium text-left text-gray-700">Date and Time</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        @foreach ($orders as $order)
+                            <tr onclick="openModal(this)" data-order-id="{{ $order->id }}"
+                                data-status="{{ $order->status }}" data-retailer='@json($order->user)'
+                                data-details='@json($order->orderDetails)'
+                                data-delivery-address="{{ $order->orderDetails->first()->delivery_address ?? '' }}"
+                                data-created-at="{{ $order->created_at->setTimezone('Asia/Manila')->format('F d, Y h:i A') }}"
+                                class="transition-colors cursor-pointer hover:bg-gray-50">
+                                <td class="px-4 py-3">{{ $order->formatted_order_id }}</td>
+                                <td class="px-4 py-3">
+                                    {{ $order->user->first_name }} {{ $order->user->last_name }}
+                                </td>
+                                <td class="px-4 py-3 font-medium text-blue-600">
+                                    ₱{{ number_format(optional($order->orderDetails)->sum('subtotal') ?: 0, 2) }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                        <span
+                                            class="font-medium text-gray-700">{{ $order->created_at->format('F d, Y') }}</span>
+                                        <span
+                                            class="px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
+                                            {{ $order->created_at->format('h:i A') }}
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
 
-                <div id="modalContent" class="p-6">
-                    <!-- Modal Content (Products and retailer profile) is generated dynamically -->
-                </div>
 
-                <!-- Modal Footer with Accept, Reject, and Close buttons -->
-                <div class="sticky bottom-0 flex justify-end gap-4 p-4 bg-white border-t">
+    <!-- Main Order Modal -->
+    <div id="orderModal"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl md:w-3/4 sm:w-3/4">
+            <!-- Modal Header -->
+            <div class="sticky top-0 z-10 flex items-center justify-between p-4 bg-white border-b">
+                <h2 class="text-xl font-bold text-gray-800" id="modalTitle">Order Details</h2>
+                <button onclick="closeModal()"
+                    class="p-2 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <div id="modalContent" class="p-6">
+                <!-- Modal Content (Products and retailer profile) is generated dynamically -->
+            </div>
+
+            <!-- Modal Footer with Accept, Reject, and Close buttons -->
+            <div class="sticky bottom-0 flex justify-end gap-4 p-4 bg-white border-t">
+                <div id="actionButtons">
                     <button onclick="acceptOrder()"
                         class="px-4 py-2 font-medium text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700">
                         Accept
@@ -84,65 +111,64 @@
                         class="px-4 py-2 font-medium text-white transition-colors bg-red-600 rounded-lg hover:bg-red-700">
                         Reject
                     </button>
-                    <button onclick="closeModal()"
-                        class="px-4 py-2 font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">
-                        Close
-                    </button>
                 </div>
+                <button onclick="closeModal()"
+                    class="px-4 py-2 font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">
+                    Close
+                </button>
             </div>
         </div>
+    </div>
 
-        <!-- Reject Reason Modal -->
-        <div id="rejectModal"
-            class="fixed inset-0 flex items-center justify-center hidden bg-black bg-opacity-50 z-60 backdrop-blur-sm">
-            <div class="w-11/12 max-w-md bg-white rounded-lg shadow-xl">
-                <div class="p-4 border-b">
-                    <h2 class="text-xl font-bold text-gray-800">Reject Order</h2>
+    <!-- Reject Reason Modal -->
+    <div id="rejectModal"
+        class="fixed inset-0 flex items-center justify-center hidden bg-black bg-opacity-50 z-60 backdrop-blur-sm">
+        <div class="w-11/12 max-w-md bg-white rounded-lg shadow-xl">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-bold text-gray-800">Reject Order</h2>
+            </div>
+            <div class="p-4">
+                <p class="mb-2 text-gray-700">Select a rejection reason:</p>
+                <div>
+                    <label class="flex items-center mb-2">
+                        <input type="radio" name="reject_reason_option" value="Out of stock" class="mr-2"
+                            onchange="checkRejectOther(this)">
+                        Out of stock
+                    </label>
+                    <label class="flex items-center mb-2">
+                        <input type="radio" name="reject_reason_option" value="Price mismatch" class="mr-2"
+                            onchange="checkRejectOther(this)">
+                        Price mismatch
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="reject_reason_option" value="Other" class="mr-2"
+                            onchange="checkRejectOther(this)">
+                        Other
+                    </label>
                 </div>
-                <div class="p-4">
-                    <p class="mb-2 text-gray-700">Select a rejection reason:</p>
-                    <div>
-                        <label class="flex items-center mb-2">
-                            <input type="radio" name="reject_reason_option" value="Out of stock" class="mr-2"
-                                onchange="checkRejectOther(this)">
-                            Out of stock
-                        </label>
-                        <label class="flex items-center mb-2">
-                            <input type="radio" name="reject_reason_option" value="Price mismatch" class="mr-2"
-                                onchange="checkRejectOther(this)">
-                            Price mismatch
-                        </label>
-                        <label class="flex items-center">
-                            <input type="radio" name="reject_reason_option" value="Other" class="mr-2"
-                                onchange="checkRejectOther(this)">
-                            Other
-                        </label>
-                    </div>
-                    <textarea id="rejectOtherReason" class="hidden w-full p-2 mt-2 border rounded"
-                        placeholder="Enter custom rejection reason..."></textarea>
-                </div>
-                <div class="flex justify-end gap-2 p-4 border-t">
-                    <button onclick="submitRejectOrder()"
-                        class="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700">
-                        Submit
-                    </button>
-                    <button onclick="closeRejectModal()"
-                        class="px-4 py-2 text-white bg-gray-600 rounded hover:bg-gray-700">
-                        Cancel
-                    </button>
-                </div>
+                <textarea id="rejectOtherReason" class="hidden w-full p-2 mt-2 border rounded"
+                    placeholder="Enter custom rejection reason..."></textarea>
+            </div>
+            <div class="flex justify-end gap-2 p-4 border-t">
+                <button onclick="submitRejectOrder()" class="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700">
+                    Submit
+                </button>
+                <button onclick="closeRejectModal()" class="px-4 py-2 text-white bg-gray-600 rounded hover:bg-gray-700">
+                    Cancel
+                </button>
             </div>
         </div>
+    </div>
 
-        <!-- Hidden Forms for Accept and Reject -->
-        <form id="acceptForm" method="POST" class="hidden">
-            @csrf
-        </form>
+    <!-- Hidden Forms for Accept and Reject -->
+    <form id="acceptForm" method="POST" class="hidden">
+        @csrf
+    </form>
 
-        <form id="rejectForm" method="POST" class="hidden">
-            @csrf
-            <input type="hidden" name="reject_reason" id="rejectReasonInput">
-        </form>
+    <form id="rejectForm" method="POST" class="hidden">
+        @csrf
+        <input type="hidden" name="reject_reason" id="rejectReasonInput">
+    </form>
     </div>
     <script>
         var storageBaseUrl = "{{ asset('storage') }}";
@@ -150,10 +176,12 @@
 
         function openModal(row) {
             var orderId = row.getAttribute('data-order-id');
+            var orderStatus = row.getAttribute('data-status');
             currentOrderId = orderId;
             var retailer = JSON.parse(row.getAttribute('data-retailer'));
             var details = JSON.parse(row.getAttribute('data-details'));
             var dateTime = row.getAttribute('data-created-at');
+            var deliveryAddress = row.getAttribute('data-delivery-address');
 
             document.getElementById('modalTitle').innerText = 'Order #' + orderId;
 
@@ -231,10 +259,10 @@
                         '<p class="flex items-center text-gray-600"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>' +
                         retailer.retailer_profile.phone + '</p>';
                 }
-                if (retailer.retailer_profile.address) {
+                if (deliveryAddress) {
                     modalHtml +=
                         '<p class="flex items-center text-gray-600"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>' +
-                        retailer.retailer_profile.address + '</p>';
+                        deliveryAddress + '</p>';
                 }
             }
             modalHtml += '</div>';
@@ -245,6 +273,12 @@
 
             document.getElementById('modalContent').innerHTML = modalHtml;
             document.getElementById('orderModal').classList.remove('hidden');
+
+            if (orderStatus !== 'pending') {
+                document.getElementById('actionButtons').classList.add('hidden');
+            } else {
+                document.getElementById('actionButtons').classList.remove('hidden');
+            }
         }
 
         function closeModal() {
@@ -262,9 +296,9 @@
                 confirmButtonText: 'Yes, accept it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                        document.getElementById('acceptForm').action = "/orders/" + currentOrderId +
-                            "/accept";
-                        document.getElementById('acceptForm').submit();
+                    document.getElementById('acceptForm').action = "/orders/" + currentOrderId +
+                        "/accept";
+                    document.getElementById('acceptForm').submit();
                 }
             });
         }
@@ -328,10 +362,10 @@
                 confirmButtonText: 'Yes, reject it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                        document.getElementById('rejectForm').action = "/orders/" + currentOrderId +
-                            "/reject";
-                        document.getElementById('rejectReasonInput').value = reason;
-                        document.getElementById('rejectForm').submit();
+                    document.getElementById('rejectForm').action = "/orders/" + currentOrderId +
+                        "/reject";
+                    document.getElementById('rejectReasonInput').value = reason;
+                    document.getElementById('rejectForm').submit();
                 }
             });
         }

@@ -61,9 +61,9 @@
                 <div class="p-6 transition-shadow bg-white border border-gray-200 rounded-lg shadow-lg hover:shadow-xl">
                     <div class="flex justify-center mb-4">
                         <img class="object-cover w-32 h-32 rounded-lg"
-                            src="{{ $product->image ? Storage::url($product->image) : asset('img/default-product.jpg') }}"
-                            alt="{{ $product->product_name }}"
-                            onerror="this.src='{{ asset('img/default-product.jpg') }}'">
+                        src="{{ $product->image ? asset('storage/products/' . basename($product->image)) : asset('img/default-product.jpg') }}"
+                        alt="{{ $product->product_name }}"
+                        onerror="this.src='{{ asset('img/default-product.jpg') }}'">
                     </div>
                     <div class="text-left">
                         <h3 class="text-lg font-bold">{{ Str::limit($product->product_name, 15) }}</h3>

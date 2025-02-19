@@ -21,9 +21,11 @@ class OrderController extends Controller
     public function index()
     {
         $distributorId = Auth::user()->distributor->id;
-        $orders = Order::with(['orderDetails.product', 'user.retailerProfile']) // 'user' is the retailer who ordered
+        $status = request('status', self::STATUS_PENDING); // default to pending
+
+        $orders = Order::with(['orderDetails.product', 'user.retailerProfile'])
             ->where('distributor_id', $distributorId)
-            ->where('status', self::STATUS_PENDING)
+            ->where('status', $status)
             ->latest()
             ->get()
             ->map(function ($order) {
@@ -87,5 +89,17 @@ class OrderController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Order rejected successfully.');
+    }
+
+    public function getOrderDetails($id)
+    {
+        $order = Order::with(['user.retailer_profile', 'orderDetails.product'])->findOrFail($id);
+        $html = view('distributors.orders.order-details-content', [
+            'orderDetails'   => $order->orderDetails,
+            'retailer'       => $order->user,
+            'storageBaseUrl' => asset('storage')
+        ])->render();
+
+        return response()->json(['html' => $html]);
     }
 }

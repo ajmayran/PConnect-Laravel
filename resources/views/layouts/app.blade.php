@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    
+
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <title>PConnect</title>
 
@@ -19,7 +19,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
+    <script src="https://unpkg.com/iconify-icon/dist/iconify-icon.min.js"></script>
 </head>
 
 
@@ -37,6 +37,17 @@
                 icon: 'success',
                 title: 'Success!',
                 text: "{{ session('success') }}",
+                timer: 3000,
+                showConfirmButton: false
+            });
+        </script>
+    @endif
+    @if (session('error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: "{{ session('error') }}",
                 timer: 3000,
                 showConfirmButton: false
             });

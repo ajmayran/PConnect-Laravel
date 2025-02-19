@@ -1,70 +1,185 @@
 <x-app-layout>
     <x-dashboard-nav />
-    <div class="container py-8 mx-auto">
-        <h1 class="mb-6 text-2xl font-bold">My Orders</h1>
+    <div class="container px-4 py-8 mx-auto max-w-7xl">
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">My Orders</h1>
+        </div>
 
         <x-retailer-orderstatus-tabs />
 
         @if ($orders->isEmpty())
-            <p class="p-4 text-gray-600">No orders found.</p>
+            <div class="flex items-center justify-center p-8 mt-4 bg-white rounded-lg">
+                <p class="text-lg text-gray-500">No orders found</p>
+            </div>
         @else
-            <div class="space-y-6">
+            <div class="mt-6 space-y-6">
                 @foreach ($orders as $order)
-                    <div class="p-6 bg-white rounded-lg shadow">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <h2 class="text-xl font-semibold text-gray-900">
-                                    {{ $order->formatted_order_id }}
-                                </h2>
-                                <p class="text-gray-600">
-                                    Distributor: {{ $order->distributor->company_name }}
-                                </p>
-                                <p class="text-gray-600">
-                                    Status: <span class="font-medium">{{ ucfirst($order->status) }}</span>
-                                </p>
+                    <div class="overflow-hidden bg-white rounded-lg shadow-sm">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <div class="space-y-1">
+                                    <h2 class="text-xl font-bold text-gray-900">
+                                        {{ $order->formatted_order_id }}
+                                    </h2>
+                                    <p class="text-gray-600">
+                                        <span class="font-medium">Distributor:</span>
+                                        {{ $order->distributor->company_name }}
+                                    </p>
+                                    <p class="text-gray-600">
+                                        <span class="font-medium">Status:</span>
+                                        <span
+                                            class="px-3 py-1 text-sm font-medium rounded-full 
+                                            @if ($order->status === 'completed') bg-green-100 text-green-800
+                                            @elseif($order->status === 'pending') bg-yellow-100 text-yellow-800
+                                            @elseif($order->status === 'cancelled') bg-red-100 text-red-800
+                                            @else bg-gray-100 text-gray-800 @endif">
+                                            {{ ucfirst($order->status) }}
+                                        </span>
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-medium text-gray-500">Order Date</p>
+                                    <p class="text-gray-900">{{ $order->created_at->format('M d, Y') }}</p>
+                                </div>
                             </div>
-                            <p class="text-gray-600">
-                                {{ $order->created_at->format('M d, Y') }}
-                            </p>
-                        </div>
 
-                        <div class="mt-4">
-                            <table class="w-full">
-                                <thead class="text-sm text-gray-600 border-b">
-                                    <tr>
-                                        <th class="px-4 py-2 text-left">Product</th>
-                                        <th class="px-4 py-2 text-center">Quantity</th>
-                                        <th class="px-4 py-2 text-right">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($order->orderDetails as $detail)
-                                        <tr class="border-b">
-                                            <td class="px-4 py-3">{{ $detail->product->product_name }}</td>
-                                            <td class="px-4 py-3 text-center">{{ $detail->quantity }}</td>
-                                            <td class="px-4 py-3 text-right">
-                                                ₱{{ number_format($detail->subtotal, 2) }}
+                            <div class="mt-6 -mx-6">
+                                <table class="w-full">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th
+                                                class="px-6 py-3 text-sm font-medium tracking-wider text-left text-gray-500">
+                                                Product</th>
+                                            <th
+                                                class="px-6 py-3 text-sm font-medium tracking-wider text-center text-gray-500">
+                                                Quantity</th>
+                                            <th
+                                                class="px-6 py-3 text-sm font-medium tracking-wider text-right text-gray-500">
+                                                Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        @foreach ($order->orderDetails as $detail)
+                                            <tr>
+                                                <td class="px-6 py-4 text-sm text-gray-900">
+                                                    {{ $detail->product->product_name }}</td>
+                                                <td class="px-6 py-4 text-sm text-center text-gray-500">
+                                                    {{ $detail->quantity }}</td>
+                                                <td class="px-6 py-4 text-sm font-medium text-right text-gray-900">
+                                                    ₱{{ number_format($detail->subtotal, 2) }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                    <tfoot class="bg-gray-50">
+                                        <tr>
+                                            <td colspan="2"
+                                                class="px-6 py-4 text-sm font-bold text-right text-gray-900">Total
+                                                Amount:</td>
+                                            <td class="px-6 py-4 text-sm font-bold text-right text-gray-900">
+                                                ₱{{ number_format($order->orderDetails->sum('subtotal'), 2) }}
                                             </td>
                                         </tr>
-                                    @endforeach
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="2" class="px-4 py-3 font-semibold text-right">Total Amount:</td>
-                                        <td class="px-4 py-3 font-semibold text-right">
-                                            ₱{{ number_format($order->orderDetails->sum('subtotal'), 2) }}
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            </table>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            <div class="pt-6 mt-6 border-t border-gray-200">
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    Delivery Address: {{ optional($order->orderDetails->first())->delivery_address }}
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="mt-4 text-sm text-gray-600">
-                            Delivery Address: {{ optional($order->orderDetails->first())->delivery_address }}
+                        <div class="flex justify-end p-4 bg-gray-50">
+                            @if ($order->status === 'pending')
+                                <!-- Cancel Button -->
+                                <button
+                                    onclick="document.getElementById('cancelModal{{ $order->id }}').style.display='block'"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
+                                    Cancel Order
+                                </button>
+                            @endif
+
+                            @if ($order->status === 'completed')
+                                <form action="{{ route('retailers.orders.return', $order) }}" method="POST"
+                                    class="inline ml-2">
+                                    @csrf
+                                    <button type="submit"
+                                        class="px-4 py-2 text-sm font-medium text-white bg-yellow-600 rounded-md hover:bg-yellow-700">
+                                        Return Order
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div id="cancelModal{{ $order->id }}"
+                        class="fixed inset-0 z-50 hidden overflow-auto bg-black bg-opacity-50">
+                        <div class="relative max-w-md p-8 mx-auto mt-20 bg-white rounded-lg">
+                            <h3 class="mb-4 text-lg font-bold">Cancel Order #{{ $order->formatted_order_id }}</h3>
+
+                            <form action="{{ route('retailers.orders.cancel', $order) }}" method="POST">
+                                @csrf
+                                <p class="mb-4 text-gray-600">Please select a reason for cancellation:</p>
+
+                                <div class="space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="radio" name="cancel_reason" value="Changed my mind" required
+                                            class="mr-2">
+                                        Changed my mind
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="cancel_reason" value="Ordered by mistake"
+                                            class="mr-2">
+                                        Ordered by mistake
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="cancel_reason" value="Found better price"
+                                            class="mr-2">
+                                        Found better price elsewhere
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="cancel_reason" value="other" class="mr-2">
+                                        Other reason
+                                    </label>
+                                </div>
+
+                                <textarea name="custom_reason" class="w-full p-2 mt-4 border rounded" placeholder="Specify other reason..."
+                                    style="display: none" rows="3"></textarea>
+
+                                <div class="flex justify-end gap-2 mt-6">
+                                    <button type="button"
+                                        onclick="document.getElementById('cancelModal{{ $order->id }}').style.display='none'"
+                                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                                        Close
+                                    </button>
+                                    <button type="submit"
+                                        class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
+                                        Confirm Cancel
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 @endforeach
             </div>
         @endif
     </div>
+    <script>
+        // Show/hide custom reason textarea
+        document.querySelectorAll('input[name="cancel_reason"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const textarea = this.closest('form').querySelector('textarea[name="custom_reason"]');
+                textarea.style.display = this.value === 'other' ? 'block' : 'none';
+            });
+        });
+    </script>
 </x-app-layout>
