@@ -1,8 +1,9 @@
 <x-app-layout>
-
     <x-dashboard-nav />
     <div class="container py-8 mx-auto">
         <h1 class="mb-6 text-2xl font-bold">My Orders</h1>
+
+        <x-retailer-orderstatus-tabs />
 
         @if ($orders->isEmpty())
             <p class="p-4 text-gray-600">No orders found.</p>
