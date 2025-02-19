@@ -1,6 +1,6 @@
 <x-guest-layout>
-    <div
-        class="flex items-center justify-center min-h-screen px-4 py-12 bg-gradient-to-r from-green-400 to-green-600 sm:px-6 lg:px-8">
+    <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url({{ asset('img/loginbg.png') }})">
+    <div class="relative flex items-center justify-center min-h-screen px-4 py-12 sm:px-6 lg:px-8">
         <div class="w-full max-w-3xl p-8 space-y-8 bg-white shadow-2xl rounded-2xl">
             <!-- Header -->
             <div class="text-center">
@@ -98,4 +98,5 @@
             </form>
         </div>
     </div>
+</div>
 </x-guest-layout>
