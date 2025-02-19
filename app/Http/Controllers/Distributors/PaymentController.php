@@ -31,25 +31,30 @@ class PaymentController extends Controller
                 'payment_note' => 'nullable|string|max:255'
             ]);
 
-            DB::beginTransaction();
-
-            $payment->update([
-                'payment_status' => $request->payment_status,
-                'payment_note' => $request->payment_note,
-                'paid_at' => $request->payment_status === 'paid' ? now() : null
-            ]);
-
-            if ($request->payment_status === 'paid') {
-                $totalAmount = $payment->order->orderDetails->sum('subtotal');
-
-                Earning::create([
-                    'payment_id' => $payment->id,
-                    'distributor_id' => $payment->distributor_id,
-                    'amount' => $totalAmount
+            DB::transaction(function () use ($request, $payment) {
+                // Update payment status
+                $payment->update([
+                    'payment_status' => $request->payment_status,
+                    'payment_note' => $request->payment_note,
+                    'paid_at' => $request->payment_status === 'paid' ? now() : null
                 ]);
-            }
 
-            DB::commit();
+                if ($request->payment_status === 'paid') {
+                    // Create earning record
+                    $totalAmount = $payment->order->orderDetails->sum('subtotal');
+                    Earning::create([
+                        'payment_id' => $payment->id,
+                        'distributor_id' => $payment->distributor_id,
+                        'amount' => $totalAmount
+                    ]);
+
+                    // Update order status to completed
+                    $payment->order->update([
+                        'status' => 'completed',
+                        'status_updated_at' => now()
+                    ]);
+                }
+            });
 
             return response()->json([
                 'success' => true,

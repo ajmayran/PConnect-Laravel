@@ -105,14 +105,15 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     // Order Routes
     Route::post('/orders', [RetailerOrdersController::class, 'store'])->name('orders.store');
     Route::get('/orders', [RetailerOrdersController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{order}', [RetailerOrdersController::class, 'show'])->name('orders.show');
-    Route::post('/orders/{order}/cancel', [RetailerOrdersController::class, 'cancel'])->name('orders.cancel');
-    Route::post('/orders/{order}/return', [RetailerOrdersController::class, 'return'])->name('orders.return');
     Route::get('/orders/to-pay', [RetailerOrdersController::class, 'toPay'])->name('orders.to-pay');
     Route::get('/orders/to-receive', [RetailerOrdersController::class, 'toReceive'])->name('orders.to-receive');
     Route::get('/orders/completed', [RetailerOrdersController::class, 'completed'])->name('orders.completed');
     Route::get('/orders/cancelled', [RetailerOrdersController::class, 'cancelled'])->name('orders.cancelled');
-    Route::get('/orders/returned', [RetailerOrdersController::class, 'cancelled'])->name('orders.returned');
+    Route::get('/orders/returned', [RetailerOrdersController::class, 'returned'])->name('orders.returned');
+
+    Route::get('/orders/{order}', [RetailerOrdersController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order}/cancel', [RetailerOrdersController::class, 'cancel'])->name('orders.cancel');
+    Route::post('/orders/{order}/return', [RetailerOrdersController::class, 'return'])->name('orders.return');
 
     //Nav Routes
     Route::get('/all-distributors', [AllDistributorController::class, 'index'])->name('all-distributor');
@@ -168,6 +169,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
 
     // Insights Routes
     Route::get('/insights', [InsightsController::class, 'index'])->name('distributors.insights.index');
+
 
     // Payment Routes
     Route::get('/payments', [PaymentController::class, 'index'])->name('distributors.payments.index');

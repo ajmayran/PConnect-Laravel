@@ -107,16 +107,7 @@ class RetailerOrdersController extends Controller
 
         return back()->with('success', 'Order cancelled successfully.');
     }
-    // public function return(Order $order)
-    // {
-    //     if ($order->status !== 'completed') {
-    //         return back()->with('error', 'Only completed orders can be returned.');
-    //     }
 
-    //     // Add return logic here
-
-    //     return back()->with('success', 'Return request submitted successfully.');
-    // }
 
     public function placeOrder(Request $request, $distributorId)
     {
