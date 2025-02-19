@@ -24,8 +24,9 @@ return new class extends Migration
             $table->string('brand')->nullable();
             $table->string('sku')->unique()->nullable();
             $table->json('attributes')->nullable(); // For dynamic attributes
-            $table->date('expiry_date')->nullable();
+            $table->json('tags')->nullable();
             $table->decimal('weight', 8, 2)->nullable();
+
 
             // Sales Information
             $table->decimal('price', 10, 2);
@@ -37,6 +38,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
             $table->string('rejection_reason')->nullable();
             $table->timestamp('price_updated_at')->nullable();
+            $table->timestamp('stock_updated_at')->nullable();
             $table->softDeletes();
             $table->timestamps();
 

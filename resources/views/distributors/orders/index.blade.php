@@ -28,7 +28,7 @@
                                     data-details='@json($order->orderDetails)'
                                     data-created-at="{{ $order->created_at->format('F d, Y h:i A') }}"
                                     class="transition-colors cursor-pointer hover:bg-gray-50">
-                                    <td class="px-4 py-3">#{{ $order->id }}</td>
+                                    <td class="px-4 py-3">{{ $order->formatted_order_id }}</td>
                                     <td class="px-4 py-3">
                                         {{ $order->user->first_name }} {{ $order->user->last_name }}
                                     </td>

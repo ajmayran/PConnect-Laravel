@@ -59,7 +59,9 @@
 </style>
 
 <body class="bg-gray-100">
-    @stack('scripts')
+   
+
+    <x-dist_navbar />
     <!-- Page Content -->
     <span class="absolute text-4xl text-white cursor-pointer top-5 left-4" onclick="toggleSidebar()">
         <i class="px-2 bg-gray-900 rounded-md bi bi-filter-left"></i>
@@ -72,7 +74,11 @@
     <div id="main-content" class="min-h-screen p-4 transition-all duration-300 ease-in-out">
         {{ $slot }}
     </div>
-    @include('components.footer')
+
+    <x-footer />
+
+    @stack('scripts')
+    
     @if (session('success'))
         <script>
             Swal.fire({
@@ -114,6 +120,7 @@
             }
         }
     }
+    
 </script>
 
 </html>

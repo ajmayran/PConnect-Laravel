@@ -26,6 +26,7 @@ class Product extends Model
 
         'price',
         'stock_quantity',
+        'stock_updated_at',
         'minimum_purchase_qty',
         'wholesale_prices',
       

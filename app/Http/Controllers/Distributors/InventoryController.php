@@ -2,13 +2,47 @@
 
 namespace App\Http\Controllers\Distributors;
 
+use App\Http\Controllers\Controller;
+use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
 
 class InventoryController extends Controller
 {
     public function index()
     {
-        return view('distributors.inventory'); // Create this view file later
+        $products = Product::where('distributor_id', Auth::user()->distributor->id)
+            ->select('id', 'product_name', 'image', 'stock_quantity', 'stock_updated_at')
+            ->orderBy('product_name')
+            ->get();
+
+        return view('distributors.inventory.index', compact('products'));
+    }
+
+    public function updateStock(Request $request, $id)
+    {
+        try {
+            $product = Product::findOrFail($id);
+
+            $validated = $request->validate([
+                'stock_quantity' => 'required|integer|min:0',
+            ]);
+
+            $product->update([
+                'stock_quantity' => $validated['stock_quantity'],
+                'stock_updated_at' => now()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Stock updated successfully',
+                'last_updated' => now()->format('M d, Y H:i')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }

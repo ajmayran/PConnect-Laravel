@@ -25,7 +25,11 @@ class OrderController extends Controller
             ->where('distributor_id', $distributorId)
             ->where('status', self::STATUS_PENDING)
             ->latest()
-            ->get();
+            ->get()
+            ->map(function ($order) {
+                $order->formatted_id = $order->formatted_order_id;
+                return $order;
+            });
 
         return view('distributors.orders.index', compact('orders'));
     }

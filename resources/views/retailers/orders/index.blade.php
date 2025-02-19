@@ -12,7 +12,9 @@
                     <div class="p-6 bg-white rounded-lg shadow">
                         <div class="flex items-center justify-between mb-4">
                             <div>
-                                <h2 class="text-xl font-semibold">Order #{{ $order->id }}</h2>
+                                <h2 class="text-xl font-semibold text-gray-900">
+                                    {{ $order->formatted_order_id }}
+                                </h2>
                                 <p class="text-gray-600">
                                     Distributor: {{ $order->distributor->company_name }}
                                 </p>

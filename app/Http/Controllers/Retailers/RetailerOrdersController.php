@@ -191,4 +191,14 @@ class RetailerOrdersController extends Controller
 
         return view('retailers.orders.show', compact('order'));
     }
+
+    public function getOrderDetails(Order $order)
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $order->load(['orderDetails.product']);
+        return view('retailers.profile.order-details', compact('order'));
+    }
 }

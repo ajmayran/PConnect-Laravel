@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class DistributorProfileController extends Controller
 {
@@ -36,8 +37,15 @@ class DistributorProfileController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('company_profile_image')) {
-            $imagePath = $request->file('company_profile_image')->store('profile-images', 'public');
+            // Store image in distributors folder
+            $imagePath = $request->file('company_profile_image')->store('distributors', 'public');
+
+            // If updating and old image exists, delete it
+            if ($user->distributor && $user->distributor->company_profile_image) {
+                Storage::disk('public')->delete($user->distributor->company_profile_image);
+            }
         }
+
 
         if (!$user->distributor) {
             // Create a new distributor record with all required fields
@@ -68,6 +76,6 @@ class DistributorProfileController extends Controller
             ->where('id', Auth::id())
             ->update(['profile_completed' => true]);
 
-        return redirect()->route('distributors.dashboard')->with('status', 'Profile setup completed successfully.')->withInput();
+        return redirect()->route('distributors.dashboard')->with('success', 'Welcome to PConnect, Distributor!.')->withInput();
     }
 }

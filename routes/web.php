@@ -21,10 +21,10 @@ use App\Http\Controllers\Distributors\DeliveryController;
 use App\Http\Controllers\Distributors\InsightsController;
 use App\Http\Controllers\Retailers\ProductDescController;
 use App\Http\Controllers\Distributors\InventoryController;
-use App\Http\Controllers\Retailers\RetailerOrderController;
 use App\Http\Controllers\Distributors\DistributorController;
 use App\Http\Controllers\Retailers\AllDistributorController;
 use App\Http\Controllers\Retailers\RetailerOrdersController;
+use App\Http\Controllers\Retailers\RetailerSearchController;
 use App\Http\Controllers\Distributors\CancellationController;
 use App\Http\Controllers\Retailers\DistributorPageController;
 use App\Http\Controllers\Retailers\RetailerProductController;
@@ -72,11 +72,14 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
 
     // Profile Routes
     Route::put('retailers/profile/update-retailer', [ProfileController::class, 'updateRetailerProfile'])->name('profile.update.retailer');
-    Route::get('retailers/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('retailers/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('retailers/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
     Route::get('profile/my-purchase', [RetailerOrdersController::class, 'myPurchases'])->name('profile.my-purchase');
+    Route::get('/profile/{order}/order-details', [RetailerORdersController::class, 'getOrderDetails'])->name('profile.order-details');
+
+
     // Product Routes
     Route::get('/products', [RetailerProductController::class, 'index'])->name('products.index');
     Route::get('/distributors/{id}', [DistributorPageController::class, 'show'])->name('distributor-page');
@@ -108,6 +111,7 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     Route::get('/distributor/{id}', [DistributorController::class, 'show'])->name('distributor.show');
 
     //
+    Route::get('/search', [RetailerSearchController::class, 'search'])->name('search');
     Route::get('/all-products', [AllProductController::class, 'index'])->name('all-product');
     Route::get('/products/{product}', [ProductDescController::class, 'show'])->name('products.show');
 });
@@ -128,6 +132,8 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::get('/products/{id}/edit', [DistributorProductController::class, 'edit'])->name('distributors.products.edit');
     Route::put('/products/{id}', [DistributorProductController::class, 'update'])->name('distributors.products.update');
     Route::delete('/products/{id}', [DistributorProductController::class, 'destroy'])->name('distributors.products.destroy');
+    Route::put('/products/{id}/update-price', [DistributorProductController::class, 'updatePrice'])->name('distributors.products.updatePrice');
+
 
     // Order Routes
     Route::get('/orders', [OrderController::class, 'index'])->name('distributors.orders.index');
@@ -146,7 +152,8 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
 
     // Inventory Routes
     Route::get('/inventory', [InventoryController::class, 'index'])->name('distributors.inventory.index');
-
+    Route::put('/inventory/{id}/update-stock', [InventoryController::class, 'updateStock'])->name('distributors.inventory.updateStock');
+    
     // Message Routes
     Route::get('/messages', [MessageController::class, 'index'])->name('distributors.messages.index');
 

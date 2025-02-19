@@ -18,7 +18,7 @@
                             <div class="space-y-4">
                                 <div
                                     class="relative flex items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
-                                    <!-- Preview container that overlays the upload area -->
+                                    <!-- Image preview container -->
                                     <div id="imagePreview" class="absolute inset-0 hidden w-full h-full">
                                         <img src="" alt="Preview"
                                             class="object-contain w-full h-full rounded-lg">
@@ -85,23 +85,35 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block mb-2 text-sm font-medium">Brand</label>
-                        <input type="text" name="brand" class="w-full px-3 py-2 border rounded-md">
+                        <input type="text" name="brand" class="w-full px-3 py-2 border rounded-md" required>
                     </div>
                     <div>
                         <label class="block mb-2 text-sm font-medium">SKU</label>
-                        <input type="text" name="sku" class="w-full px-3 py-2 border rounded-md">
+                        <input type="text" name="sku" class="w-full px-3 py-2 border rounded-md" required>
                     </div>
                     <div>
-                        <label class="block mb-2 text-sm font-medium">Weight (kg)</label>
+                        <label class="block mb-2 text-sm font-medium">Weight (in kg)</label>
                         <input type="number" name="weight" step="0.01" class="w-full px-3 py-2 border rounded-md">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium">Tags</label>
+                        <input type="text" name="tags" class="w-full px-3 py-2 border rounded-md"
+                            placeholder="Comma separated tags">
                     </div>
                 </div>
                 <div class="flex justify-between mt-4">
                     <button type="button" id="backToBasic"
                         class="px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200">Back</button>
-                    <button type="button" id="nextToSales"
-                        class="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600">Next: Sales
-                        Information</button>
+                    <div class="space-x-2">
+                        <!-- Partial Save Button -->
+                        <button type="submit" id="partialSave"
+                            class="px-4 py-2 text-white bg-green-500 rounded-md hover:bg-green-600">Save
+                            Product</button>
+                        <!-- Navigation to Sales Information -->
+                        <button type="button" id="nextToSales"
+                            class="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600">Next: Sales
+                            Information</button>
+                    </div>
                 </div>
             </div>
 
@@ -111,8 +123,8 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block mb-2 text-sm font-medium">Price (₱)</label>
-                        <input type="number" name="price" step="0.01" class="w-full px-3 py-2 border rounded-md"
-                            required>
+                        <input type="number" name="price" step="0.01"
+                            class="w-full px-3 py-2 border rounded-md" required>
                     </div>
                     <div>
                         <label class="block mb-2 text-sm font-medium">Stock Quantity</label>
@@ -128,7 +140,7 @@
                 <div class="flex justify-between mt-4">
                     <button type="button" id="backToSpecs"
                         class="px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200">Back</button>
-                    <button type="submit"
+                    <button type="submit" id="completeSave"
                         class="px-4 py-2 text-white bg-green-500 rounded-md hover:bg-green-600">Save Product</button>
                 </div>
             </div>
@@ -138,12 +150,13 @@
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function() {
+                let partialSaveTriggered = false;
                 const basicInfo = document.getElementById('basicInfo');
                 const specifications = document.getElementById('specifications');
                 const salesInfo = document.getElementById('salesInfo');
-                const categorySelect = document.getElementById('category_id');
-                // Image preview
-                const removeImageBtn = document.getElementById('removeImage');
+                const productForm = document.getElementById('productForm');
+
+                // Image preview functionality
                 const imageInput = document.querySelector('input[name="image"]');
                 const imagePreview = document.getElementById('imagePreview');
                 imageInput.addEventListener('change', function(e) {
@@ -157,6 +170,13 @@
                     }
                 });
 
+                // Remove image preview
+                document.getElementById('removeImage').addEventListener('click', function() {
+                    imageInput.value = "";
+                    imagePreview.querySelector('img').src = "";
+                    imagePreview.classList.add('hidden');
+                });
+
                 function showError(message) {
                     Swal.fire({
                         icon: 'error',
@@ -165,127 +185,57 @@
                         confirmButtonColor: '#3085d6'
                     });
                 }
-                // Navigation between cards
-                document.getElementById('nextToSpecs').addEventListener('click', function() {
-                    if (validateBasicInfo()) {
-                        basicInfo.classList.add('hidden');
-                        specifications.classList.remove('hidden');
-                    }
-                });
-
-                document.getElementById('backToBasic').addEventListener('click', function() {
-                    specifications.classList.add('hidden');
-                    basicInfo.classList.remove('hidden');
-                });
-
-                document.getElementById('nextToSales').addEventListener('click', function() {
-                    if (validateSpecifications()) {
-                        specifications.classList.add('hidden');
-                        salesInfo.classList.remove('hidden');
-                    }
-                });
-
-                document.getElementById('backToSpecs').addEventListener('click', function() {
-                    salesInfo.classList.add('hidden');
-                    specifications.classList.remove('hidden');
-                });
 
                 function validateBasicInfo() {
-                    const productName = document.querySelector('input[name="product_name"]').value;
+                    const productName = document.querySelector('input[name="product_name"]').value.trim();
                     const category = document.querySelector('select[name="category_id"]').value;
-                    const description = document.querySelector('textarea[name="description"]').value;
-                    const image = document.querySelector('input[name="image"]').files[0];
+                    const description = document.querySelector('textarea[name="description"]').value.trim();
+                    const image = imageInput.files[0];
 
-                    let errorMessage = [];
+                    let errors = [];
+                    if (!productName) errors.push('Product name is required');
+                    if (!category) errors.push('Category is required');
+                    if (!description) errors.push('Description is required');
+                    if (!image) errors.push('Product image is required');
 
-                    if (!productName.trim()) errorMessage.push('Product name is required');
-                    if (!category) errorMessage.push('Category is required');
-                    if (!description.trim()) errorMessage.push('Description is required');
-                    if (!image) errorMessage.push('Product image is required');
-
-                    if (errorMessage.length > 0) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Validation Error',
-                            html: errorMessage.join('<br>'),
-                            confirmButtonColor: '#3085d6'
-                        });
+                    if (errors.length) {
+                        showError(errors.join('\n'));
                         return false;
                     }
-
                     return true;
                 }
 
                 function validateSpecifications() {
-                    const brand = document.querySelector('input[name="brand"]').value;
-                    const sku = document.querySelector('input[name="sku"]').value;
-                    const weight = document.querySelector('input[name="weight"]').value;
-                    const selectedCategory = categorySelect.options[categorySelect.selectedIndex].text.toLowerCase();
+                    const brand = document.querySelector('input[name="brand"]').value.trim();
+                    const sku = document.querySelector('input[name="sku"]').value.trim();
+                    let errors = [];
+                    if (!brand) errors.push('Brand is required');
+                    if (!sku) errors.push('SKU is required');
 
-                    let isValid = true;
-                    let errorMessage = [];
-
-                    if (!brand.trim()) {
-                        errorMessage.push('Brand is required');
-                        isValid = false;
+                    if (errors.length) {
+                        showError(errors.join('\n'));
+                        return false;
                     }
-
-                    if (!sku.trim()) {
-                        errorMessage.push('SKU is required');
-                        isValid = false;
-                    }
-
-                    if (!weight || weight <= 0) {
-                        errorMessage.push('Valid weight is required');
-                        isValid = false;
-                    }
-
-                    if (!isValid) {
-                        showError(errorMessage.join('\n'));
-                    }
-                    return isValid;
+                    return true;
                 }
 
-                document.querySelector('input[name="brand"]').required = true;
-                document.querySelector('input[name="sku"]').required = true;
-                document.querySelector('input[name="weight"]').required = true;
+                function validateSalesInfo() {
+                    const price = document.querySelector('input[name="price"]').value;
+                    const stockQuantity = document.querySelector('input[name="stock_quantity"]').value;
+                    const minPurchase = document.querySelector('input[name="minimum_purchase_qty"]').value;
+                    let errors = [];
+                    if (!price || price <= 0) errors.push('Valid price is required');
+                    if (!stockQuantity || stockQuantity <= 0) errors.push('Valid stock quantity is required');
+                    if (!minPurchase || minPurchase <= 0) errors.push('Valid minimum purchase quantity is required');
 
-                document.getElementById('productForm').addEventListener('submit', function(e) {
-                    e.preventDefault();
-
-                    if (validateBasicInfo() && validateSpecifications()) {
-                        const price = document.querySelector('input[name="price"]').value;
-                        const stockQuantity = document.querySelector('input[name="stock_quantity"]')
-                            .value;
-                        const minPurchaseQty = document.querySelector(
-                                'input[name="minimum_purchase_qty"]')
-                            .value;
-
-                        let isValid = true;
-                        let errorMessage = [];
-
-                        if (!price || price <= 0) errorMessage.push('Valid price is required');
-                        if (!stockQuantity || stockQuantity <= 0) errorMessage.push(
-                            'Valid stock quantity is required');
-                        if (!minPurchaseQty || minPurchaseQty <= 0) errorMessage.push(
-                            'Valid minimum purchase quantity is required');
-
-                        if (isValid) {
-                            Swal.fire({
-                                title: 'Saving Product',
-                                text: 'Please wait while we save your product...',
-                                allowOutsideClick: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-                            this.submit();
-                        } else {
-                            showError(errorMessage.join('\n'));
-                        }
+                    if (errors.length) {
+                        showError(errors.join('\n'));
+                        return false;
                     }
-                });
+                    return true;
+                }
 
+                // Navigation events between cards
                 document.getElementById('nextToSpecs').addEventListener('click', function() {
                     if (validateBasicInfo()) {
                         basicInfo.classList.add('hidden');
@@ -300,6 +250,11 @@
                     }
                 });
 
+                document.getElementById('backToBasic').addEventListener('click', function() {
+                    specifications.classList.add('hidden');
+                    basicInfo.classList.remove('hidden');
+                });
+
                 document.getElementById('nextToSales').addEventListener('click', function() {
                     if (validateSpecifications()) {
                         specifications.classList.add('hidden');
@@ -312,6 +267,60 @@
                             showConfirmButton: false
                         });
                     }
+                });
+
+                document.getElementById('backToSpecs').addEventListener('click', function() {
+                    salesInfo.classList.add('hidden');
+                    specifications.classList.remove('hidden');
+                });
+
+                // Form submission handling
+                productForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    // Add hidden input for partial save if triggered
+                    if (partialSaveTriggered) {
+                        const hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.name = 'save_product';
+                        hiddenInput.value = '1';
+                        this.appendChild(hiddenInput);
+                    }
+
+                    if (!validateBasicInfo() || !validateSpecifications()) {
+                        return;
+                    }
+
+                    if (partialSaveTriggered) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Product Saved',
+                            text: 'Product saved successfully (partial save).',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            this.submit();
+                        });
+                    } else {
+                        if (!validateSalesInfo()) {
+                            return;
+                        }
+                        Swal.fire({
+                            title: 'Saving Product',
+                            text: 'Please wait while we save your product...',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                        this.submit();
+                    }
+                });
+
+                // Update the partial save button click handler
+                document.getElementById('partialSave').addEventListener('click', function() {
+                    partialSaveTriggered = true;
+                    productForm.dispatchEvent(new Event('submit'));
                 });
             });
         </script>

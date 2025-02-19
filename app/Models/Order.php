@@ -20,6 +20,15 @@ class Order extends Model
         'status_updated_at' => 'datetime',
     ];
 
+    public function getFormattedOrderIdAttribute()
+    {
+        return sprintf(
+            'ORD-%s-%s',
+            $this->created_at->format('Ymd-His'),
+            str_pad($this->id, 3, '0', STR_PAD_LEFT)
+        );
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
