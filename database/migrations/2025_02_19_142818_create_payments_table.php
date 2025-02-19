@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('order_id');
-            $table->unsignedBigInteger('distribution_id');
+            $table->unsignedBigInteger('distributor_id');
             $table->enum('payment_status', ['unpaid', 'paid', 'failed'])->default('unpaid');
             // $table->unsignedBigInteger('collected_by')->nullable();
             $table->timestamp('paid_at')->nullable();
@@ -23,7 +23,7 @@ return new class extends Migration
 
             // $table->foreign('collected_by')->references('id')->on('users')->onDelete('set null');
             $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
-            $table->foreign('distribution_id')->references('id')->on('distributions')->onDelete('cascade');
+            $table->foreign('distributor_id')->references('id')->on('distributors')->onDelete('cascade');
         });
     }
 

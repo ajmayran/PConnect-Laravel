@@ -89,7 +89,7 @@
     <!-- Price Modal -->
     <div id="priceModal"
         class="fixed inset-0 z-40 flex items-center justify-center hidden overflow-auto bg-black bg-opacity-50">
-        <div class="w-full max-w-4xl p-6 bg-white rounded-lg shadow-lg">
+        <div class="w-full max-w-4xl max-h-screen p-6 overflow-y-auto bg-white rounded-lg shadow-lg">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-2xl font-bold">Edit Product Prices</h2>
                 <button onclick="closeModal('priceModal')"
