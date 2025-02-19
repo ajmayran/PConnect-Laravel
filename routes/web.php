@@ -16,6 +16,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Distributors\ReturnController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Distributors\MessageController;
+use App\Http\Controllers\Distributors\PaymentController;
 use App\Http\Controllers\Retailers\AllProductController;
 use App\Http\Controllers\Distributors\DeliveryController;
 use App\Http\Controllers\Distributors\InsightsController;
@@ -156,7 +157,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
 
     // Delivery Routes
     Route::get('/delivery', [DeliveryController::class, 'index'])->name('distributors.delivery.index');
-    Route::patch('/delivery/{delivery}/status', [DeliveryController::class, 'updateStatus'])->name('distributors.delivery.update-status');
+    Route::post('/delivery/{id}/update-status', [DeliveryController::class, 'updateStatus'])->name('delivery.update-status');
 
     // Inventory Routes
     Route::get('/inventory', [InventoryController::class, 'index'])->name('distributors.inventory.index');
@@ -167,6 +168,9 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
 
     // Insights Routes
     Route::get('/insights', [InsightsController::class, 'index'])->name('distributors.insights.index');
+
+    // Payment Routes
+    Route::get('/payments', [PaymentController::class, 'index'])->name('distributors.payments.index');
 
     // Truck Routes
     Route::get('/trucks', [TruckController::class, 'index'])->name('distributors.trucks.index');

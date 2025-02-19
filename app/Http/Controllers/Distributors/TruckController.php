@@ -13,6 +13,9 @@ class TruckController extends Controller
     public function index()
     {
         $trucks = Trucks::where('distributor_id', Auth::user()->distributor->id)
+            ->withCount(['deliveries' => function ($query) {
+                $query->whereIn('status', ['in_transit', 'out_for_delivery']);
+            }])
             ->get();
 
         return view('distributors.trucks.index', compact('trucks'));

@@ -152,7 +152,6 @@ class RetailerOrdersController extends Controller
                 'user_id' => $user->id,
                 'distributor_id' => $distributorId,
                 'status' => 'pending',
-                'payment_status' => 'unpaid',
                 'status_updated_at' => now(),
             ]);
 
@@ -230,7 +229,6 @@ class RetailerOrdersController extends Controller
                 $order = Order::create([
                     'user_id' => $user->id,
                     'distributor_id' => $distributorId,
-                    'payment_status' => 'unpaid',
                     'status' => 'pending',
                     'status_updated_at' => now(),
                 ]);

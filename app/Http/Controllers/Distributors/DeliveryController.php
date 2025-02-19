@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Distributors;
 
+use App\Models\Trucks;
+use App\Models\Delivery;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Delivery;
-use App\Models\Trucks;
+use Illuminate\Validation\Rule;
 
 class DeliveryController extends Controller
 {
@@ -20,16 +21,17 @@ class DeliveryController extends Controller
     public function index()
     {
         $distributorId = Auth::user()->distributor->id;
+        $status = request('status', self::STATUS_PENDING); // default to pending if not set
+
         $deliveries = Delivery::with([
+            'order',
             'order.user.retailerProfile',
-            'order.orderDetails' => function ($query) {
-                $query->latest()->take(1); // Get only the latest order detail
-            }
+            'order.orderDetails.product'
         ])
             ->whereHas('order', function ($query) use ($distributorId) {
                 $query->where('distributor_id', $distributorId);
             })
-            ->where('status', self::STATUS_PENDING)
+            ->where('status', $status)
             ->latest()
             ->get();
 
@@ -40,17 +42,18 @@ class DeliveryController extends Controller
         return view('distributors.delivery.index', compact('deliveries', 'availableTrucks'));
     }
 
-    public function updateStatus(Request $request, Delivery $delivery)
+    public function updateStatus(Request $request, $id)
     {
+        // Validate the incoming request
         $validated = $request->validate([
-            'status' => 'required|in:pending,in_transit,out_for_delivery,delivered,failed'
+            'status' => ['required', Rule::in(['in_transit', 'out_for_delivery', 'delivered'])],
         ]);
 
-        $delivery->update([
-            'status' => $validated['status'],
-            'updated_at' => now()
-        ]);
+        // Retrieve delivery or fail
+        $delivery = Delivery::findOrFail($id);
+        $delivery->status = $validated['status'];
+        $delivery->save();
 
-        return redirect()->back()->with('success', 'Delivery status updated successfully');
+        return redirect()->back()->with('success', 'Delivery status updated successfully.');
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Distributors;
 
 use App\Models\Order;
 use Illuminate\Http\Request;
+use App\Models\Payment;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Delivery;
@@ -66,7 +67,14 @@ class OrderController extends Controller
 
                 // Add additional fields as per your Delivery model
             ]);
+
+            Payment::create([
+                'order_id'        => $order->id,
+                'distribution_id' => $order->distributor_id, // Assumes distributor_id is stored on the Order model
+                'payment_status'  => 'unpaid',
+            ]);
         });
+
 
         return redirect()->back()->with('success', 'Order accepted successfully.');
     }
