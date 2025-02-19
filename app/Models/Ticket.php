@@ -15,6 +15,7 @@ class Ticket extends Model
         'content',
         'status',
         'rejection_reason',
+        'image', 
     ];
 
     public function user()
@@ -24,7 +25,7 @@ class Ticket extends Model
 
     public function retailerProfile()
     {
-        return $this->hasOne(RetailerProfile::class,);
+        return $this->hasOne(RetailerProfile::class);
     }
 
     public function retailer()
@@ -43,7 +44,7 @@ class Ticket extends Model
     }
 
     public function retailers()
-{
-    return $this->belongsToMany(Retailers::class, 'retailer_profile', 'ticket_id', 'retailer_id');
-}
+    {
+        return $this->belongsToMany(Retailers::class, 'retailer_profile', 'ticket_id', 'retailer_id');
+    }
 }

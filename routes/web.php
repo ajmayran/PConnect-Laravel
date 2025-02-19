@@ -12,7 +12,6 @@ use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Distributors\OrderController;
 use App\Http\Controllers\Distributors\TruckController;
 use App\Http\Controllers\Retailers\CheckoutController;
-use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Distributors\ReturnController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Distributors\MessageController;
@@ -31,6 +30,12 @@ use App\Http\Controllers\Retailers\RetailerProductController;
 use App\Http\Controllers\Retailers\RetailerDashboardController;
 use App\Http\Controllers\Distributors\DistributorProfileController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+
+Route::get('register/distributor', [RegisteredUserController::class, 'createDistributorStep1'])->name('register.distributor');
+Route::post('register/distributor/step1', [RegisteredUserController::class, 'storeStep1'])->name('register.distributor.step1');
+Route::get('register/distributor/step2', [RegisteredUserController::class, 'createDistributorStep2'])->name('register.distributor.step2');
+Route::post('register/distributor/step2', [RegisteredUserController::class, 'storeStep2'])->name('register.distributor.step2');
 
 Route::get('/', function () {
     if (Auth::check()) {

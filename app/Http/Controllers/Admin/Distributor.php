@@ -15,6 +15,7 @@ class Distributor extends Controller
     {
         $pendingDistributors = User::where('user_type', 'distributor')
             ->where('status', 'pending')
+            ->with('distributor')
             ->get();
         return view('admin.distributors.pending', compact('pendingDistributors'));
     }
@@ -29,11 +30,12 @@ class Distributor extends Controller
         return redirect()->back()->with('success', 'Distributor approved successfully');
     }
 
-    public function declineDistributor($id)
+    public function declineDistributor(Request $request, $id)
     {
         $distributor = User::findOrFail($id);
         $distributor->update([
-            'status' => 'rejected'
+            'status' => 'rejected',
+            'rejection_reason' => $request->input('reason')
         ]);
 
         return redirect()->back()->with('success', 'Distributor application declined');
@@ -50,7 +52,7 @@ class Distributor extends Controller
 
             $filePath = storage_path('app/public/credentials/' . $distributor->credential->file_path);
 
-            if (Storage::disk('public')->exists('credentials/' . $distributor->credential->file_path)) {
+            if (!Storage::disk('public')->exists('credentials/' . $distributor->credential->file_path)) {
                 return back()->with('error', 'Credential file is missing from storage.');
             }
 
@@ -62,33 +64,11 @@ class Distributor extends Controller
 
     public function approvedDistributors()
     {
-        $distributors = Distributors::with('user')->get();
         $approvedDistributors = User::where('user_type', 'distributor')
             ->where('status', 'approved')
+            ->with('distributor')
             ->get();
-        return view('admin.distributors.approved', compact('approvedDistributors', 'distributors'));
-    }
-
-    public function removeProduct(Request $request, $id)
-    {
-        $product = Product::findOrFail($id);
-        $product->delete();
-
-        return redirect()->back()->with('success', 'Product removed successfully. Reason: ' . $request->input('reason'));
-    }
-
-    public function pendingProducts()
-    {
-        $pendingProducts = Product::where('status', 'pending')->get();
-        return view('admin.products.pending', compact('pendingProducts'));
-    }
-
-    public function rejectProduct(Request $request, $id)
-    {
-        $product = Product::findOrFail($id);
-        $product->update(['status' => 'rejected', 'rejection_reason' => $request->input('reason')]);
-
-        return redirect()->back()->with('success', 'Product rejected successfully. Reason: ' . $request->input('reason'));
+        return view('admin.distributors.approved', compact('approvedDistributors'));
     }
 
     public function allDistributors()

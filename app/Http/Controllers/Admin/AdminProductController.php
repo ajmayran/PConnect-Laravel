@@ -20,7 +20,7 @@ class AdminProductController extends Controller
 
     public function pendingProducts()
     {
-        $pendingProducts = Product::where('status', 'pending')->get();
+        $pendingProducts = Product::with('distributor.user')->where('status', 'pending')->get();
         return view('admin.products.pending', compact('pendingProducts'));
     }
 

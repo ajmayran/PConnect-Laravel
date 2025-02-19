@@ -20,6 +20,7 @@ class CreateTicketsTable extends Migration
             $table->text('content');
             $table->enum('status', ['pending', 'resolved', 'rejected'])->default('pending');
             $table->text('rejection_reason')->nullable();
+            $table->string('image')->nullable();
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
