@@ -16,11 +16,11 @@ class CreateDistributorsTable extends Migration
         Schema::create('distributors', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('company_name');
-            $table->string('company_email');
-            $table->string('company_address');
-            $table->string('company_phone_number');
-            $table->string('company_profile_image')->nullable(); // Make this field nullable
+            $table->string('company_name')->nullable();;
+            $table->string('company_email')->nullable();;
+            $table->string('company_address')->nullable();;
+            $table->string('company_phone_number')->nullable();
+            $table->string('company_profile_image')->nullable();
             $table->string('bir_form');
             $table->string('sec_document');
             $table->timestamps();

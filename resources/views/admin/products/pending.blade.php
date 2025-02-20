@@ -62,14 +62,32 @@
                                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->price }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $product->stock_quantity }}</td>
                                     <td class="px-6 py-4 text-sm whitespace-nowrap">
-                                        <form action="{{ route('admin.removeProduct', $product->id) }}" method="POST">
+                                        <form action="{{ route('admin.approveProduct', $product->id) }}" method="POST" class="inline-block">
                                             @csrf
-                                            @method('DELETE')
-                                            <input type="text" name="reason" placeholder="Reason for removal" required class="border rounded p-1">
-                                            <button type="submit" class="font-medium text-red-600 hover:text-red-900">
-                                                Remove
-                                            </button>
+                                            <button type="submit" class="px-4 py-2 font-medium text-white bg-green-500 rounded hover:bg-green-700">Accept</button>
                                         </form>
+                                        <button type="button" onclick="openReasonModal('{{ $product->id }}')" class="px-4 py-2 font-medium text-white bg-red-500 rounded hover:bg-red-700">Reject</button>
+                                        <div id="reasonModal-{{ $product->id }}" class="fixed inset-0 z-50 hidden overflow-y-auto">
+                                            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                                <div class="fixed inset-0 transition-opacity">
+                                                    <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                                                </div>
+                                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen"></span>​
+                                                <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                                                    <div class="px-4 pt-5 pb-4 bg-white sm:p-6 sm:pb-4">
+                                                        <form action="{{ route('admin.rejectProduct', $product->id) }}" method="POST">
+                                                            @csrf
+                                                            <label for="reason" class="block mb-2 text-sm font-medium text-gray-700">Reason for rejection</label>
+                                                            <textarea id="reason" name="reason" rows="4" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"></textarea>
+                                                            <div class="px-4 py-3 bg-gray-50 sm:px-6 sm:flex sm:flex-row-reverse">
+                                                                <button type="submit" class="inline-flex justify-center w-full px-4 py-2 text-base font-medium text-white bg-red-500 border border-transparent rounded-md shadow-sm hover:bg-red-700 sm:ml-3 sm:w-auto sm:text-sm">Submit</button>
+                                                                <button type="button" onclick="closeReasonModal('{{ $product->id }}')" class="inline-flex justify-center w-full px-4 py-2 mt-2 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -106,6 +124,14 @@
 
         function closeModal() {
             document.getElementById('imageModal').classList.add('hidden');
+        }
+
+        function openReasonModal(productId) {
+            document.getElementById('reasonModal-' + productId).classList.remove('hidden');
+        }
+
+        function closeReasonModal(productId) {
+            document.getElementById('reasonModal-' + productId).classList.add('hidden');
         }
     </script>
 </x-app-layout>

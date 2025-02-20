@@ -6,8 +6,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Distributors; // Import the Distributor model
-
+use App\Models\Distributors;
 
 class RetailerDashboardController extends Controller
 {
@@ -15,9 +14,9 @@ class RetailerDashboardController extends Controller
     {
         $distributors = Distributors::all(); // Fetch all distributors
         
-        $products = Product::where('status', 'pending')
-            ->where('stock_quantity', '>', 0)
+        $products = Product::where('status', 'accepted')
             ->paginate(15);
+        
         return view('retailers.dashboard', [
             'user' => Auth::user(),
             'distributors' => $distributors,

@@ -1,4 +1,3 @@
-{{-- filepath: /c:/Users/nunez/Documents/PConnect-Laravel/resources/views/retailers/dashboard.blade.php --}}
 <x-app-layout>
     <x-dashboard-nav />
 

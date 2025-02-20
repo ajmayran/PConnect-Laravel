@@ -30,6 +30,7 @@
                         <h3 class="text-lg font-bold text-red-600">Rejection Reason</h3>
                         <p>{{ $ticket->rejection_reason }}</p>
                     </div>
+                @elseif($ticket->status === 'resolved')
                 @else
                     <form action="{{ route('admin.tickets.resolve', $ticket->id) }}" method="POST" class="mt-4">
                         @csrf
