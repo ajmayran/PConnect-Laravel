@@ -9,6 +9,7 @@ class CartDetail extends Model
     protected $fillable = [
         'cart_id',
         'product_id',
+        'price',
         'quantity',
         'subtotal'
     ];

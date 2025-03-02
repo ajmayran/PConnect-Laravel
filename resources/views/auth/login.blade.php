@@ -1,32 +1,45 @@
 <x-guest-layout>
-    <div class="fixed inset-0 flex items-center justify-center bg-cover bg-center" style="background-image: url('img/Registration2.png'); background-position: center;">
-        
-        <!-- Login Form Card - Increased width -->
-        <div class="p-5 flex flex-row w-full h-full  bg-white shadow-2xl rounded-3xl" style="height: 90%; width: 80%;">
-            <div class="w-1/2 p-4 border rounded-2xl" style="background-image: url('img/welcome2.png'); background-position: center;">
-                <button class="shadow-2xl px-5 py-2 bg-gray-800 hover:bg-gray-600 text-white rounded-3xl font-sans text-base cursor-pointer transition duration-300 ease-in-out inline-flex items-center">
+    <div class="flex items-center justify-center w-full min-h-screen px-4 py-8 md:py-0">
+        <!-- Login Form Card -->
+        <div class="flex flex-col w-full max-w-6xl overflow-hidden bg-white shadow-2xl rounded-3xl lg:flex-row">
+            <!-- Image Section - Hidden on mobile, visible on lg screens -->
+            <div class="hidden p-4 bg-center bg-cover border lg:block lg:w-1/2 rounded-2xl" 
+                 style="background-image: url('{{ asset('img/welcome2.png') }}');">
+                <a href="/" 
+                   class="inline-flex items-center px-4 py-2 font-sans text-base text-white transition duration-300 ease-in-out bg-gray-800 shadow-2xl cursor-pointer hover:bg-gray-600 rounded-3xl">
                     <span class="mr-2">&larr;</span>
                     Back to website
-                 </button>
+                </a>
             </div>
-            <div class="w-1/2 p-20  rounded-2xl ">
+            
+            <!-- Form Section -->
+            <div class="w-full p-6 lg:w-1/2 sm:p-8 md:p-12 lg:p-16 rounded-2xl">
+                <!-- Mobile only back button -->
+                <div class="block mb-6 lg:hidden">
+                    <a href="/" 
+                       class="inline-flex items-center px-4 py-2 font-sans text-sm text-white transition duration-300 ease-in-out bg-gray-800 shadow-2xl cursor-pointer hover:bg-gray-600 rounded-3xl">
+                        <span class="mr-2">&larr;</span>
+                        Back to website
+                    </a>
+                </div>
+                
                 <!-- Header -->
                 <div class="text-center">
-                    <h2 class="text-3xl font-bold text-gray-900">Login</h2>
-                    <p class="mt-2 text-2xl text-gray-600">Welcome back! Please enter your details</p>
+                    <h2 class="text-2xl font-bold text-gray-900 sm:text-3xl">Login</h2>
+                    <p class="mt-2 text-base text-gray-600 sm:text-xl md:text-2xl">Welcome back! Please enter your details</p>
                 </div>
 
                 <!-- Session Status -->
                 <x-auth-session-status class="mb-4" :status="session('status')" />
 
                 <!-- Login Form -->
-                <form method="POST" action="{{ route('login') }}" class="mt-8 space-y-6">
+                <form method="POST" action="{{ route('login') }}" class="mt-6 space-y-4 sm:mt-8 sm:space-y-6">
                     @csrf
                     <!-- Email Field -->
                     <div>
                         <x-text-input 
                             id="email"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-green-500 focus:border-green-500"
+                            class="w-full px-3 py-2 border border-gray-300 sm:px-4 sm:py-3 rounded-xl focus:ring-green-500 focus:border-green-500"
                             type="email"
                             name="email"
                             :value="old('email')"
@@ -40,7 +53,7 @@
                     <div>
                         <x-text-input 
                             id="password"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-green-500 focus:border-green-500"
+                            class="w-full px-3 py-2 border border-gray-300 sm:px-4 sm:py-3 rounded-xl focus:ring-green-500 focus:border-green-500"
                             type="password"
                             name="password"
                             placeholder="Password"
@@ -49,7 +62,7 @@
                     </div>
 
                     <!-- Remember Me & Forgot Password -->
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                         <label class="flex items-center">
                             <input type="checkbox" class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
                             <span class="ml-2 text-sm text-gray-600">Remember me</span>
@@ -61,13 +74,13 @@
 
                     <!-- Login Button -->
                     <button type="submit" 
-                        class="w-full px-4 py-3 text-white transition-colors duration-200 bg-green-600 rounded-xl hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                        class="w-full px-3 py-2 text-white transition-colors duration-200 bg-green-600 sm:px-4 sm:py-3 rounded-xl hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
                         Sign in
                     </button>
                 </form>
 
                 <!-- Divider -->
-                <div class="relative my-6">
+                <div class="relative my-4 sm:my-6">
                     <div class="absolute inset-0 flex items-center">
                         <div class="w-full border-t border-gray-300"></div>
                     </div>
@@ -77,10 +90,10 @@
                 </div>
 
                 <!-- Social Buttons -->
-                <div class="space-y-4">
+                <div class="space-y-3 sm:space-y-4">
                     <!-- Facebook -->
                     <button onclick="window.location.href='{{ route('auth.facebook') }}'"
-                        class="flex items-center justify-center w-full px-4 py-3 space-x-2 transition-colors duration-200 border border-gray-300 rounded-xl hover:bg-gray-50">
+                        class="flex items-center justify-center w-full px-3 py-2 space-x-2 transition-colors duration-200 border border-gray-300 sm:px-4 sm:py-3 rounded-xl hover:bg-gray-50">
                         <svg class="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                         </svg>
@@ -89,7 +102,7 @@
 
                     <!-- Google -->
                     <button onclick="window.location.href='{{ route('auth.google') }}'"
-                        class="flex items-center justify-center w-full px-4 py-3 space-x-2 transition-colors duration-200 border border-gray-300 rounded-xl hover:bg-gray-50">
+                        class="flex items-center justify-center w-full px-3 py-2 space-x-2 transition-colors duration-200 border border-gray-300 sm:px-4 sm:py-3 rounded-xl hover:bg-gray-50">
                         <svg class="w-5 h-5" viewBox="0 0 48 48">
                             <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
                             <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
@@ -101,7 +114,7 @@
                 </div>
 
                 <!-- Sign Up Link -->
-                <p class="text-sm text-center text-gray-600">
+                <p class="mt-4 text-sm text-center text-gray-600 sm:mt-6">
                     Don't have an account? 
                     <a href="#" id="signUpModalBtn" class="font-medium text-green-600 hover:text-green-500">
                         Sign up
@@ -112,8 +125,8 @@
     </div>
 
     <!-- Modal for Registration Options -->
-    <div id="signUpModal" class="fixed inset-0 flex items-center justify-center transition-opacity duration-300 bg-black bg-opacity-50 opacity-0 pointer-events-none">
-        <div id="modalContent" class="p-6 transition-all duration-300 transform scale-95 bg-white rounded-lg shadow-xl w-96">
+    <div id="signUpModal" class="fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 bg-black bg-opacity-50 opacity-0 pointer-events-none">
+        <div id="modalContent" class="w-full max-w-sm p-6 mx-4 transition-all duration-300 transform scale-95 bg-white rounded-lg shadow-xl">
             <h2 class="mb-4 text-xl font-bold text-center">Register As</h2>
             <div class="flex space-x-4">
                 <a href="{{ route('register.retailer') }}" class="w-1/2 px-4 py-2 text-center text-white transition-colors duration-500 bg-green-500 rounded hover:bg-green-700">
@@ -152,13 +165,17 @@
             }, 300);
         }
 
-        signUpModalBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            showModal();
-        });
+        if (signUpModalBtn) {
+            signUpModalBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                showModal();
+            });
+        }
 
-        closeSignUpModal.addEventListener('click', function() {
-            hideModal();
-        });
+        if (closeSignUpModal) {
+            closeSignUpModal.addEventListener('click', function() {
+                hideModal();
+            });
+        }
     </script>
 </x-guest-layout>

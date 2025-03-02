@@ -155,6 +155,7 @@ class RetailerOrdersController extends Controller
                     'product_id' => $cartDetail->product_id,
                     'quantity' => $cartDetail->quantity,
                     'subtotal' => $cartDetail->subtotal,
+                    'price' => $cartDetail->price,
                     'delivery_address' => $deliveryAddress,
                 ]);
             }
@@ -240,6 +241,7 @@ class RetailerOrdersController extends Controller
                             'order_id' => $order->id,
                             'product_id' => $cartDetail->product_id,
                             'quantity' => $cartDetail->quantity,
+                            'price' => $cartDetail->price,
                             'subtotal' => $cartDetail->subtotal,
                             'delivery_address' => $deliveryAddress,
                         ]);

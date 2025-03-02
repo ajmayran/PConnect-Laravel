@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Redirect;
 use App\Http\Controllers\Admin\Distributor;
 use App\Http\Controllers\ProfileController;
 use App\Http\Middleware\CheckProductStatus;
@@ -15,7 +17,6 @@ use App\Http\Controllers\Retailers\CheckoutController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Distributors\ReturnController;
 use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\Distributors\MessageController;
 use App\Http\Controllers\Distributors\PaymentController;
 use App\Http\Controllers\Retailers\AllProductController;
 use App\Http\Controllers\Distributors\DeliveryController;
@@ -33,6 +34,7 @@ use App\Http\Controllers\Retailers\RetailerDashboardController;
 use App\Http\Controllers\Distributors\DistributorProductController;
 use App\Http\Controllers\Distributors\DistributorProfileController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
+use App\Http\Controllers\Retailers\BuynowController;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -102,6 +104,11 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     Route::post('/checkout/placeOrderAll', [RetailerOrdersController::class, 'placeOrderAll'])->name('checkout.placeOrderAll');
     Route::post('/checkout/placeOrder/{distributorId}', [RetailerOrdersController::class, 'placeOrder'])->name('checkout.placeOrder');
 
+    // Direct purchase routes
+    Route::post('/direct-purchase/buy-now', [BuynowController::class, 'buyNow'])->name('direct-purchase.buy-now');
+    Route::get('/direct-purchase/checkout', [BuynowController::class, 'checkout'])->name('direct-purchase.checkout');
+    Route::post('/direct-purchase/place-order', [BuynowController::class, 'placeOrder'])->name('direct-purchase.place-order');
+
     // Order Routes
     Route::post('/orders', [RetailerOrdersController::class, 'store'])->name('orders.store');
     Route::get('/orders', [RetailerOrdersController::class, 'index'])->name('orders.index');
@@ -163,9 +170,8 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     // Inventory Routes
     Route::get('/inventory', [InventoryController::class, 'index'])->name('distributors.inventory.index');
     Route::put('/inventory/{id}/update-stock', [InventoryController::class, 'updateStock'])->name('distributors.inventory.updateStock');
-    
+
     // Message Routes
-    Route::get('/messages', [MessageController::class, 'index'])->name('distributors.messages.index');
 
     // Insights Routes
     Route::get('/insights', [InsightsController::class, 'index'])->name('distributors.insights.index');
@@ -174,7 +180,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     // Payment Routes
     Route::get('/payments', [PaymentController::class, 'index'])->name('distributors.payments.index');
     Route::put('/payments/{payment}/update-status', [PaymentController::class, 'updateStatus'])->name('distributors.payments.update-status');
-    
+
 
     // Truck Routes
     Route::get('/trucks', [TruckController::class, 'index'])->name('distributors.trucks.index');
