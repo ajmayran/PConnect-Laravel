@@ -5,7 +5,7 @@
             <h1 class="text-3xl font-bold text-gray-900">My Orders</h1>
         </div>
 
-        <x-retailer-orderstatus-tabs />
+        <x-retailer-orderstatus-tabs /> 
 
         @if ($orders->isEmpty())
             <div class="flex items-center justify-center p-8 mt-4 bg-white rounded-lg">

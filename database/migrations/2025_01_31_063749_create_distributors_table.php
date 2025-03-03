@@ -17,7 +17,11 @@ return new class extends Migration
             $table->string('company_profile_image');
             $table->string('company_name');
             $table->string('company_email');
-            $table->string('company_address');
+            $table->string('region')->nullable();
+            $table->string('province')->nullable();
+            $table->string('city')->nullable();
+            $table->string('barangay')->nullable();
+            $table->string('street')->nullable();
             $table->string('company_phone_number');
             $table->timestamps();
 

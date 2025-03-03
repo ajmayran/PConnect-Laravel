@@ -25,8 +25,8 @@ class DatabaseSeeder extends Seeder
             'is_admin' => true, // Indicate that this user is an admin
         ]);
 
-        $this->call([
-            CategorySeeder::class,
+        $this->call([CategorySeeder::class, 
+            
         ]);
     }
     

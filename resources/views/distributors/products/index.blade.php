@@ -5,18 +5,39 @@
         </span>
         <div class="container p-2 mx-auto">
             <h1 class="mb-6 text-3xl font-bold text-gray-800">My Products</h1>
-            <div class="flex items-center justify-end mb-6 space-x-4">
-                <div class="flex items-center space-x-4">
-                    <button onclick="openModal('priceModal')"
-                        class="px-4 py-2 font-bold text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600">
-                        Product Prices
-                    </button>
+
+            <!-- Search Bar -->
+            <div class="flex items-center justify-between mb-6">
+                <div class="w-full md:w-1/2 lg:w-1/3">
+                    <form action="{{ route('distributors.products.index') }}" method="GET">
+                        <div class="relative flex">
+                            <input type="text" name="search" value="{{ request('search') }}"
+                                placeholder="Search products..."
+                                class="w-full py-2 pl-4 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <button type="submit"
+                                class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-blue-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <div class="space-x-2">
-                    <a href="{{ route('distributors.products.create') }}"
-                        class="px-4 py-2 font-bold text-white transition duration-200 bg-green-500 rounded-lg hover:bg-green-600">
-                        Add New Product
-                    </a>
+                <div class="flex items-center justify-end space-x-4">
+                    <div class="flex items-center space-x-4">
+                        <button onclick="openModal('priceModal')"
+                            class="px-4 py-2 font-bold text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600">
+                            Product Prices
+                        </button>
+                    </div>
+                    <div class="space-x-2">
+                        <a href="{{ route('distributors.products.create') }}"
+                            class="px-4 py-2 font-bold text-white transition duration-200 bg-green-500 rounded-lg hover:bg-green-600">
+                            Add New Product
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -33,6 +54,19 @@
             @if (session('error'))
                 <div class="mb-4 alert alert-danger">
                     {{ session('error') }}
+                </div>
+            @endif
+
+            @if (request('search'))
+                <div class="mb-4">
+                    <div class="flex items-center">
+                        <p class="text-gray-600">Search results for: <span
+                                class="font-bold">"{{ request('search') }}"</span></p>
+                        <a href="{{ route('distributors.products.index') }}"
+                            class="ml-3 text-sm text-blue-500 hover:underline">
+                            Clear search
+                        </a>
+                    </div>
                 </div>
             @endif
 
@@ -83,6 +117,10 @@
                     </div>
                 @endforeach
             </div>
+            <!-- Pagination Links -->
+            <div class="flex justify-end mt-6 ">
+                {{ $products->withQueryString()->links() }}
+            </div>
         </div>
     </div>
 
@@ -97,6 +135,33 @@
                     Close
                 </button>
             </div>
+
+            <!-- Search Bar for Price Modal -->
+            <div class="mb-4">
+                <div class="relative flex">
+                    <input type="text" id="priceModalSearch" placeholder="Search products..."
+                        class="w-full py-2 pl-4 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <button type="button" onclick="searchPriceModal()"
+                        class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-blue-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div id="priceModalSearchResults" class="hidden mb-2">
+                <div class="flex items-center">
+                    <p class="text-gray-600">Search results for: <span id="priceModalSearchTerm"
+                            class="font-bold"></span></p>
+                    <button onclick="clearPriceModalSearch()" class="ml-3 text-sm text-blue-500 hover:underline">
+                        Clear search
+                    </button>
+                </div>
+            </div>
+
             <div class="overflow-x-auto">
                 <table class="min-w-full table-auto">
                     <thead class="bg-gray-100">
@@ -104,49 +169,36 @@
                             <th class="px-4 py-2 text-sm font-medium text-left text-gray-600 uppercase">Image</th>
                             <th class="px-4 py-2 text-sm font-medium text-left text-gray-600 uppercase">Product</th>
                             <th class="px-4 py-2 text-sm font-medium text-left text-gray-600 uppercase">Price</th>
-                            <th class="px-4 py-2 text-sm font-medium text-left text-gray-600 uppercase">Last Update</th>
+                            <th class="px-4 py-2 text-sm font-medium text-left text-gray-600 uppercase">Last Update
+                            </th>
                             <th class="px-4 py-2 text-sm font-medium text-left text-gray-600 uppercase">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        @foreach ($products as $product)
-                            <tr>
-                                <td class="px-4 py-2">
-                                    @if ($product->image && Storage::disk('public')->exists($product->image))
-                                        <img src="{{ asset('storage/' . $product->image) }}"
-                                            alt="{{ $product->product_name }}"
-                                            class="object-cover w-12 h-12 rounded-lg">
-                                    @else
-                                        <img src="{{ asset('img/default-product.jpg') }}" alt="Default Product Image"
-                                            class="object-cover w-12 h-12 rounded-lg">
-                                    @endif
-                                </td>
-                                <td class="px-4 py-2 text-sm text-gray-800">
-                                    {{ $product->product_name }}
-                                </td>
-                                <td class="px-4 py-2">
-                                    <form action="{{ route('distributors.products.updatePrice', $product->id) }}"
-                                        method="POST" class="flex items-center">
-                                        @csrf
-                                        @method('PUT')
-                                        <input type="number" name="price" step="0.01"
-                                            value="{{ $product->price }}" class="w-24 px-2 py-1 border rounded-md"
-                                            required>
-                                </td>
-                                <td class="px-4 py-2 text-sm text-gray-600">
-                                    {{ $product->price_updated_at ? \Carbon\Carbon::parse($product->price_updated_at)->format('M d, Y') : 'N/A' }}
-                                </td>
-                                <td class="px-4 py-2">
-                                    <button type="submit"
-                                        class="px-3 py-1 ml-2 text-sm text-white bg-green-500 rounded-md hover:bg-green-600">
-                                        Update
-                                    </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @endforeach
+                    <tbody id="priceModalTableBody" class="divide-y divide-gray-200">
+                        <!-- Products will be loaded via JavaScript -->
                     </tbody>
                 </table>
+
+                <!-- Pagination controls -->
+                <div class="flex items-center justify-between mt-4">
+                    <div class="text-sm text-gray-700">
+                        Showing <span id="priceModalCurrentRange">0-0</span> of <span id="priceModalTotal">0</span>
+                        products
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="priceModalPrevPage" onclick="changePriceModalPage('prev')"
+                            class="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                            disabled>
+                            Previous
+                        </button>
+                        <span id="priceModalCurrentPage"
+                            class="px-3 py-1 text-sm text-white bg-blue-500 rounded">1</span>
+                        <button id="priceModalNextPage" onclick="changePriceModalPage('next')"
+                            class="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50">
+                            Next
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -430,6 +482,285 @@
                     }
                 });
             }
+
+            let priceModalProducts = [];
+            let filteredProducts = [];
+            const priceModalItemsPerPage = 5;
+            let priceModalCurrentPage = 1;
+            let priceModalSearchQuery = '';
+
+            function openModal(id) {
+                document.getElementById(id).classList.remove('hidden');
+
+                if (id === 'priceModal') {
+                    // Load products when price modal is opened
+                    fetchProductsForPriceModal();
+                }
+            }
+
+            function closeModal(id) {
+                document.getElementById(id).classList.add('hidden');
+
+                // Reset search and pagination when modal is closed if it's the price modal
+                if (id === 'priceModal') {
+                    document.getElementById('priceModalSearch').value = '';
+                    priceModalSearchQuery = '';
+                    priceModalCurrentPage = 1;
+                    document.getElementById('priceModalSearchResults').classList.add('hidden');
+                }
+            }
+
+            function fetchProductsForPriceModal() {
+                // Show loading state
+                document.getElementById('priceModalTableBody').innerHTML =
+                    '<tr><td colspan="5" class="px-4 py-3 text-center">Loading products...</td></tr>';
+
+                fetch('/products/list')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok: ' + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        priceModalProducts = data;
+                        filteredProducts = [...priceModalProducts];
+                        updatePriceModalTable();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching products:', error);
+                        document.getElementById('priceModalTableBody').innerHTML =
+                            '<tr><td colspan="5" class="px-4 py-3 text-center text-red-500">Failed to load products: ' +
+                            error.message + '</td></tr>';
+                    });
+            }
+
+            function searchPriceModal() {
+                const searchInput = document.getElementById('priceModalSearch');
+                priceModalSearchQuery = searchInput.value.trim().toLowerCase();
+
+                if (priceModalSearchQuery) {
+                    filteredProducts = priceModalProducts.filter(product =>
+                        product.product_name.toLowerCase().includes(priceModalSearchQuery)
+                    );
+
+                    document.getElementById('priceModalSearchTerm').textContent = `"${priceModalSearchQuery}"`;
+                    document.getElementById('priceModalSearchResults').classList.remove('hidden');
+                } else {
+                    filteredProducts = [...priceModalProducts];
+                    document.getElementById('priceModalSearchResults').classList.add('hidden');
+                }
+
+                priceModalCurrentPage = 1;
+                updatePriceModalTable();
+            }
+
+            function clearPriceModalSearch() {
+                document.getElementById('priceModalSearch').value = '';
+                priceModalSearchQuery = '';
+                filteredProducts = [...priceModalProducts];
+                document.getElementById('priceModalSearchResults').classList.add('hidden');
+                priceModalCurrentPage = 1;
+                updatePriceModalTable();
+            }
+
+            function changePriceModalPage(direction) {
+                if (direction === 'prev' && priceModalCurrentPage > 1) {
+                    priceModalCurrentPage--;
+                } else if (direction === 'next' && priceModalCurrentPage < Math.ceil(filteredProducts.length /
+                        priceModalItemsPerPage)) {
+                    priceModalCurrentPage++;
+                }
+
+                updatePriceModalTable();
+            }
+
+            function updatePriceModalTable() {
+                const tableBody = document.getElementById('priceModalTableBody');
+                tableBody.innerHTML = '';
+
+                const startIdx = (priceModalCurrentPage - 1) * priceModalItemsPerPage;
+                const endIdx = Math.min(startIdx + priceModalItemsPerPage, filteredProducts.length);
+
+                // Update pagination info
+                document.getElementById('priceModalCurrentRange').textContent = filteredProducts.length > 0 ?
+                    `${startIdx + 1}-${endIdx}` : '0-0';
+                document.getElementById('priceModalTotal').textContent = filteredProducts.length;
+                document.getElementById('priceModalCurrentPage').textContent = priceModalCurrentPage;
+
+                // Enable/disable pagination buttons
+                document.getElementById('priceModalPrevPage').disabled = priceModalCurrentPage === 1;
+                document.getElementById('priceModalNextPage').disabled = priceModalCurrentPage >= Math.ceil(filteredProducts
+                    .length / priceModalItemsPerPage);
+
+                if (filteredProducts.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-2 text-center">No products found</td></tr>';
+                    return;
+                }
+
+                // Generate table rows
+                for (let i = startIdx; i < endIdx; i++) {
+                    const product = filteredProducts[i];
+                    const row = document.createElement('tr');
+
+                    // Image cell
+                    const imageCell = document.createElement('td');
+                    imageCell.className = 'px-4 py-2';
+                    imageCell.innerHTML = `
+                    <img src="${product.image_url || '/img/default-product.jpg'}" alt="${product.product_name}"
+                    class="object-cover w-12 h-12 rounded-lg">
+                `;
+
+                    // Name cell
+                    const nameCell = document.createElement('td');
+                    nameCell.className = 'px-4 py-2 text-sm text-gray-800';
+                    nameCell.textContent = product.product_name;
+
+                    // Price cell with form
+                    const priceCell = document.createElement('td');
+                    priceCell.className = 'px-4 py-2';
+                    priceCell.innerHTML = `
+                    <form action="/products/${product.id}/update-price" method="POST" class="flex items-center price-update-form">
+                        <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').content}">
+                        <input type="hidden" name="_method" value="PUT">
+                        <input type="number" name="price" step="0.01" value="${product.price}" 
+                            class="w-24 px-2 py-1 border rounded-md" required>
+                    </form>
+                `;
+
+                    // Last update cell
+                    const updateCell = document.createElement('td');
+                    updateCell.className = 'px-4 py-2 text-sm text-gray-600';
+                    updateCell.textContent = product.price_updated_at || 'N/A';
+
+                    // Actions cell
+                    const actionsCell = document.createElement('td');
+                    actionsCell.className = 'px-4 py-2';
+                    actionsCell.innerHTML = `
+                    <button type="button" onclick="submitPriceForm(this)" data-product-id="${product.id}"
+                        class="px-3 py-1 ml-2 text-sm text-white bg-green-500 rounded-md hover:bg-green-600">
+                        Update
+                    </button>
+                `;
+
+                    // Append cells to row
+                    row.appendChild(imageCell);
+                    row.appendChild(nameCell);
+                    row.appendChild(priceCell);
+                    row.appendChild(updateCell);
+                    row.appendChild(actionsCell);
+
+                    // Append row to table
+                    tableBody.appendChild(row);
+                }
+            }
+
+            function submitPriceForm(button) {
+                const productId = button.getAttribute('data-product-id');
+                console.log('Updating product ID:', productId);
+
+                const row = button.closest('tr');
+                const form = row.querySelector('.price-update-form');
+
+                if (!form) {
+                    console.error('Form not found');
+                    return;
+                }
+
+                const formData = new FormData(form);
+                const price = formData.get('price');
+                console.log('Price to update:', price);
+
+                // Show processing state
+                button.disabled = true;
+                button.textContent = 'Updating...';
+
+                // Debug the form action
+                console.log('Form action:', form.action);
+
+                fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    })
+                    .then(response => {
+                        console.log('Response status:', response.status);
+                        // Clone the response for debugging
+                        return response.clone().text().then(text => {
+                            console.log('Raw response:', text);
+                            try {
+                                return response.json();
+                            } catch (e) {
+                                throw new Error('Invalid JSON response from server');
+                            }
+                        });
+                    })
+                    .then(data => {
+                        console.log('Parsed response data:', data);
+
+                        if (data && (data.success || data.last_updated)) {
+                            // Update the product in the arrays
+                            const productIndex = priceModalProducts.findIndex(p => p.id == productId);
+                            if (productIndex !== -1) {
+                                priceModalProducts[productIndex].price = price;
+                                priceModalProducts[productIndex].price_updated_at = data.last_updated;
+                            }
+
+                            const filteredIndex = filteredProducts.findIndex(p => p.id == productId);
+                            if (filteredIndex !== -1) {
+                                filteredProducts[filteredIndex].price = price;
+                                filteredProducts[filteredIndex].price_updated_at = data.last_updated;
+                            }
+
+                            // Update the row with new data
+                            const updateCell = row.querySelector('td:nth-child(4)');
+                            if (updateCell) {
+                                updateCell.textContent = data.last_updated;
+                            }
+
+                            // Show success state
+                            button.textContent = 'Updated';
+                            button.classList.remove('bg-green-500', 'hover:bg-green-600');
+                            button.classList.add('bg-blue-500');
+
+                            setTimeout(() => {
+                                button.textContent = 'Update';
+                                button.classList.add('bg-green-500', 'hover:bg-green-600');
+                                button.classList.remove('bg-blue-500');
+                                button.disabled = false;
+                            }, 1500);
+                        } else {
+                            throw new Error(data?.message || 'Failed to update price: Unknown error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error updating price:', error);
+                        button.textContent = 'Failed';
+                        button.classList.remove('bg-green-500', 'hover:bg-green-600');
+                        button.classList.add('bg-red-500');
+
+                        setTimeout(() => {
+                            button.textContent = 'Update';
+                            button.classList.add('bg-green-500', 'hover:bg-green-600');
+                            button.classList.remove('bg-red-500');
+                            button.disabled = false;
+                        }, 1500);
+                    });
+            }
+
+            // Initialize price modal search with Enter key support
+            document.addEventListener('DOMContentLoaded', function() {
+                const searchInput = document.getElementById('priceModalSearch');
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        searchPriceModal();
+                    }
+                });
+            });
         </script>
     @endpush
 </x-distributor-layout>

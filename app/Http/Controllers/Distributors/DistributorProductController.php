@@ -14,7 +14,7 @@ use App\Models\Category;
 
 class DistributorProductController extends Controller
 {
-    public function index(): RedirectResponse|View
+    public function index(Request $request): RedirectResponse|View
     {
         $user = Auth::user();
         $distributor = $user->distributor;
@@ -23,10 +23,20 @@ class DistributorProductController extends Controller
             return back()->with('error', 'No distributor profile found.');
         }
 
-        $products = Product::where('distributor_id', $distributor->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = Product::where('distributor_id', $distributor->id)
+            ->orderBy('created_at', 'desc');
 
+        // Add search functionality
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('product_name', 'like', "%{$search}%")
+                    ->orWhere('brand', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+
+        $products = $query->paginate(8);
         $categories = Category::all();
         $latestPriceUpdate = Product::where('distributor_id', $distributor->id)->max('price_updated_at');
 
@@ -167,18 +177,72 @@ class DistributorProductController extends Controller
         return redirect()->route('distributors.products.index')->with('success', 'Product deleted successfully.');
     }
 
+
+    public function getProductsList()
+    {
+        try {
+            $user = Auth::user();
+            $distributor = $user->distributor;
+
+            if (!$distributor) {
+                return response()->json(['error' => 'No distributor profile found.'], 404);
+            }
+
+            $products = Product::where('distributor_id', $distributor->id)
+                ->select('id', 'product_name', 'image', 'price', 'price_updated_at')
+                ->get()
+                ->map(function ($product) {
+                    return [
+                        'id' => $product->id,
+                        'product_name' => $product->product_name,
+                        'image_url' => $product->image ? asset('storage/' . $product->image) : asset('img/default-product.jpg'),
+                        'price' => $product->price,
+                        'price_updated_at' => $product->price_updated_at ? \Carbon\Carbon::parse($product->price_updated_at)->format('M d, Y') : null,
+                    ];
+                });
+
+            return response()->json($products);
+        } catch (\Exception $e) {
+            Log::error('Error fetching products list: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch products: ' . $e->getMessage()], 500);
+        }
+    }
+
     public function updatePrice(Request $request, $id)
     {
-        $validated = $request->validate([
-            'price' => 'required|numeric|min:0',
-        ]);
+        try {
+            $validated = $request->validate([
+                'price' => 'required|numeric|min:0',
+            ]);
 
-        $product = Product::findOrFail($id);
-        $product->update([
-            'price' => $validated['price'],
-            'price_updated_at' => now(),
-        ]);
+            $product = Product::findOrFail($id);
 
-        return redirect()->back()->with('success', 'Price updated successfully.');
+            // Check if this product belongs to the current distributor
+            if ($product->distributor_id != Auth::user()->distributor->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access'
+                ], 403);
+            }
+
+            // Update the price - this line was missing!
+            $product->update([
+                'price' => $validated['price'],
+                'price_updated_at' => now()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Price updated successfully',
+                'last_updated' => now()->format('M d, Y')
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Price update failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update price: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -62,7 +62,7 @@
 
     <div class="my-2 bg-gray-600 h-[1px]"></div>
 
-    <a href="{{ route('distributors.messages.index') }}" class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.messages.index') ? 'bg-green-600' : 'hover:bg-green-600' }}">
+    <a href="" class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.messages.index') ? 'bg-green-600' : 'hover:bg-green-600' }}">
         <div class="flex items-center">
             <iconify-icon icon="ant-design:message-filled" class="text-xl icon"></iconify-icon>
             <span class="ml-4 font-normal text-gray-200">Messages</span>

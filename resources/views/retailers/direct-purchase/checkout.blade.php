@@ -50,7 +50,14 @@
                     <div class="mt-4">
                         <p><strong>Business Name:</strong> {{ $user->retailerProfile->business_name ?? 'N/A' }}</p>
                         <p><strong>Phone:</strong> {{ $user->retailerProfile->phone ?? 'N/A' }}</p>
-                        <p><strong>Address:</strong> {{ $user->retailerProfile->address ?? 'N/A' }}</p>
+                        <p><strong>Address:</strong>
+                            @if ($user->retailerProfile)
+                                {{ $user->retailerProfile->barangay_name }},
+                                {{ $user->retailerProfile->street ?? '' }}
+                            @else
+                                N/A
+                            @endif
+                        </p>
                     </div>
 
                     <div class="pt-4 mt-6 border-t">
@@ -73,7 +80,7 @@
                                     checked class="form-radio">
                                 <label for="default_address" class="ml-2">
                                     Use my default address:
-                                    <span class="font-medium">{{ $user->retailerProfile->address ?? 'N/A' }}</span>
+                                    <span class="font-medium">{{ $user->retailerProfile->barangay_name }},{{ $user->retailerProfile->street ?? '' }}</span>
                                 </label>
                             </div>
                             <div class="flex items-center">

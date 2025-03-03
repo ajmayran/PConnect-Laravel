@@ -23,7 +23,7 @@ class CartController extends Controller
         // Group cart items by cart (which is already separated by distributor)
         $groupedItems = collect();
 
-        foreach ($carts as $cart) {
+        foreach ($carts as $cart) { 
             if ($cart->details->isNotEmpty()) {
                 $groupedItems[$cart->distributor_id] = $cart->details;
             }

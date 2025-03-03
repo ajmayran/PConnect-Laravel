@@ -14,7 +14,11 @@ class Distributors extends Model
         'company_profile_image',
         'company_name',
         'company_email',
-        'company_address',
+        'region',
+        'province',
+        'city',
+        'barangay',
+        'street',
         'company_phone_number',
         'profile_completed'
     ];
@@ -39,6 +43,5 @@ class Distributors extends Model
             ? Storage::url($this->company_profile_image)
             : asset('img/default-profile.png');
     }
-
 }
 

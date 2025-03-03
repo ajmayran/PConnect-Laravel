@@ -1,15 +1,17 @@
 <?php
 
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redirect;
+use App\Http\Controllers\AddressController;
 use App\Http\Controllers\Admin\Distributor;
 use App\Http\Controllers\ProfileController;
 use App\Http\Middleware\CheckProductStatus;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Retailers\CartController;
 use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\Retailers\BuynowController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Distributors\OrderController;
 use App\Http\Controllers\Distributors\TruckController;
@@ -34,7 +36,6 @@ use App\Http\Controllers\Retailers\RetailerDashboardController;
 use App\Http\Controllers\Distributors\DistributorProductController;
 use App\Http\Controllers\Distributors\DistributorProfileController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
-use App\Http\Controllers\Retailers\BuynowController;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -149,7 +150,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::put('/products/{id}', [DistributorProductController::class, 'update'])->name('distributors.products.update');
     Route::delete('/products/{id}', [DistributorProductController::class, 'destroy'])->name('distributors.products.destroy');
     Route::put('/products/{id}/update-price', [DistributorProductController::class, 'updatePrice'])->name('distributors.products.updatePrice');
-
+    Route::get('/products/list', [DistributorProductController::class, 'getProductsList'])->name('distributors.products.list');
 
     // Order Routes
     Route::get('/orders', [OrderController::class, 'index'])->name('distributors.orders.index');
@@ -208,4 +209,10 @@ Route::get('auth/google', [SocialAuthController::class, 'googleRedirect'])->name
 Route::get('auth/google/callback', [SocialAuthController::class, 'googleCallback']);
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
 
+Route::get('regions', [AddressController::class, 'getRegions']);
+Route::get('provinces/{regionCode}', [AddressController::class, 'getProvinces']);
+Route::get('cities/{provinceCode}', [AddressController::class, 'getCities']);
+Route::get('barangays/{cityCode}', [AddressController::class, 'getBarangays']);
+
+Route::get('/api/debug/zamboanga', [AddressController::class, 'debugZamboangaData']);
 require __DIR__ . '/auth.php';

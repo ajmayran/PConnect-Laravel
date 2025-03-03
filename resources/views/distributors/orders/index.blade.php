@@ -4,7 +4,7 @@
     </span>
 
     <div class="container p-4 mx-auto">
-        <h1 class="mb-6 text-2xl font-bold text-center text-gray-800 sm:text-3xl">Orders Management</h1>
+        <h1 class="mb-6 text-2xl font-bold text-left text-gray-800 sm:text-3xl">Orders Management</h1>
 
         <!-- Order Status Tabs -->
         <div class="flex mb-4 border-b">

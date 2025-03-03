@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+
 use Illuminate\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Redirect;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\RetailerProfile;
+use Yajra\Address\Entities\Region;
 
 class ProfileController extends Controller
 {
@@ -18,9 +20,8 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
-        return view('retailers.profile.edit', [
-            'user' => $request->user(),
-        ]);
+        $user = $request->user();        
+        return view('retailers.profile.edit', compact('user'));
     }
 
 
@@ -54,9 +55,13 @@ class ProfileController extends Controller
     public function updateRetailerProfile(Request $request): RedirectResponse
     {
         $request->validate([
-            'business_name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:15'],
-            'address' => ['required', 'string'],
+            'business_name' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:15'],
+            'city' => ['required', 'string', 'max:10'],
+            'province' => ['required', 'string', 'max:10'],
+            'region' => ['required', 'string', 'max:10'],
+            'barangay' => ['nullable', 'string', 'max:20'],
+            'street' => ['nullable', 'string', 'max:255'],
             'profile_picture' => ['nullable', 'image', 'max:2048'],
         ]);
 
@@ -69,8 +74,12 @@ class ProfileController extends Controller
 
         $retailerProfile->business_name = $request->business_name;
         $retailerProfile->phone = $request->phone;
-        $retailerProfile->address = $request->address;
-
+        $retailerProfile->city = $request->city;
+        $retailerProfile->province = $request->province;
+        $retailerProfile->region = $request->region;
+        $retailerProfile->barangay = $request->barangay;
+        $retailerProfile->street = $request->street;
+        
         if ($request->hasFile('profile_picture')) {
             // Delete the old picture if it exists
             if ($retailerProfile->profile_picture) {

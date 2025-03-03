@@ -16,6 +16,7 @@ class RetailerOrdersController extends Controller
     {
         $user = Auth::user();
         $orders = Order::where('user_id', $user->id)
+            ->where('status', 'pending')
             ->with(['orderDetails.product', 'distributor'])
             ->latest()
             ->get();
@@ -121,10 +122,13 @@ class RetailerOrdersController extends Controller
             $user = Auth::user();
 
             if ($request->input('delivery_option') === 'default') {
-                if (!$user->retailerProfile || !$user->retailerProfile->address) {
+                // Check if retailer profile and address details exist
+                if (!$user->retailerProfile || !$user->retailerProfile->barangay_name) {
                     return redirect()->back()->with('error', 'No default delivery address found. Please provide a new address.');
                 }
-                $deliveryAddress = $user->retailerProfile->address;
+                // Combine barangay name and street
+                $deliveryAddress = $user->retailerProfile->barangay_name .
+                    ($user->retailerProfile->street ? ', ' . $user->retailerProfile->street : '');
             } else {
                 $deliveryAddress = $request->input('new_delivery_address');
             }
@@ -176,7 +180,6 @@ class RetailerOrdersController extends Controller
     public function placeOrderAll(Request $request)
     {
         try {
-
             $request->validate([
                 'delivery_option' => 'required|in:default,other',
                 'new_delivery_address' => 'nullable|required_if:delivery_option,other|string',
@@ -185,29 +188,27 @@ class RetailerOrdersController extends Controller
             $user = Auth::user();
 
             if ($request->input('delivery_option') === 'default') {
-                if (!$user->retailerProfile || !$user->retailerProfile->address) {
+                // Check if retailer profile and address details exist
+                if (!$user->retailerProfile || !$user->retailerProfile->barangay_name) {
                     return redirect()->back()->with('error', 'No default delivery address found. Please provide a new address.');
                 }
-                $deliveryAddress = $user->retailerProfile->address;
+                // Combine barangay name and street
+                $deliveryAddress = $user->retailerProfile->barangay_name .
+                    ($user->retailerProfile->street ? ', ' . $user->retailerProfile->street : '');
             } else {
                 $deliveryAddress = $request->input('new_delivery_address');
             }
 
-            $carts = $request->input('carts');
-            if (!$carts) {
+            // Get all carts for this user
+            $carts = Cart::where('user_id', $user->id)->get();
+
+            if ($carts->isEmpty()) {
                 return redirect()->back()->with('error', 'No items found in cart.');
             }
 
-            $cartDetails = $request->input('cart_details');
-
             // Group cart items by distributor
             $cartsByDistributor = [];
-            foreach ($carts as $cartId) {
-                $cart = Cart::find($cartId);
-                if (!$cart) {
-                    return redirect()->back()->with('error', 'Cart not found.');
-                }
-
+            foreach ($carts as $cart) {
                 $distributorId = $cart->distributor_id;
                 if (!isset($cartsByDistributor[$distributorId])) {
                     $cartsByDistributor[$distributorId] = [];
@@ -227,16 +228,11 @@ class RetailerOrdersController extends Controller
 
                 // Process all cart items for this distributor
                 foreach ($distributorCarts as $cart) {
-                    if (!isset($cartDetails[$cart->distributor_id])) {
-                        continue;
-                    }
+                    // Get all cart details for this cart
+                    $allCartDetails = CartDetail::where('cart_id', $cart->id)->get();
 
-                    foreach ($cartDetails[$cart->distributor_id] as $cartDetailId) {
-                        $cartDetail = CartDetail::find($cartDetailId);
-                        if (!$cartDetail) {
-                            continue;
-                        }
-
+                    // Add all cart details to the order
+                    foreach ($allCartDetails as $cartDetail) {
                         OrderDetails::create([
                             'order_id' => $order->id,
                             'product_id' => $cartDetail->product_id,
@@ -258,7 +254,6 @@ class RetailerOrdersController extends Controller
             return redirect()->back()->with('error', 'An error occurred while placing the order: ' . $e->getMessage());
         }
     }
-
     public function myPurchases()
     {
         $orders = Order::with(['orderDetails.product'])

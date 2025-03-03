@@ -9,12 +9,23 @@ use Illuminate\Support\Facades\Auth;
 
 class InventoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::where('distributor_id', Auth::user()->distributor->id)
-            ->select('id', 'product_name', 'image', 'stock_quantity', 'stock_updated_at')
-            ->orderBy('product_name')
-            ->get();
+        $search = $request->input('search');
+        $query = Product::where('distributor_id', Auth::user()->distributor->id)
+            ->select('id', 'product_name', 'image', 'stock_quantity', 'stock_updated_at');
+
+        if ($search) {
+            $query->where('product_name', 'like', '%' . $search . '%');
+        }
+
+        $products = $query->orderBy('product_name')
+            ->paginate(10);
+
+        // Append search query to pagination links
+        if ($search) {
+            $products->appends(['search' => $search]);
+        }
 
         return view('distributors.inventory.index', compact('products'));
     }

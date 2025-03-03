@@ -25,7 +25,11 @@ class DistributorProfileController extends Controller
             'company_profile_image' => 'nullable|image|max:2048',
             'company_name' => 'required|string|max:255',
             'company_email' => 'required|email|max:255',
-            'company_address' => 'required|string|max:255',
+            'region' => 'nullable|string|max:10',
+            'province' => 'nullable|string|max:10',
+            'city' => 'nullable|string|max:10',
+            'barangay' => 'required|string|max:20',
+            'street' => 'required|string|max:255',
             'company_phone_number' => 'required|string|max:15',
         ]);
 
@@ -53,7 +57,11 @@ class DistributorProfileController extends Controller
             $distributor->user_id = $user->id;
             $distributor->company_name = $request->company_name;
             $distributor->company_email = $request->company_email;
-            $distributor->company_address = $request->company_address;
+            $distributor->region = $request->region;
+            $distributor->province = $request->province;
+            $distributor->city = $request->city;
+            $distributor->barangay = $request->barangay;
+            $distributor->street = $request->street;
             $distributor->company_phone_number = $request->company_phone_number;
             $distributor->company_profile_image = $imagePath;
             $distributor->save();
@@ -62,7 +70,11 @@ class DistributorProfileController extends Controller
             $distributor->update($request->only([
                 'company_name',
                 'company_email',
-                'company_address',
+                'region',
+                'province',
+                'city',
+                'barangay',
+                'street',
                 'company_phone_number',
             ]));
 

@@ -21,7 +21,7 @@
                     src="{{ $distributor->company_profile_image ? asset('storage/' . $distributor->company_profile_image) : asset('img/default-distributor.jpg') }}">
                 <div class="ml-6">
                     <h1 class="text-2xl font-bold text-gray-800">{{ $distributor->company_name }}</h1>
-                    <p class="text-gray-600">{{ $distributor->company_address }}</p>
+                    <p class="text-gray-600">{{ $distributor->barangay }}, {{ $distributor->street }}</p>
                 </div>
             </div>
 
