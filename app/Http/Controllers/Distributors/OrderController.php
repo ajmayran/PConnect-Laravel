@@ -22,25 +22,43 @@ class OrderController extends Controller
     public function index()
     {
         $distributorId = Auth::user()->distributor->id;
-        $status = request('status', self::STATUS_PENDING); // default to pending
+        $status = request('status', self::STATUS_PENDING);
+        $search = request('search');
 
-        // Get all orders with the selected status
+        // Base query without search filter
         $query = Order::with(['orderDetails.product', 'user.retailerProfile'])
             ->where('distributor_id', $distributorId)
             ->where('status', $status);
 
         // For pending orders, show oldest first
         if ($status === self::STATUS_PENDING) {
-            $query = $query->oldest(); // Sort by created_at ascending for pending
+            $query = $query->oldest();
         } else {
-            $query = $query->latest(); // Sort by created_at descending for other statuses
+            $query = $query->latest();
         }
 
-        $orders = $query->get()
-            ->map(function ($order) {
-                $order->formatted_id = $order->formatted_order_id;
-                return $order;
+        // Get all orders first
+        $allOrders = $query->get();
+
+        // Then filter by search if provided
+        if ($search) {
+            $orders = $allOrders->filter(function ($order) use ($search) {
+                // Check formatted ID
+                if (stripos($order->formatted_order_id, $search) !== false) {
+                    return true;
+                }
+
+                // Check retailer name
+                $retailerName = $order->user->first_name . ' ' . $order->user->last_name;
+                if (stripos($retailerName, $search) !== false) {
+                    return true;
+                }
+
+                return false;
             });
+        } else {
+            $orders = $allOrders;
+        }
 
         return view('distributors.orders.index', compact('orders'));
     }

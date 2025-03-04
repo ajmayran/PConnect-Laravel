@@ -6,23 +6,58 @@
     <div class="container p-4 mx-auto">
         <h1 class="mb-6 text-2xl font-bold text-left text-gray-800 sm:text-3xl">Orders Management</h1>
 
+        <!-- Search Bar -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-full md:w-1/2 lg:w-1/3">
+                <form action="{{ route('distributors.orders.index') }}" method="GET">
+                    <input type="hidden" name="status" value="{{ request('status', 'pending') }}">
+                    <div class="relative flex">
+                        <input type="text" name="search" value="{{ request('search') }}"
+                            placeholder="Search orders..."
+                            class="w-full py-2 pl-4 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none">
+                        <button type="submit"
+                            class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-green-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        @if (request('search'))
+            <div class="mb-4">
+                <div class="flex items-center">
+                    <p class="text-gray-600">Search results for: <span
+                            class="font-bold">"{{ request('search') }}"</span></p>
+                    <a href="{{ route('distributors.orders.index', ['status' => request('status', 'pending')]) }}"
+                        class="ml-3 text-sm text-red-500 hover:underline">
+                        Clear search
+                    </a>
+                </div>
+            </div>
+        @endif
+
         <!-- Order Status Tabs -->
         <div class="flex mb-4 border-b">
-            <a href="?status=pending"
+            <a href="?status=pending{{ request('search') ? '&search=' . request('search') : '' }}"
                 class="px-4 py-2 -mb-px font-semibold 
                       @if (request('status') === 'pending' || !request('status')) text-green-500 border-green-500 
                       @else text-gray-600 border-transparent @endif 
                       border-b-2">
                 Pending
             </a>
-            <a href="?status=processing"
+            <a href="?status=processing{{ request('search') ? '&search=' . request('search') : '' }}"
                 class="px-4 py-2 -mb-px font-semibold 
                       @if (request('status') === 'processing') text-green-500 border-green-500
                       @else text-gray-600 border-transparent @endif  
                       border-b-2">
                 Processing
             </a>
-            <a href="?status=rejected"
+            <a href="?status=rejected{{ request('search') ? '&search=' . request('search') : '' }}"
                 class="px-4 py-2 -mb-px font-semibold 
                       @if (request('status') === 'rejected') text-green-500 border-green-500
                       @else text-gray-600 border-transparent @endif  
@@ -150,10 +185,12 @@
                     placeholder="Enter custom rejection reason..."></textarea>
             </div>
             <div class="flex justify-end gap-2 p-4 border-t">
-                <button onclick="submitRejectOrder()" class="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700">
+                <button onclick="submitRejectOrder()"
+                    class="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700">
                     Submit
                 </button>
-                <button onclick="closeRejectModal()" class="px-4 py-2 text-white bg-gray-600 rounded hover:bg-gray-700">
+                <button onclick="closeRejectModal()"
+                    class="px-4 py-2 text-white bg-gray-600 rounded hover:bg-gray-700">
                     Cancel
                 </button>
             </div>
