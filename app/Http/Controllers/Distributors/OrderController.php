@@ -24,11 +24,19 @@ class OrderController extends Controller
         $distributorId = Auth::user()->distributor->id;
         $status = request('status', self::STATUS_PENDING); // default to pending
 
-        $orders = Order::with(['orderDetails.product', 'user.retailerProfile'])
+        // Get all orders with the selected status
+        $query = Order::with(['orderDetails.product', 'user.retailerProfile'])
             ->where('distributor_id', $distributorId)
-            ->where('status', $status)
-            ->latest()
-            ->get()
+            ->where('status', $status);
+
+        // For pending orders, show oldest first
+        if ($status === self::STATUS_PENDING) {
+            $query = $query->oldest(); // Sort by created_at ascending for pending
+        } else {
+            $query = $query->latest(); // Sort by created_at descending for other statuses
+        }
+
+        $orders = $query->get()
             ->map(function ($order) {
                 $order->formatted_id = $order->formatted_order_id;
                 return $order;

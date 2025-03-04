@@ -54,7 +54,7 @@
 
                     <!-- Deliveries Table -->
                     <div class="mt-8">
-                        <h3 class="mb-4 text-xl font-semibold">Delivery History</h3>
+                        <h3 class="mb-4 text-xl font-semibold">Delivery</h3>
                         @if ($deliveries->isEmpty())
                             <div class="p-4 text-center bg-gray-50">
                                 <p class="text-gray-600">No deliveries found for this truck.</p>

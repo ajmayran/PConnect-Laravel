@@ -1,3 +1,5 @@
+<x-profile-completion-alert :user="Auth::user()" />
+
 <nav class="bg-white border-b border-gray-100 shadow-sm">
     <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
         <!-- Top Navigation Bar -->

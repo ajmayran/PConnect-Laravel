@@ -26,7 +26,7 @@
                     <tr class="transition-colors hover:bg-gray-50">
                         <td class="px-6 py-4 text-sm text-gray-900">{{ $detail->product->product_name }}</td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ $detail->quantity }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-500">₱{{ number_format($detail->product->price, 2) }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">₱{{ number_format($detail->price, 2) }}</td>
                         <td class="px-6 py-4 text-sm text-gray-900">₱{{ number_format($detail->subtotal, 2) }}</td>
                     </tr>
                 @endforeach

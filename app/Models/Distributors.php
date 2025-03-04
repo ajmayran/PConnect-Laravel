@@ -19,13 +19,9 @@ class Distributors extends Model
         'city',
         'barangay',
         'street',
-        'company_phone_number',
-        'profile_completed'
+        'company_phone_number'
     ];
 
-    protected $casts = [
-        'profile_completed' => 'boolean'
-    ];
 
     public function user(): BelongsTo
     {

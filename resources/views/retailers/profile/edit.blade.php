@@ -69,12 +69,12 @@
                                     <label for="barangay"
                                         class="block text-sm font-medium text-gray-700">Barangay</label>
 
-                                    <!-- Current barangay display section -->
+                                    <!-- Current barangay display section - add null check -->
                                     <div id="barangayDisplaySection"
-                                        class="flex items-center mt-1 {{ $user->retailerProfile->barangay ? '' : 'hidden' }}">
+                                        class="flex items-center mt-1 {{ isset($user->retailerProfile) && $user->retailerProfile && $user->retailerProfile->barangay ? '' : 'hidden' }}">
                                         <span id="currentBarangayDisplay"
                                             class="inline-block px-3 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-md">
-                                            {{ $user->retailerProfile->barangay_name ?? 'Loading...' }}
+                                            {{ isset($user->retailerProfile) && $user->retailerProfile && isset($user->retailerProfile->barangay_name) ? $user->retailerProfile->barangay_name : 'Loading...' }}
                                         </span>
                                         <button type="button" id="changeBarangayBtn"
                                             class="px-3 py-1 ml-3 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -82,9 +82,9 @@
                                         </button>
                                     </div>
 
-                                    <!-- Select dropdown (initially hidden if barangay is already set) -->
+                                    <!-- Select dropdown - add null check -->
                                     <div id="barangaySelectSection"
-                                        class="{{ $user->retailerProfile->barangay ? 'hidden' : '' }}">
+                                        class="{{ isset($user->retailerProfile) && $user->retailerProfile && $user->retailerProfile->barangay ? 'hidden' : '' }}">
                                         <select id="barangay" name="barangay"
                                             class="block w-full mt-1 border-gray-300 rounded-md shadow-sm dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600">
                                             <option value="">Select Barangay</option>
@@ -97,9 +97,9 @@
                                         </button>
                                     </div>
 
-                                    <!-- Hidden input to store the actual barangay code -->
+                                    <!-- Hidden input to store the actual barangay code - add null check -->
                                     <input type="hidden" id="barangayCode" name="barangay"
-                                        value="{{ $user->retailerProfile->barangay ?? '' }}">
+                                        value="{{ isset($user->retailerProfile) && $user->retailerProfile ? $user->retailerProfile->barangay ?? '' : '' }}">
                                 </div>
 
                                 <div class="mb-4">
@@ -135,6 +135,7 @@
             const barangaySelectSection = document.getElementById('barangaySelectSection');
             const currentBarangayDisplay = document.getElementById('currentBarangayDisplay');
             const barangayCodeInput = document.getElementById('barangayCode');
+            const savedBarangay = '{{ isset($user->retailerProfile) && $user->retailerProfile ? ($user->retailerProfile->barangay ?? '') : '' }}';
 
             changeBarangayBtn.addEventListener('click', function() {
                 barangayDisplaySection.classList.add('hidden');

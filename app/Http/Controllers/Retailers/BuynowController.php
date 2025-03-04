@@ -101,14 +101,15 @@ class BuynowController extends Controller
             return redirect()->back()->with('error', 'Product is out of stock or insufficient quantity available.');
         }
 
-        // Determine shipping address based on delivery option
+        // Determine delivery address based on delivery option
         if ($request->input('delivery_option') === 'default') {
-            if (!$user->retailerProfile || !$user->retailerProfile->address) {
+            if (!$user->retailerProfile || (!$user->retailerProfile->barangay && !$user->retailerProfile->street)) {
                 return redirect()->back()->with('error', 'No default delivery address found. Please provide a new address.');
             }
-            $shippingAddress = $user->retailerProfile->address;
+            // Format the address properly using the available fields
+            $deliveryAddress = $user->retailerProfile->barangay_name . ', ' . ($user->retailerProfile->street ?? '');
         } else {
-            $shippingAddress = $request->input('new_delivery_address');
+            $deliveryAddress = $request->input('new_delivery_address');
         }
 
         DB::beginTransaction();
@@ -120,7 +121,6 @@ class BuynowController extends Controller
                 'distributor_id' => $directPurchase['distributor_id'],
                 'total_amount' => $directPurchase['subtotal'],
                 'status' => 'pending',
-                'payment_status' => 'unpaid',
                 'status_updated_at' => now(),
             ]);
 
@@ -131,7 +131,7 @@ class BuynowController extends Controller
                 'quantity' => $directPurchase['quantity'],
                 'price' => $directPurchase['price'],
                 'subtotal' => $directPurchase['subtotal'],
-                'delivery_address' => $shippingAddress,
+                'delivery_address' => $deliveryAddress,
             ]);
 
             // Update product stock

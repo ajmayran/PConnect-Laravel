@@ -20,7 +20,7 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
-        $user = $request->user();        
+        $user = $request->user();
         return view('retailers.profile.edit', compact('user'));
     }
 
@@ -79,7 +79,7 @@ class ProfileController extends Controller
         $retailerProfile->region = $request->region;
         $retailerProfile->barangay = $request->barangay;
         $retailerProfile->street = $request->street;
-        
+
         if ($request->hasFile('profile_picture')) {
             // Delete the old picture if it exists
             if ($retailerProfile->profile_picture) {
@@ -93,6 +93,11 @@ class ProfileController extends Controller
         }
 
         $retailerProfile->save();
+
+        // Update profile_completed status to true
+        $user = $request->user();
+        $user->profile_completed = true;
+        $user->save();
 
         return back()->with('success', 'Retailer profile updated successfully!');
     }

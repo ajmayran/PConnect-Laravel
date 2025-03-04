@@ -190,29 +190,31 @@
                             </thead>
                             <tbody>
                                 @foreach ($trucks as $truck)
-                                    <tr>
-                                        <td class="px-4 py-2 border">{{ $truck->plate_number }}</td>
-                                        
-                                        <td class="px-4 py-2 border">
+                                    <tr class="p-2 border-b border-gray-200">
+                                        <td class="px-4 py-2 text-center">{{ $truck->plate_number }}</td>
+
+                                        <td class="px-4 py-2">
                                             @if ($truck->deliveryLocations && $truck->deliveryLocations->count() > 0)
                                                 @php $primaryLocation = $truck->deliveryLocations->first() @endphp
-                                                
+
                                                 <!-- Primary Location - Prominently Displayed -->
-                                                <div class="p-2 border border-gray-200 rounded-md bg-gray-50">
-                                                    <div class="font-medium">{{ $primaryLocation->barangayName ?? 'Unknown Barangay' }}</div>
-                                                    @if ($primaryLocation->street)
-                                                        <div class="text-xs text-gray-600">{{ $primaryLocation->street }}</div>
-                                                    @endif
-                                                </div>
-                                                
+                                                <div class="font-medium">
+                                                    {{ $primaryLocation->barangayName ?? 'Unknown Barangay' }}</div>
+                                                @if ($primaryLocation->street)
+                                                    <div class="text-xs text-gray-600">{{ $primaryLocation->street }}
+                                                    </div>
+                                                @endif
+
                                                 <!-- Additional Locations Indicator -->
                                                 @if ($truck->deliveryLocations->count() > 1)
                                                     <div class="flex items-center mt-2">
-                                                        <span class="inline-flex items-center justify-center w-5 h-5 mr-2 text-xs font-semibold text-white bg-blue-600 rounded-full">
+                                                        <span
+                                                            class="inline-flex items-center justify-center w-5 h-5 mr-2 text-xs font-semibold text-white bg-blue-600 rounded-full">
                                                             {{ $truck->deliveryLocations->count() - 1 }}
                                                         </span>
-                                                        <span class="text-xs font-medium text-blue-600 cursor-pointer hover:text-blue-800" 
-                                                              onclick="viewAllLocations({{ $truck->id }})">
+                                                        <span
+                                                            class="text-xs font-medium text-blue-600 cursor-pointer hover:text-blue-800"
+                                                            onclick="viewAllLocations({{ $truck->id }})">
                                                             {{ $truck->deliveryLocations->count() - 1 == 1 ? 'more location' : 'more locations' }}
                                                         </span>
                                                     </div>
@@ -222,7 +224,7 @@
                                             @endif
                                         </td>
 
-                                        <td class="px-4 py-2 border">
+                                        <td class="px-4 py-2 text-center">
                                             <span
                                                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                                 {{ $truck->status === 'available'
@@ -233,8 +235,8 @@
                                                 {{ ucfirst(str_replace('_', ' ', $truck->status)) }}
                                             </span>
                                         </td>
-                                        <td class="px-4 py-2 text-center border">{{ $truck->deliveries_count }}</td>
-                                        <td class="px-4 py-2 border">
+                                        <td class="px-4 py-2 text-center">{{ $truck->deliveries_count }}</td>
+                                        <td class="px-4 py-2">
                                             <div class="flex justify-around">
                                                 <a href="{{ route('distributors.trucks.show', $truck) }}"
                                                     class="text-blue-600 hover:text-blue-900">
@@ -635,12 +637,12 @@
             <div class="flex justify-between mb-2">
                 <span class="text-sm font-medium">${isFirstLocation ? 'Primary Location' : 'Additional Location'}</span>
                 ${!isFirstLocation ? `
-                    <button type="button" class="text-red-600 remove-location-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                    ` : ''}
+                            <button type="button" class="text-red-600 remove-location-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            ` : ''}
             </div>
             <input type="hidden" name="locations[${index}][id]" value="${location ? location.id || '' : ''}">
             <input type="hidden" name="locations[${index}][region]" value="09">

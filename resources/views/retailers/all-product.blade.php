@@ -17,11 +17,11 @@
             </button>
         </div>
     </form>
-
-    <section class="py-10" id="category">
+  
+    <section class="py-10" id="category ">
         <div class="container px-4 mx-auto">
             <h2 class="mb-10 text-2xl font-bold text-gray-800">Categories</h2>
-            <div class="flex mb-8 space-x-4 overflow-x-auto">
+            <div class="container flex mx-auto mb-2 space-x-4 overflow-x-auto bg-white rounded-lg shadow-lg">
                 <a href="{{ route('retailers.all-product') }}"
                     class="px-6 py-3 whitespace-nowrap {{ $selectedCategory === 'all' ? 'text-green-600 border-b-2 border-green-500' : 'text-gray-500 hover:text-gray-700' }}">
                     All Products
