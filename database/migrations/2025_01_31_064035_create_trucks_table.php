@@ -15,11 +15,10 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('distributor_id');
             $table->string('plate_number')->unique();
-            $table->string('delivery_location')->nullable();
+            $table->boolean('is_ready_to_deliver')->default(false);
             $table->enum('status', ['available', 'on_delivery', 'maintenance'])->default('available');
             $table->timestamps();
-
-
+            
             $table->foreign('distributor_id')->references('id')->on('distributors')->onDelete('cascade');
         });
         Schema::create('truck_delivery', function (Blueprint $table) {

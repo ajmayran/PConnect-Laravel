@@ -2,19 +2,21 @@
 
 namespace App\Http\Controllers\Distributors;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Trucks;
 use App\Models\Delivery;
+use Illuminate\Http\Request;
+use App\Models\DeliveryLocations;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 class TruckController extends Controller
 {
     public function index()
     {
         $trucks = Trucks::where('distributor_id', Auth::user()->distributor->id)
-            ->withCount(['deliveries' => function ($query) {
-                $query->whereIn('status', ['in_transit', 'out_for_delivery']);
+            ->with('deliveryLocations')  // Only load the deliveryLocations relationship
+            ->withCount(['deliveries as deliveries_count' => function ($query) {
+                $query->whereIn('status', ['pending', 'processing', 'in_transit']);
             }])
             ->get();
 
@@ -31,20 +33,102 @@ class TruckController extends Controller
         return view('distributors.trucks.show', compact('truck', 'deliveries'));
     }
 
-    public function edit(Trucks $truck)
+    public function edit($id)
     {
-        return response()->json($truck);
+        $truck = Trucks::with('deliveryLocations')->findOrFail($id);
+
+        $locations = $truck->deliveryLocations->map(function ($location) {
+            return [
+                'id' => $location->id,
+                'barangay' => $location->barangay,
+                'street' => $location->street,
+                'region' => $location->region,
+                'province' => $location->province,
+                'city' => $location->city,
+            ];
+        });
+
+        return response()->json([
+            'plate_number' => $truck->plate_number,
+            'status' => $truck->status,
+            'locations' => $locations,
+        ]);
     }
+
+    public function locations($id)
+    {
+        $truck = Trucks::with('deliveryLocations')->findOrFail($id);
+
+        $locations = $truck->deliveryLocations->map(function ($location) {
+            return [
+                'id' => $location->id,
+                'barangay' => $location->barangay,
+                'street' => $location->street,
+                'barangay_name' => $location->barangayName,
+            ];
+        });
+
+        return response()->json($locations);
+    }
+
 
     public function update(Request $request, Trucks $truck)
     {
         $validated = $request->validate([
             'plate_number' => 'required|unique:trucks,plate_number,' . $truck->id,
-            'delivery_location' => 'nullable|string',
             'status' => 'required|in:available,on_delivery,maintenance',
+            'locations' => 'required|array|min:1',
+            'locations.*.barangay' => 'required',
+            'locations.*.street' => 'required',
+            'locations.*.region' => 'required',
+            'locations.*.province' => 'required',
+            'locations.*.city' => 'required',
         ]);
 
-        $truck->update($validated);
+        // Update the truck info
+        $truck->plate_number = $validated['plate_number'];
+        $truck->status = $validated['status'];
+        $truck->save();
+
+        // Get existing location IDs
+        $existingLocationIds = $truck->deliveryLocations->pluck('id')->toArray();
+        $updatedLocationIds = [];
+
+        // Update or create locations
+        foreach ($validated['locations'] as $locationData) {
+            if (isset($locationData['id']) && $locationData['id']) {
+                // Update existing location
+                $location = DeliveryLocations::find($locationData['id']);
+                if ($location) {
+                    $location->update([
+                        'barangay' => $locationData['barangay'],
+                        'street' => $locationData['street'],
+                        'region' => $locationData['region'],
+                        'province' => $locationData['province'],
+                        'city' => $locationData['city'],
+                    ]);
+                    $updatedLocationIds[] = $location->id;
+                }
+            } else {
+                // Create new location
+                $location = new DeliveryLocations([
+                    'barangay' => $locationData['barangay'],
+                    'street' => $locationData['street'],
+                    'region' => $locationData['region'],
+                    'province' => $locationData['province'],
+                    'city' => $locationData['city'],
+                    'truck_id' => $truck->id,
+                ]);
+                $location->save();
+                $updatedLocationIds[] = $location->id;
+            }
+        }
+
+        // Delete any locations that weren't updated or created
+        $locationsToDelete = array_diff($existingLocationIds, $updatedLocationIds);
+        if (!empty($locationsToDelete)) {
+            DeliveryLocations::whereIn('id', $locationsToDelete)->delete();
+        }
 
         return redirect()->route('distributors.trucks.index')
             ->with('success', 'Truck updated successfully');
@@ -54,18 +138,36 @@ class TruckController extends Controller
     {
         $validated = $request->validate([
             'plate_number' => 'required|unique:trucks',
-            'delivery_location' => 'nullable|string',
+            'locations' => 'required|array|min:1',
+            'locations.*.barangay' => 'required',
+            'locations.*.street' => 'required',
+            'locations.*.region' => 'required',
+            'locations.*.province' => 'required',
+            'locations.*.city' => 'required',
         ]);
 
-        $truck = new Trucks($validated);
+        // Create truck first
+        $truck = new Trucks();
         $truck->distributor_id = Auth::user()->distributor->id;
+        $truck->plate_number = $validated['plate_number'];
         $truck->status = 'available';
         $truck->save();
+
+        // Create all locations
+        foreach ($validated['locations'] as $locationData) {
+            DeliveryLocations::create([
+                'barangay' => $locationData['barangay'],
+                'street' => $locationData['street'],
+                'region' => $locationData['region'],
+                'province' => $locationData['province'],
+                'city' => $locationData['city'],
+                'truck_id' => $truck->id,
+            ]);
+        }
 
         return redirect()->route('distributors.trucks.index')
             ->with('success', 'Truck added successfully');
     }
-
     public function destroy(Trucks $truck)
     {
         $truck->delete();

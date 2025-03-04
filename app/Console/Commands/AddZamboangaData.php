@@ -19,4 +19,4 @@ class AddZamboangaData extends Command
         
         return Command::SUCCESS;
     }
-}
+}   
