@@ -111,6 +111,9 @@
                     </tbody>
                 </table>
             </div>
+            <div class="flex justify-end mt-6">
+                {{ $orders->links() }}
+            </div>
         @endif
     </div>
 

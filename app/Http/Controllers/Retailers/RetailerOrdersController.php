@@ -19,7 +19,7 @@ class RetailerOrdersController extends Controller
             ->where('status', 'pending')
             ->with(['orderDetails.product', 'distributor'])
             ->latest()
-            ->get();
+            ->paginate(3); 
 
         return view('retailers.orders.index', compact('orders'));
     }
@@ -31,7 +31,7 @@ class RetailerOrdersController extends Controller
             ->where('status', 'processing')
             ->with(['distributor', 'orderDetails.product'])
             ->latest()
-            ->get();
+            ->paginate(3); 
 
         return view('retailers.orders.to-pay', compact('orders'));
     }
@@ -46,7 +46,7 @@ class RetailerOrdersController extends Controller
             })
             ->with(['distributor', 'orderDetails.product', 'delivery'])
             ->latest()
-            ->get();
+            ->paginate(3); 
 
         return view('retailers.orders.to-receive', compact('orders'));
     }
@@ -59,7 +59,7 @@ class RetailerOrdersController extends Controller
 
             ->with(['distributor', 'orderDetails.product'])
             ->latest()
-            ->get();
+            ->paginate(3); 
 
         return view('retailers.orders.completed', compact('orders'));
     }
@@ -71,7 +71,7 @@ class RetailerOrdersController extends Controller
             ->whereIn('status', ['cancelled', 'rejected'])
             ->with(['distributor', 'orderDetails.product'])
             ->latest()
-            ->get();
+            ->paginate(3); 
 
         return view('retailers.orders.cancelled', compact('orders'));
     }
@@ -84,7 +84,7 @@ class RetailerOrdersController extends Controller
             ->whereIn('status', ['returned'])
             ->with(['distributor', 'orderDetails.product'])
             ->latest()
-            ->get();
+            ->paginate(3); 
 
         return view('retailers.orders.returned', compact('orders'));
     }

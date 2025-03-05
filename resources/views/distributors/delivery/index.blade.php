@@ -100,6 +100,10 @@
                         </tbody>
                     </table>
                 </div>
+
+                <div class="mt-4">
+                    {{ $deliveries->withQueryString()->links() }}
+                </div>  
             @endif
         </div>
     </div>

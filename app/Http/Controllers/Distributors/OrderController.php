@@ -25,7 +25,7 @@ class OrderController extends Controller
         $status = request('status', self::STATUS_PENDING);
         $search = request('search');
 
-        // Base query without search filter
+        // Base query with relationships
         $query = Order::with(['orderDetails.product', 'user.retailerProfile'])
             ->where('distributor_id', $distributorId)
             ->where('status', $status);
@@ -37,28 +37,24 @@ class OrderController extends Controller
             $query = $query->latest();
         }
 
-        // Get all orders first
-        $allOrders = $query->get();
-
-        // Then filter by search if provided
+        // Apply search if provided
         if ($search) {
-            $orders = $allOrders->filter(function ($order) use ($search) {
-                // Check formatted ID
-                if (stripos($order->formatted_order_id, $search) !== false) {
-                    return true;
-                }
-
-                // Check retailer name
-                $retailerName = $order->user->first_name . ' ' . $order->user->last_name;
-                if (stripos($retailerName, $search) !== false) {
-                    return true;
-                }
-
-                return false;
+            $query->where(function ($query) use ($search) {
+                // Search in order_id
+                $query->where('order_id', 'like', "%{$search}%")
+                    // Join and search in user table
+                    ->orWhereHas('user', function ($q) use ($search) {
+                        $q->where(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%");
+                    });
             });
-        } else {
-            $orders = $allOrders;
         }
+
+        // Paginate the results
+        $orders = $query->paginate(10);
+        if (request()->has('search') || request()->has('status')) {
+            $orders->appends(request()->only(['search', 'status']));
+        }
+
 
         return view('distributors.orders.index', compact('orders'));
     }

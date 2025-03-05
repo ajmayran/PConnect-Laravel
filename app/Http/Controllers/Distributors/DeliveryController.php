@@ -21,8 +21,7 @@ class DeliveryController extends Controller
     public function index()
     {
         $distributorId = Auth::user()->distributor->id;
-        $status = request('status', self::STATUS_PENDING); // default to pending if not set
-
+        $status = request('status', self::STATUS_PENDING); 
         $deliveries = Delivery::with([
             'order',
             'order.user.retailerProfile',
@@ -32,8 +31,8 @@ class DeliveryController extends Controller
                 $query->where('distributor_id', $distributorId);
             })
             ->where('status', $status)
-            ->latest()
-            ->get();
+            ->oldest()
+            ->paginate(10); 
 
         $availableTrucks = Trucks::where('distributor_id', Auth::user()->distributor->id)
             ->where('status', 'available')
