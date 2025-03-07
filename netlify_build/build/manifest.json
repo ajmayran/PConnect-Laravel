@@ -1,0 +1,31 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-DKlQmRET.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/admin_dash.js": {
+    "file": "assets/admin_dash-TMSCbGld.js",
+    "name": "admin_dash",
+    "src": "resources/js/admin_dash.js",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-CNxCuSJB.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true
+  },
+  "resources/js/dist_dashboard.js": {
+    "file": "assets/dist_dashboard-C7rQVSGS.js",
+    "name": "dist_dashboard",
+    "src": "resources/js/dist_dashboard.js",
+    "isEntry": true
+  },
+  "resources/js/index.js": {
+    "file": "assets/index-278n8CFF.js",
+    "name": "index",
+    "src": "resources/js/index.js",
+    "isEntry": true
+  }
+}
