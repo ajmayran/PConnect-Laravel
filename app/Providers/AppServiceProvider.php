@@ -22,6 +22,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        config(['broadcasting.default' => 'pusher']);
         Paginator::defaultView('vendor.pagination.tailwind');
         Blade::component('profile-completion-alert', ProfileCompletionAlert::class);
     }

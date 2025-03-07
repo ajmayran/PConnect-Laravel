@@ -13,6 +13,7 @@
     </div>
 
     <!-- Distributor Header -->
+
     <section class="container p-4 sm:p-8 mx-auto mb-4 sm:mb-6 bg-white rounded-lg shadow-lg">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
             <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6">
@@ -21,7 +22,8 @@
                     alt="{{ $distributor->company_name }}">
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold text-gray-800">{{ $distributor->company_name }}</h1>
-                    <p class="text-sm sm:text-base text-gray-600">{{ $distributor->street }}</p>
+                    <p class="text-sm sm:text-base text-gray-600">{{ $distributor->barangay_name }},{{ $distributor->street }}</p>
+
                 </div>
             </div>
 
@@ -99,5 +101,6 @@
         scrollbar-width: none;
     }
     </style>
+
     <x-footer />
 </x-app-layout>
