@@ -1,13 +1,16 @@
 <?php
 
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\Admin\Distributor;
 use App\Http\Controllers\ProfileController;
 use App\Http\Middleware\CheckProductStatus;
+use App\Http\Controllers\BroadcastAuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Retailers\CartController;
 use App\Http\Controllers\Auth\SocialAuthController;
@@ -31,12 +34,19 @@ use App\Http\Controllers\Retailers\RetailerOrdersController;
 use App\Http\Controllers\Retailers\RetailerSearchController;
 use App\Http\Controllers\Distributors\CancellationController;
 use App\Http\Controllers\Retailers\DistributorPageController;
+use App\Http\Controllers\Retailers\RetailerMessageController;
 use App\Http\Controllers\Retailers\RetailerProductController;
 use App\Http\Controllers\Retailers\RetailerDashboardController;
+use App\Http\Controllers\Distributors\DistributorMessageController;
 use App\Http\Controllers\Distributors\DistributorProductController;
 use App\Http\Controllers\Distributors\DistributorProfileController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
 
+
+Route::post('/broadcasting/auth', [BroadcastAuthController::class, 'authenticate'])
+    ->middleware(['web', 'auth'])
+    ->name('broadcasting.auth');
+    
 Route::get('/', function () {
     if (Auth::check()) {
         $userType = Auth::user()->user_type;
@@ -83,6 +93,12 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     Route::get('profile/my-purchase', [RetailerOrdersController::class, 'myPurchases'])->name('profile.my-purchase');
     Route::get('/profile/{order}/order-details', [RetailerORdersController::class, 'getOrderDetails'])->name('profile.order-details');
 
+
+    // Message Routes
+    Route::get('/messages', [App\Http\Controllers\Retailers\RetailerMessageController::class, 'index'])->name('messages.index');
+    Route::post('/messages/send', [App\Http\Controllers\Retailers\RetailerMessageController::class, 'sendMessage'])->name('messages.send');
+    Route::get('/messages/unread-count', [App\Http\Controllers\Retailers\RetailerMessageController::class, 'getUnreadCount'])->name('messages.unread-count');
+    Route::post('/messages/mark-read', [RetailerMessageController::class, 'markAsRead'])->name('messages.mark-read');
 
     // Product Routes
     Route::get('/products', [RetailerProductController::class, 'index'])->name('products.index');
@@ -167,12 +183,18 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     // Delivery Routes
     Route::get('/delivery', [DeliveryController::class, 'index'])->name('distributors.delivery.index');
     Route::post('/delivery/{id}/update-status', [DeliveryController::class, 'updateStatus'])->name('delivery.update-status');
+    Route::patch('/deliveries/{delivery}/mark-delivered', [DeliveryController::class, 'markDelivered'])->name('distributors.deliveries.mark-delivered');
 
     // Inventory Routes
     Route::get('/inventory', [InventoryController::class, 'index'])->name('distributors.inventory.index');
     Route::put('/inventory/{id}/update-stock', [InventoryController::class, 'updateStock'])->name('distributors.inventory.updateStock');
 
     // Message Routes
+    Route::get('/messages', [DistributorMessageController::class, 'index'])->name('distributors.messages.index');
+    Route::post('/messages/send', [DistributorMessageController::class, 'sendMessage'])->name('distributors.messages.send');
+    Route::get('/messages/unread-count', [DistributorMessageController::class, 'getUnreadCount'])->name('distributors.messages.unread-count');
+    Route::post('/messages/mark-read', [DistributorMessageController::class, 'markAsRead'])->name('distributors.messages.mark-read');
+
 
     // Insights Routes
     Route::get('/insights', [InsightsController::class, 'index'])->name('distributors.insights.index');
@@ -191,6 +213,8 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::put('/trucks/{truck}', [TruckController::class, 'update'])->name('distributors.trucks.update');
     Route::delete('/trucks/{truck}', [TruckController::class, 'destroy'])->name('distributors.trucks.destroy');
     Route::get('/trucks/{truck}/locations', [TruckController::class, 'locations'])->name('distributors.trucks.locations');
+    Route::post('/trucks/{truck}/out-for-delivery', [TruckController::class, 'outForDelivery'])->name('distributors.trucks.out-for-delivery');
+    Route::get('/trucks/{truck}/delivery-history', [TruckController::class, 'deliveryHistory'])->name('distributors.trucks.delivery-history');
 
     Route::post('/delivery/{delivery}/assign-truck', [TruckController::class, 'assignDelivery'])->name('distributors.delivery.assign-truck');
 

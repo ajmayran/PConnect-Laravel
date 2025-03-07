@@ -21,6 +21,15 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/iconify-icon/dist/iconify-icon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .notification-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #ef4444;
+            border-radius: 50%;
+        }
+    </style>
 </head>
 <style>
     body {
@@ -58,8 +67,9 @@
     }
 </style>
 
-<body class="bg-gray-100">
-   
+<body class="bg-gray-100" data-user-id="{{ Auth::id() ?? '' }}" data-user-type="distributor">
+
+
 
     <x-dist_navbar />
     <!-- Page Content -->
@@ -78,7 +88,7 @@
     <x-footer />
 
     @stack('scripts')
-    
+
     @if (session('success'))
         <script>
             Swal.fire({
@@ -120,7 +130,6 @@
             }
         }
     }
-    
 </script>
 
 </html>

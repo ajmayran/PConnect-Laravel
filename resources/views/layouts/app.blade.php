@@ -20,10 +20,22 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/iconify-icon/dist/iconify-icon.min.js"></script>
+    <style>
+        .notification-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #ef4444;
+            border-radius: 50%;
+        }
+    </style>
+    <script>
+        window.PusherDebug = true; // Enable Pusher debugging
+    </script>
 </head>
 
 
-<body class="font-sans antialiased">
+<body class="font-sans antialiased" data-user-id="{{ Auth::id() ?? '' }}" data-user-type="retailer">
     <div class="min-h-screen bg-gray-100 dark:bg-gray-200">
         @stack('scripts')
         <!-- Page Content -->

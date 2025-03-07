@@ -12,7 +12,7 @@
                         <div class="space-y-4">
                             @foreach ($checkoutProducts as $product)
                                 <div class="flex items-center justify-between p-4 border rounded">
-                                    <div class="flex items-center space-x-4">
+                                    <div class="flex items-center space-x-4">t
                                         <img class="object-cover w-16 h-16"
                                             src="{{ asset('storage/' . $product->product->image) }}"
                                             alt="{{ $product->product->product_name }}">

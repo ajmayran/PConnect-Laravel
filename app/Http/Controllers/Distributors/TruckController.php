@@ -26,9 +26,15 @@ class TruckController extends Controller
     public function show(Trucks $truck)
     {
         $deliveries = $truck->deliveries()
-            ->with(['order.user', 'order.orderDetails'])
+            ->with([
+                'order',
+                'order.user',
+                'order.orderDetails',
+                'order.orderDetails.product'
+            ])
+            ->where('status', '!=', 'delivered')
             ->latest('truck_delivery.started_at')
-            ->get();
+            ->paginate(10);
 
         return view('distributors.trucks.show', compact('truck', 'deliveries'));
     }
@@ -194,5 +200,73 @@ class TruckController extends Controller
         $delivery->update(['status' => 'in_transit']);
 
         return redirect()->back()->with('success', 'Delivery assigned to truck successfully');
+    }
+
+    public function outForDelivery(Trucks $truck)
+    {
+        // Check if the truck is available
+        if ($truck->status !== 'available') {
+            return back()->with('error', 'This truck is not currently available for delivery');
+        }
+
+        // Get all active deliveries for this truck
+        $deliveries = $truck->deliveries()
+            ->whereIn('status', ['in_transit', 'pending'])
+            ->get();
+
+        if ($deliveries->isEmpty()) {
+            return back()->with('error', 'No active deliveries found for this truck');
+        }
+
+        // Update all deliveries to "out_for_delivery" status
+        foreach ($deliveries as $delivery) {
+            $delivery->update(['status' => 'out_for_delivery']);
+        }
+
+        // Update truck status to "on_delivery"
+        $truck->update(['status' => 'on_delivery']);
+
+        return back()->with('success', 'All deliveries are now out for delivery and truck status updated');
+    }
+
+    public function deliveryHistory(Trucks $truck, Request $request)
+    {
+        // Verify the truck belongs to the current distributor
+        if ($truck->distributor_id !== Auth::user()->distributor->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Start with a base query for completed deliveries
+        $query = Delivery::whereHas('trucks', function ($query) use ($truck) {
+            $query->where('trucks.id', $truck->id);
+        })
+            ->with([
+                'order.user',
+                'order.orderDetails.product',
+            ])
+            ->latest('updated_at');
+
+        // Apply status filter
+        if ($request->filter === 'delivered') {
+            $query->where('status', 'delivered');
+        } elseif ($request->filter === 'failed') {
+            $query->where('status', 'failed');
+        } else {
+            $query->whereIn('status', ['delivered', 'failed']);
+        }
+
+        // Apply date range filter
+        if ($request->period === 'today') {
+            $query->whereDate('updated_at', now()->toDateString());
+        } elseif ($request->period === 'week') {
+            $query->whereBetween('updated_at', [now()->startOfWeek(), now()->endOfWeek()]);
+        } elseif ($request->period === 'month') {
+            $query->whereMonth('updated_at', now()->month)
+                ->whereYear('updated_at', now()->year);
+        }
+
+        $deliveryHistory = $query->paginate(10)->withQueryString();
+
+        return view('distributors.trucks.delivery-history', compact('truck', 'deliveryHistory'));
     }
 }
