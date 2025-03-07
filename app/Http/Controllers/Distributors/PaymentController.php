@@ -70,4 +70,34 @@ class PaymentController extends Controller
             ], 500);
         }
     }
+
+    public function batchDelete(Request $request)
+    {
+        try {
+            $request->validate([
+                'selected_payments' => 'required|array',
+                'selected_payments.*' => 'exists:payments,id'
+            ]);
+
+            DB::transaction(function () use ($request) {
+                // Get payments that are linked to orders
+                $payments = Payment::whereIn('id', $request->selected_payments)->get();
+
+                foreach ($payments as $payment) {
+                    // Delete any related earnings
+                    Earning::where('payment_id', $payment->id)->delete();
+
+                    // Delete the payment
+                    $payment->delete();
+                }
+            });
+
+            return redirect()->back()->with('success', count($request->selected_payments) . ' payment(s) deleted successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Batch delete failed: ' . $e->getMessage());
+
+            return redirect()->back()->with('error', 'Failed to delete payments. ' . $e->getMessage());
+        }
+    }
 }
