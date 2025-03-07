@@ -143,14 +143,10 @@
                                 class="flex flex-col items-center mt-6 space-y-4 md:flex-row md:justify-end md:space-y-0">
                                 <!-- Out for Delivery Button -->
                                 @if (!$deliveries->isEmpty() && $truck->status === 'available')
-                                    <form action="{{ route('distributors.trucks.out-for-delivery', $truck) }}"
-                                        method="POST">
-                                        @csrf
-                                        <button type="submit"
-                                            class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                                            Out for Delivery
-                                        </button>
-                                    </form>
+                                    <button type="button" onclick="openEstimatedDeliveryModal()"
+                                        class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                        Out for Delivery
+                                    </button>
                                 @else
                                     <div></div>
                                 @endif
@@ -167,6 +163,48 @@
         </div>
     </div>
 
+    <div id="estimatedDeliveryModal"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="w-11/12 max-w-md bg-white rounded-lg shadow-xl md:w-1/3 sm:w-2/3">
+            <div class="flex items-center justify-between p-4 border-b">
+                <h2 class="text-lg font-semibold text-gray-800">Set Estimated Delivery Date</h2>
+                <button onclick="closeEstimatedDeliveryModal()"
+                    class="p-1 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <form action="{{ route('distributors.trucks.out-for-delivery', $truck) }}" method="POST">
+                @csrf
+                <div class="p-6">
+                    <div class="mb-4">
+                        <label for="estimated_delivery" class="block mb-2 text-sm font-medium text-gray-700">
+                            Estimated Delivery Date <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" id="estimated_delivery" name="estimated_delivery"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            min="{{ date('Y-m-d') }}" required>
+                        <p class="mt-1 text-sm text-gray-500">Select the expected delivery date</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 p-4 rounded-b-lg bg-gray-50">
+                    <button type="button" onclick="closeEstimatedDeliveryModal()"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Confirm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Delivery Details Modal -->
     <div id="deliveryModal"
         class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
@@ -177,7 +215,8 @@
                 <button onclick="closeDeliveryModal()"
                     class="p-2 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12">
                         </path>
                     </svg>
                 </button>
@@ -407,6 +446,23 @@
                     form.submit();
                 }
             });
+        }
+
+        function openEstimatedDeliveryModal() {
+            // Set minimum date to today
+            document.getElementById('estimated_delivery').min = new Date().toISOString().split('T')[0];
+
+            // Set default value to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('estimated_delivery').value = tomorrow.toISOString().split('T')[0];
+
+            // Show modal
+            document.getElementById('estimatedDeliveryModal').classList.remove('hidden');
+        }
+
+        function closeEstimatedDeliveryModal() {
+            document.getElementById('estimatedDeliveryModal').classList.add('hidden');
         }
     </script>
 </x-distributor-layout>

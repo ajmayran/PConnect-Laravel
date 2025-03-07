@@ -202,8 +202,13 @@ class TruckController extends Controller
         return redirect()->back()->with('success', 'Delivery assigned to truck successfully');
     }
 
-    public function outForDelivery(Trucks $truck)
+    public function outForDelivery(Request $request, Trucks $truck)
     {
+        // Validate the estimated delivery date
+        $request->validate([
+            'estimated_delivery' => 'required|date|after_or_equal:today',
+        ]);
+
         // Check if the truck is available
         if ($truck->status !== 'available') {
             return back()->with('error', 'This truck is not currently available for delivery');
@@ -218,15 +223,19 @@ class TruckController extends Controller
             return back()->with('error', 'No active deliveries found for this truck');
         }
 
-        // Update all deliveries to "out_for_delivery" status
+        // Update all deliveries to "out_for_delivery" status and set estimated delivery date
         foreach ($deliveries as $delivery) {
-            $delivery->update(['status' => 'out_for_delivery']);
+            $delivery->update([
+                'status' => 'out_for_delivery',
+                'estimated_delivery' => $request->estimated_delivery
+            ]);
         }
 
         // Update truck status to "on_delivery"
         $truck->update(['status' => 'on_delivery']);
 
-        return back()->with('success', 'All deliveries are now out for delivery and truck status updated');
+        return back()->with('success', 'All deliveries are now out for delivery with estimated delivery date set to ' .
+            date('F j, Y', strtotime($request->estimated_delivery)));
     }
 
     public function deliveryHistory(Trucks $truck, Request $request)
