@@ -82,8 +82,8 @@ class DeliveryController extends Controller
 
                 // Detach all completed deliveries from the truck
                 $completedDeliveries = $truck->deliveries()
-                    ->where('status', 'delivered')
-                    ->pluck('id')
+                    ->where('deliveries.status', 'delivered')  // Specify the table name here
+                    ->pluck('deliveries.id')  // Specify the table name here
                     ->toArray();
 
                 $truck->deliveries()->detach($completedDeliveries);
