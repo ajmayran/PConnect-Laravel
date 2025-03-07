@@ -20,90 +20,67 @@
                     <div class="flex flex-col md:flex-row">
                         <!-- Product Image -->
                         <div class="w-full md:w-1/2">
-                            <div class="relative pt-[75%] md:pt-0 md:h-full">
+                            <div class="relative pt-[100%] md:pt-0 md:h-full">
                                 <img src="{{ $product->image ? asset('storage/products/' . basename($product->image)) : asset('img/default-product.jpg') }}"
                                     alt="{{ $product->product_name }}"
-                                    class="absolute inset-0 object-contain w-full h-full p-4 md:object-cover md:p-0"
+                                    class="absolute inset-0 object-contain w-full h-full p-4 transition-transform duration-300 hover:scale-105 touch-manipulation"
                                     onerror="this.src='{{ asset('img/default-product.jpg') }}'">
                             </div>
                         </div>
 
                         <!-- Product Info -->
                         <div class="w-full p-4 sm:p-6 md:p-8 md:w-1/2">
+                            <!-- Product Title and Distributor -->
                             <div class="mb-3 sm:mb-4">
                                 <h1 class="mb-1 text-xl font-bold text-gray-900 sm:text-2xl md:text-3xl sm:mb-2">
                                     {{ $product->product_name }}</h1>
-                                <p class="text-base text-gray-600 sm:text-lg">By
-                                    {{ $product->distributor->company_name }}</p>
+                                <p class="text-sm text-gray-600 sm:text-base md:text-lg">
+                                    By {{ $product->distributor->company_name }}</p>
                             </div>
 
+                            <!-- Price and Description -->
                             <div class="mb-4 sm:mb-6">
-                                <h2 class="mb-2 text-3xl font-bold text-green-600 sm:text-4xl md:text-5xl">
+                                <h2 class="mb-2 text-2xl font-bold text-green-600 sm:text-3xl md:text-4xl">
                                     ₱{{ number_format($product->price, 2) }}</h2>
                                 <p class="mb-4 text-sm text-gray-700 sm:text-base">{{ $product->description }}</p>
                             </div>
 
-                            <!-- Product Categories -->
+                            <!-- Stock Information -->
                             <div class="mb-4 sm:mb-6">
-                                <h3 class="mb-2 text-sm font-medium text-gray-900">Category</h3>
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="px-3 py-1 text-xs text-gray-800 bg-gray-100 rounded-full sm:text-sm">
-                                        {{ $product->category->name }}
-                                    </span>
-                                </div>
+                                <p class="text-sm text-gray-600 sm:text-base">
+                                    Stock Available: <span class="font-semibold">{{ $product->stock_quantity }}</span>
+                                </p>
+                                <p class="text-sm text-gray-600 sm:text-base">
+                                    Min. Purchase: <span class="font-semibold">{{ $product->min_purchase_qty }}</span>
+                                </p>
                             </div>
 
-                            <!-- Add to Cart Form -->
-                            <form id="productActionForm" class="mt-4 sm:mt-6">
-                                @csrf
-                                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                <input type="hidden" name="price" value="{{ $product->price }}">
-                                <div class="flex flex-col justify-between gap-2 mb-4 sm:flex-row">
-                                    <div class="text-sm font-medium text-gray-700">
-                                        Stock Quantity: <span
-                                            class="text-xl font-semibold text-green-600 sm:text-2xl md:text-3xl">{{ $product->stock_quantity }}</span>
-                                    </div>
-                                    <div class="text-sm font-medium text-gray-700">
-                                        Min. Purchase: <span
-                                            class="text-base font-semibold text-green-600 sm:text-lg">{{ $product->minimum_purchase_qty }}</span>
-                                    </div>
-                                </div>
+                            <!-- Quantity Controls -->
+                            <div class="flex items-center mb-4 sm:mb-6 space-x-2">
+                                <button onclick="decreaseQuantity()" 
+                                    class="px-3 py-1 text-lg font-bold text-green-600 border-2 border-green-600 rounded-lg hover:bg-green-600 hover:text-white active:bg-green-700 touch-manipulation">
+                                    -
+                                </button>
+                                <input type="number" id="quantity" value="1" min="1" 
+                                    class="w-20 px-3 py-1 text-center border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    oninput="validateQuantity()">
+                                <button onclick="increaseQuantity()" 
+                                    class="px-3 py-1 text-lg font-bold text-green-600 border-2 border-green-600 rounded-lg hover:bg-green-600 hover:text-white active:bg-green-700 touch-manipulation">
+                                    +
+                                </button>
+                            </div>
 
-                                <div class="flex items-center justify-center mb-4">
-                                    <button type="button" onclick="decreaseQuantity()"
-                                        class="flex items-center justify-center w-8 h-8 bg-gray-300 rounded-full hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-green-500">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M20 12H4" />
-                                        </svg>
-                                    </button>
-                                    <input type="number" name="quantity" id="quantity"
-                                        value="{{ $product->minimum_purchase_qty }}"
-                                        min="{{ $product->minimum_purchase_qty }}"
-                                        class="w-16 mx-3 text-center border-gray-300 rounded-md shadow-sm sm:w-20 focus:border-green-500 focus:ring-green-500">
-                                    <button type="button" onclick="increaseQuantity()"
-                                        class="flex items-center justify-center w-8 h-8 bg-gray-300 rounded-full hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-green-500">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 6v12M6 12h12" />
-                                        </svg>
-                                    </button>
-                                </div>
-
-                                <!-- Action Buttons -->
-                                <div class="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
-                                    <button type="submit" id="addToCartBtn"
-                                        class="w-full px-4 py-2 text-green-600 transition-colors duration-200 bg-green-200 border border-green-600 rounded-md sm:px-6 sm:py-3 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-100 focus:ring-offset-2">
-                                        Add to Cart
-                                    </button>
-                                    <button type="button" id="buyNowBtn"
-                                        class="w-full px-4 py-2 text-white transition-colors duration-200 bg-green-600 rounded-md sm:px-6 sm:py-3 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
-                                        Buy Now
-                                    </button>
-                                </div>
-                            </form>
+                            <!-- Action Buttons -->
+                            <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                                <button id="addToCartBtn" 
+                                    class="w-full px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-lg sm:text-base hover:bg-green-600 active:bg-green-700 touch-manipulation">
+                                    Add to Cart
+                                </button>
+                                <button id="buyNowBtn"
+                                    class="w-full px-4 py-2 text-sm font-medium text-green-600 bg-white border-2 border-green-600 rounded-lg sm:text-base hover:bg-green-600 hover:text-white active:bg-green-700 touch-manipulation">
+                                    Buy Now
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -111,41 +88,35 @@
         </div>
     </div>
 
-    <!-- Related Product -->
+    <!-- Related Products Section -->
     <div class="py-8 bg-white sm:py-12">
         <div class="container px-4 mx-auto">
             <div class="mx-auto max-w-7xl">
-                <h2 class="mb-4 text-xl font-bold text-gray-900 sm:mb-8 sm:text-2xl">Related Products</h2>
-
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
-                    @foreach ($relatedProducts as $relatedProduct)
-                        <div
-                            class="overflow-hidden transition-shadow duration-300 bg-white rounded shadow hover:shadow-xl">
-                            <a href="{{ route('retailers.products.show', $relatedProduct) }}" class="block h-full">
-                                <div class="relative pt-[75%]">
-                                    <img src="{{ $relatedProduct->image ? Storage::url($relatedProduct->image) : asset('img/default-product.jpg') }}"
-                                        alt="{{ $relatedProduct->product_name }}"
-                                        class="absolute inset-0 object-cover w-full h-full"
-                                        onerror="this.src='{{ asset('img/default-product.jpg') }}'">
+                <h2 class="mb-6 text-xl sm:text-2xl font-bold text-gray-800">Recommended Products</h2>
+                
+                <div class="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                    @foreach($relatedProducts as $product)
+                        <a href="{{ route('retailers.products.show', $product->id) }}"
+                            class="relative flex flex-col overflow-hidden transition-all duration-300 bg-white rounded-lg shadow-md group hover:shadow-xl">
+                            <div class="relative w-full pt-[100%] overflow-hidden bg-gray-100">
+                                <img class="absolute inset-0 object-contain w-full h-full p-2 transition-transform duration-300 group-hover:scale-110"
+                                    src="{{ $product->image ? asset('storage/products/' . basename($product->image)) : asset('img/default-product.jpg') }}"
+                                    alt="{{ $product->product_name }}"
+                                    onerror="this.src='{{ asset('img/default-product.jpg') }}'">
+                            </div>
+                            <div class="flex flex-col flex-grow p-2 sm:p-4">
+                                <h3 class="mb-1 sm:mb-2 text-sm sm:text-lg font-bold text-gray-800 line-clamp-2">
+                                    {{ $product->product_name }}
+                                </h3>
+                                <p class="mt-1 text-xs sm:text-sm text-gray-500 line-clamp-1">
+                                    {{ $product->distributor->company_name }}
+                                </p>
+                                <div class="flex items-center justify-between pt-2 sm:pt-4 mt-auto">
+                                    <span class="text-sm sm:text-lg font-bold text-green-600">₱{{ number_format($product->price, 2) }}</span>
+                                    <span class="text-xs sm:text-sm text-gray-500">View Details →</span>
                                 </div>
-                                <div class="p-3 sm:p-4">
-                                    <h3 class="mb-1 text-base font-semibold text-gray-900 truncate sm:text-lg sm:mb-2">
-                                        {{ $relatedProduct->product_name }}
-                                    </h3>
-                                    <p class="mb-2 text-xs text-gray-600 truncate sm:text-sm">
-                                        {{ $relatedProduct->description }}
-                                    </p>
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-lg font-bold text-green-600 sm:text-xl">
-                                            ₱{{ number_format($relatedProduct->price, 2) }}
-                                        </span>
-                                        <span class="text-xs text-gray-500 sm:text-sm">
-                                            Stock: {{ $relatedProduct->stock_quantity }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
+                            </div>
+                        </a>
                     @endforeach
                 </div>
             </div>
