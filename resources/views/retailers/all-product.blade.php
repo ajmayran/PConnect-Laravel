@@ -2,11 +2,15 @@
     <x-retailer-topnav />
 
     <!-- Responsive Search Bar -->
-    <form class="max-w-2xl p-2 sm:p-4 mx-auto">
+    <form action="{{ route('retailers.search') }}" method="GET" class="max-w-2xl p-2 sm:p-4 mx-auto">
         <div class="relative">
-            <input type="search" id="search" name="search"
+            <input type="search" 
+                id="search-dropdown" 
+                name="query"
                 class="block w-full p-2 sm:p-3 text-sm text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                placeholder="Search products..." required />
+                placeholder="Search products..." 
+                required 
+                value="{{ request('query') }}" />
             <button type="submit"
                 class="absolute top-0 h-full p-2 sm:p-3 text-sm font-medium text-white bg-green-500 border border-green-500 rounded-r-lg end-0 hover:bg-green-600 active:bg-green-700 focus:ring-2 focus:outline-none focus:ring-green-300">
                 <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
