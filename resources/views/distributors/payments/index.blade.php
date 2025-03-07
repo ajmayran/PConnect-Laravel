@@ -1,6 +1,11 @@
 <x-distributor-layout>
     <div class="container p-4 mx-auto">
-        <h1 class="mb-4 text-2xl font-bold">Payment Management</h1>
+        <div class="flex items-center justify-between mb-4">
+            <h1 class="text-2xl font-bold">Payment Management</h1>
+            <a href="{{ route('distributors.payments.history') }}" class="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600">
+                <i class="mr-1 fas fa-history"></i> Payment History
+            </a>
+        </div>
 
         <!-- Payment Status Tabs -->
         <div class="flex mb-4 border-b">
@@ -44,12 +49,14 @@
                 @method('DELETE')
                 <div class="flex items-center justify-between mb-4">
                     <div>
+                        @if(request('status') === 'paid')
                         <button type="button" id="selectAllBtn" class="px-3 py-1 mr-2 text-sm text-gray-600 bg-gray-100 rounded hover:bg-gray-200">
                             Select All
                         </button>
                         <button type="button" id="batchDeleteBtn" class="px-3 py-1 text-sm text-white bg-red-500 rounded hover:bg-red-600 disabled:opacity-50" disabled>
                             Delete Selected
                         </button>
+                        @endif
                     </div>
                 </div>
                 
@@ -57,9 +64,11 @@
                     <table class="min-w-full text-sm divide-y divide-gray-200">
                         <thead>
                             <tr class="bg-gray-50">
+                                @if(request('status') === 'paid')
                                 <th class="w-10 px-4 py-3 font-medium text-left text-gray-700">
                                     <input type="checkbox" id="selectAll" class="text-blue-600 border-gray-300 rounded">
                                 </th>
+                                @endif
                                 <th class="px-4 py-3 font-medium text-left text-gray-700">Order ID</th>
                                 <th class="px-4 py-3 font-medium text-left text-gray-700">Retailer</th>
                                 <th class="px-4 py-3 font-medium text-left text-gray-700">Amount</th>
@@ -72,9 +81,11 @@
                         <tbody class="divide-y divide-gray-200">
                             @foreach ($payments as $payment)
                                 <tr class="hover:bg-gray-50">
+                                    @if(request('status') === 'paid')
                                     <td class="px-4 py-3">
                                         <input type="checkbox" name="selected_payments[]" value="{{ $payment->id }}" class="text-blue-600 border-gray-300 rounded payment-checkbox">
                                     </td>
+                                    @endif
                                     <td class="px-4 py-3">{{ $payment->order->formatted_order_id }}</td>
                                     <td class="px-4 py-3">{{ $payment->order->user->first_name }}
                                         {{ $payment->order->user->last_name }}</td>
@@ -232,7 +243,8 @@
                 }
             });
 
-            // Batch Delete Functionality
+            // Batch Delete Functionality - Only shown on paid payments page
+            @if(request('status') === 'paid')
             const selectAll = document.getElementById('selectAll');
             const selectAllBtn = document.getElementById('selectAllBtn');
             const batchDeleteBtn = document.getElementById('batchDeleteBtn');
@@ -289,6 +301,7 @@
                     }
                 });
             });
+            @endif
         </script>
     @endpush
 </x-distributor-layout>

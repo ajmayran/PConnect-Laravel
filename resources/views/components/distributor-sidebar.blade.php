@@ -18,7 +18,7 @@
     </a>
 
     <a href="{{ route('distributors.orders.index') }}"
-        class="flex items-center px-4 py-1 mt-3 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.orders.index') ? 'bg-green-600' : 'hover:bg-green-600' }}">
+        class="flex items-center px-4 py-1 mt-3 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.orders.*') ? 'bg-green-600' : 'hover:bg-green-600' }}">
         <div class="flex items-center">
             <iconify-icon icon="material-symbols-light:sell" class="text-xl icon"></iconify-icon>
             <span class="ml-4 font-normal text-gray-200">My Orders</span>
@@ -26,7 +26,7 @@
     </a>
 
     <a href="{{ route('distributors.returns.index') }}"
-        class="flex items-center px-4 py-1 mt-3 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.returns.index') ? 'bg-green-600' : 'hover:bg-green-600' }}">
+        class="flex items-center px-4 py-1 mt-3 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.returns.*') ? 'bg-green-600' : 'hover:bg-green-600' }}">
         <div class="flex items-center">
             <iconify-icon icon="ph:key-return-fill" class="text-xl icon"></iconify-icon>
             <span class="ml-4 font-normal text-gray-200">Return | Refund</span>
@@ -34,7 +34,7 @@
     </a>
 
     <a href="{{ route('distributors.cancellations.index') }}"
-        class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.cancellations.index') ? 'bg-green-600' : 'hover:bg-green-600' }}">
+        class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.cancellations.*') ? 'bg-green-600' : 'hover:bg-green-600' }}">
         <div class="flex items-center">
             <iconify-icon icon="basil:cancel-solid" class="text-xl icon"></iconify-icon>
             <span class="ml-4 font-normal text-gray-200">Cancellation</span>
@@ -42,7 +42,7 @@
     </a>
 
     <a href="{{ route('distributors.delivery.index') }}"
-        class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.delivery.index') || request()->routeIs('distributors.trucks.index') || request()->routeIs('distributors.trucks.show') ? 'bg-green-600' : 'hover:bg-green-600' }}">
+        class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.delivery.index') || request()->routeIs('distributors.trucks.*') ? 'bg-green-600' : 'hover:bg-green-600' }}">
         <div class="flex items-center">
             <iconify-icon icon="mdi:truck-delivery" class="text-xl icon"></iconify-icon>
             <span class="ml-4 font-normal text-gray-200">Delivery</span>
@@ -52,7 +52,7 @@
     <div class="my-2 bg-gray-600 h-[1px]"></div>
 
     <a href="{{ route('distributors.products.index') }}"
-        class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.products.index') || request()->routeIs('distributors.products.create') || request()->routeIs('distributors.products.edit') ? 'bg-green-600' : 'hover:bg-green-600' }}">
+        class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.products.*') ? 'bg-green-600' : 'hover:bg-green-600' }}">
         <div class="flex items-center">
             <iconify-icon icon="dashicons:products" class="text-xl icon"></iconify-icon>
             <span class="ml-4 font-normal text-gray-200">My Products</span>
@@ -97,7 +97,7 @@
     <div class="my-2 bg-gray-600 h-[1px]"></div>
 
     <a href="{{ route('distributors.payments.index') }}"
-        class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.payments.index') ? 'bg-green-600' : 'hover:bg-green-600' }}">
+        class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.payments.*') ? 'bg-green-600' : 'hover:bg-green-600' }}">
         <div class="flex items-center">
             <iconify-icon icon="hugeicons:payment-02" class="text-xl icon"></iconify-icon>
             <span class="ml-4 font-normal text-gray-200">Payments</span>
