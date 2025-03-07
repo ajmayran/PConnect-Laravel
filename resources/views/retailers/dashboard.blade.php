@@ -2,7 +2,7 @@
     <x-dashboard-nav />
 
     <!-- Search Section - Made more compact on mobile -->
-    <div class="relative z-50">
+    <div class="relative z-20">
         <form action="{{ route('retailers.search') }}" method="GET" class="max-w-2xl p-2 mx-auto sm:p-4" id="searchForm">
             <div class="flex gap-0">
                 <div class="relative w-full">
@@ -22,7 +22,7 @@
         </form>
     </div>
 
-    <div id="searchOverlay" class="fixed inset-0 z-40 hidden transition-opacity bg-black bg-opacity-50"></div>
+    <div id="searchOverlay" class="fixed inset-0 z-10 hidden transition-opacity bg-black bg-opacity-50"></div>
 
     <div id="mainContent">
         <!-- Distributors Section - Improved grid responsiveness -->
@@ -118,8 +118,14 @@
                 const searchInput = document.getElementById('search-dropdown');
                 const searchOverlay = document.getElementById('searchOverlay');
                 const mainContent = document.getElementById('mainContent');
+                const mobileMenu = document.getElementById('mobile-menu');
 
                 function toggleOverlay(show) {
+                    // Don't show search overlay if mobile menu is open
+                    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                        return;
+                    }
+                    
                     if (show) {
                         searchOverlay.classList.remove('hidden');
                         mainContent.classList.add('opacity-30');
@@ -132,6 +138,9 @@
                         }
                     }
                 }
+
+                // Make toggleOverlay available globally
+                window.toggleOverlay = toggleOverlay;
 
                 // Focus event
                 searchInput.addEventListener('focus', () => {

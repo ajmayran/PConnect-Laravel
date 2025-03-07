@@ -6,11 +6,21 @@
         <div class="flex justify-between h-16">
             <!-- Left Side -->
             <div class="flex items-center">
-                <!-- Logo -->
-                <div class="flex items-center flex-shrink-0">
-                    <div class="flex items-center"> <!-- Changed to div since route might not be ready -->
+                <!-- Logo - Hidden on mobile -->
+                <div class="flex items-center flex-shrink-0 hidden sm:block">
+                    <div class="flex items-center">
                         <img class="w-auto h-10" src="{{ asset('img/Pconnect Logo.png') }}" alt="PConnect">
                     </div>
+                </div>
+                
+                <!-- Mobile Menu Button - Visible only on mobile -->
+                <div class="sm:hidden">
+                    <button id="mobile-menu-button" class="p-2 text-gray-500 hover:text-gray-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path id="burger-icon" class="block" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            <path id="close-icon" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
 
@@ -175,8 +185,8 @@
                     });
                 </script>
 
-                <!-- Profile Section with Dropdown -->
-                <div class="relative ml-4">
+                <!-- Profile Section with Dropdown - Hidden on mobile -->
+                <div class="relative ml-4 hidden sm:block">
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
                             <button class="flex items-center cursor-pointer">
@@ -216,8 +226,71 @@
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar -->
-    <div class="bg-gray-800">
+    <!-- Mobile Menu Panel - Hidden by default -->
+    <div id="mobile-menu" class="fixed inset-0 z-[150] hidden">
+        <!-- Backdrop -->
+        <div id="mobile-backdrop" class="absolute inset-0 bg-black opacity-50"></div>
+        
+        <!-- Menu Panel -->
+        <div class="absolute right-0 top-0 h-full w-3/4 max-w-xs bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
+            <!-- User Profile Section -->
+            <div class="p-4 border-b border-gray-200 bg-gray-50">
+                <div class="flex items-center">
+                    <img class="object-cover w-12 h-12 border-2 border-green-500 rounded-full"
+                         src="{{ Auth::user()->retailerProfile && Auth::user()->retailerProfile->profile_picture ? asset('storage/' . Auth::user()->retailerProfile->profile_picture) : asset('img/default-profile.png') }}"
+                         alt="Profile">
+                    <div class="ml-3">
+                        <p class="text-base font-semibold text-gray-800">{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</p>
+                        <p class="text-sm text-gray-600">{{ Auth::user()->email }}</p>
+                    </div>
+                </div>
+                <a href="{{ route('retailers.profile.edit') }}" class="block mt-3 py-2 px-4 text-center text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700">
+                    View Profile
+                </a>
+            </div>
+            
+            <!-- Navigation Links -->
+            <div class="py-2 px-4">
+                <a href="{{ route('retailers.dashboard') }}" 
+                   class="flex items-center py-3 border-b border-gray-200 {{ request()->routeIs('retailers.dashboard') ? 'text-green-600 font-semibold' : 'text-gray-700' }}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    HOME
+                </a>
+                <a href="{{ route('retailers.all-distributor') }}"
+                   class="flex items-center py-3 border-b border-gray-200 {{ request()->routeIs('retailers.all-distributor') ? 'text-green-600 font-semibold' : 'text-gray-700' }}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                    DISTRIBUTORS
+                </a>
+                <a href="{{ route('retailers.all-product') }}"
+                   class="flex items-center py-3 border-b border-gray-200 {{ request()->routeIs('retailers.all-product') ? 'text-green-600 font-semibold' : 'text-gray-700' }}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                    </svg>
+                    PRODUCTS
+                </a>
+            </div>
+            
+            <!-- Footer Actions -->
+            <div class="absolute bottom-0 left-0 right-0 border-t border-gray-200">
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="flex items-center w-full px-4 py-4 text-gray-700 hover:bg-gray-100">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        </svg>
+                        <span>Log Out</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar - Hidden on mobile -->
+    <div class="bg-gray-800 hidden sm:block">
         <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="flex justify-center space-x-8">
                 <a href="{{ route('retailers.dashboard') }}"
@@ -236,3 +309,116 @@
         </div>
     </div>
 </nav>
+
+<script>
+    // Mobile menu functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileBackdrop = document.getElementById('mobile-backdrop');
+        const burgerIcon = document.getElementById('burger-icon');
+        const closeIcon = document.getElementById('close-icon');
+        
+        function toggleMobileMenu() {
+            mobileMenu.classList.toggle('hidden');
+            document.body.classList.toggle('overflow-hidden');
+            
+            // Toggle icons
+            burgerIcon.classList.toggle('hidden');
+            closeIcon.classList.toggle('hidden');
+            
+            // Animate the panel
+            const panel = mobileMenu.querySelector('div:not(#mobile-backdrop)');
+            if (mobileMenu.classList.contains('hidden')) {
+                panel.classList.add('translate-x-full');
+            } else {
+                panel.classList.remove('translate-x-full');
+            }
+        }
+        
+        mobileMenuButton.addEventListener('click', toggleMobileMenu);
+        mobileBackdrop.addEventListener('click', toggleMobileMenu);
+        
+        // Close mobile menu when changing routes
+        const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+        mobileMenuLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (!mobileMenu.classList.contains('hidden')) {
+                    toggleMobileMenu();
+                }
+            });
+        });
+        
+        // Add this to prevent conflicts with search overlay in dashboard
+        if (typeof toggleOverlay === 'function') {
+            const originalToggleOverlay = toggleOverlay;
+            toggleOverlay = function(show) {
+                if (mobileMenu.classList.contains('hidden')) {
+                    originalToggleOverlay(show);
+                }
+            };
+        }
+    });
+    
+    // Existing notification scripts
+    function toggleNotifications() {
+        const popup = document.getElementById('notificationsPopup');
+        const backdrop = document.getElementById('backdrop');
+        popup.classList.toggle('hidden');
+        backdrop.classList.toggle('hidden');
+    }
+
+    function closeAll() {
+        document.getElementById('notificationsPopup').classList.add('hidden');
+        document.getElementById('backdrop').classList.add('hidden');
+    }
+
+    // Close popups when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('#notificationsPopup') &&
+            !event.target.closest('button') &&
+            !document.getElementById('notificationsPopup').classList.contains('hidden')) {
+            closeAll();
+        }
+    });
+
+    function openNotificationModal() {
+        document.getElementById('allNotificationsModal').classList.remove('hidden');
+        document.getElementById('notificationsPopup').classList.add('hidden');
+    }
+
+    function closeNotificationModal() {
+        document.getElementById('allNotificationsModal').classList.add('hidden');
+    }
+
+    // Update the existing click event listener
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('#notificationsPopup') &&
+            !event.target.closest('#allNotificationsModal') &&
+            !event.target.closest('button')) {
+            closeAll();
+            closeNotificationModal();
+        }
+    });
+
+    // Add escape key listener for modal
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeNotificationModal();
+        }
+    });
+
+    // Close modal when clicking outside
+    document.getElementById('allNotificationsModal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeNotificationModal();
+        }
+    });
+
+    // Close on escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeNotificationModal();
+        }
+    });
+</script>
