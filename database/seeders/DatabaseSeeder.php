@@ -13,11 +13,26 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // \App\Models\User::factory(10)->create();
+
+        // \App\Models\User::factory()->create([
+        //     'name' => 'Test User',
+        //     'email' => 'test@example.com',
+        // ]);
 
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'first_name' => 'Admin',
+            'last_name' => 'User',
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password'), // Use a secure password
+            'is_admin' => true, // Set is_admin to true
+            'user_type' => 'admin', // Set user type to distributor
+            'is_admin' => true, // Indicate that this user is an admin
+        ]);
+
+        $this->call([
+            CategorySeeder::class,
         ]);
     }
+    
 }

@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use App\View\Components\ProfileCompletionAlert;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -17,8 +20,12 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
+    public function boot()
     {
-        //
+        config(['broadcasting.default' => 'pusher']);
+        Paginator::defaultView('vendor.pagination.tailwind');
+        Blade::component('profile-completion-alert', ProfileCompletionAlert::class);
     }
+
+
 }

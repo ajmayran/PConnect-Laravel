@@ -1,6 +1,11 @@
 <?php
 
+use App\Http\Middleware\CheckRole;
 use Illuminate\Foundation\Application;
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\RetailerMiddleware;
+use App\Http\Middleware\ApprovedDistributor;
+use App\Http\Middleware\EnsureProfileIsCompleted;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
@@ -11,7 +16,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->alias([
+            'approved' => ApprovedDistributor::class,
+            'profile.completed' => EnsureProfileIsCompleted::class,
+            'retailer' => RetailerMiddleware::class,
+            'admin' => AdminMiddleware::class,
+            'checkRole'  => CheckRole::class
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
