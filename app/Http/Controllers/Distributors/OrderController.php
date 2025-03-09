@@ -92,7 +92,7 @@ class OrderController extends Controller
 
             Payment::create([
                 'order_id'        => $order->id,
-                'distributor_id' => $order->distributor_id, // Assumes distributor_id is stored on the Order model
+                'distributor_id' => $order->distributor_id, 
                 'payment_status'  => 'unpaid',
 
             ]);
