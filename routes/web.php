@@ -22,6 +22,7 @@ use App\Http\Controllers\Retailers\CheckoutController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Distributors\ReturnController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Distributors\OrderQrController;
 use App\Http\Controllers\Distributors\PaymentController;
 use App\Http\Controllers\Retailers\AllProductController;
 use App\Http\Controllers\Distributors\DeliveryController;
@@ -46,7 +47,7 @@ use App\Http\Controllers\Distributors\DistributorDashboardController;
 Route::post('/broadcasting/auth', [BroadcastAuthController::class, 'authenticate'])
     ->middleware(['web', 'auth'])
     ->name('broadcasting.auth');
-    
+
 Route::get('/', function () {
     if (Auth::check()) {
         $userType = Auth::user()->user_type;
@@ -173,6 +174,12 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::post('/orders/{order}/accept', [OrderController::class, 'acceptOrder'])->name('orders.accept');
     Route::post('/orders/{order}/reject', [OrderController::class, 'rejectOrder'])->name('orders.reject');
     Route::get('/orders/{id}/details', [OrderController::class, 'getOrderDetails'])->name('orders.details');
+    Route::get('/orders/{order}/qrcode', [OrderQrController::class, 'showQrCode'])->name('distributors.orders.qrcode');
+    Route::get('/orders/verify/{token}', [OrderQrController::class, 'verifyOrder'])->name('distributors.orders.verify');
+    Route::post('/orders/action/{token}', [OrderQrController::class, 'processAction'])->name('distributors.orders.action');
+    Route::get('/orders/processing', [OrderQrController::class, 'getProcessingOrders'])->name('distributors.orders.processing');
+    Route::post('/orders/batch-qrcode', [OrderQrController::class, 'generateBatchQrCodes'])->name('distributors.orders.batch-qrcode');
+
 
     // Return Routes
     Route::get('/returns', [ReturnController::class, 'index'])->name('distributors.returns.index');
@@ -184,6 +191,11 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::get('/delivery', [DeliveryController::class, 'index'])->name('distributors.delivery.index');
     Route::post('/delivery/{id}/update-status', [DeliveryController::class, 'updateStatus'])->name('delivery.update-status');
     Route::patch('/deliveries/{delivery}/mark-delivered', [DeliveryController::class, 'markDelivered'])->name('distributors.deliveries.mark-delivered');
+    Route::post('/delivery/{delivery}/assign-truck', [TruckController::class, 'assignDelivery'])->name('distributors.delivery.assign-truck');
+    Route::get('/delivery/{delivery}/scan-qr', [DeliveryController::class, 'scanQrCode'])->name('distributors.delivery.scan-qr-general');
+    Route::post('/delivery/process-general-scan', [OrderQrController::class, 'processGeneralScan'])->name('distributors.delivery.process-general-scan');
+    Route::post('/api/verify-qr-token', [OrderQrController::class, 'verifyQrToken'])->name('api.verify-qr-token');
+    Route::get('/delivery/scan-qr', [OrderQrController::class, 'showGeneralQrScanner'])->name('distributors.delivery.scan-qr-general');
 
     // Inventory Routes
     Route::get('/inventory', [InventoryController::class, 'index'])->name('distributors.inventory.index');
@@ -216,13 +228,11 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::get('/trucks/{truck}/locations', [TruckController::class, 'locations'])->name('distributors.trucks.locations');
     Route::post('/trucks/{truck}/out-for-delivery', [TruckController::class, 'outForDelivery'])->name('distributors.trucks.out-for-delivery');
     Route::get('/trucks/{truck}/delivery-history', [TruckController::class, 'deliveryHistory'])->name('distributors.trucks.delivery-history');
-
-    Route::post('/delivery/{delivery}/assign-truck', [TruckController::class, 'assignDelivery'])->name('distributors.delivery.assign-truck');
-
+    Route::post('/move-to-truck', [TruckController::class, 'moveDeliveryToTruck'])->name('distributors.deliveries.move-to-truck');
 
 
-    Route::get('/distributors/create', [DistributorController::class, 'create'])->name('distributors.create');
-    Route::post('/distributors', [DistributorController::class, 'store'])->name('distributors.store');
+    // Route::get('/distributors/create', [DistributorController::class, 'create'])->name('distributors.create');
+    // Route::post('/distributors', [DistributorController::class, 'store'])->name('distributors.store');
 
     Route::get('/approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])->name('auth.approval-waiting');
 });

@@ -51,28 +51,30 @@
                                     Stock Available: <span class="font-semibold">{{ $product->stock_quantity }}</span>
                                 </p>
                                 <p class="text-sm text-gray-600 sm:text-base">
-                                    Min. Purchase: <span class="font-semibold">{{ $product->min_purchase_qty }}</span>
+                                    Min. Purchase: <span
+                                        class="font-semibold">{{ $product->minimum_purchase_qty }}</span>
                                 </p>
                             </div>
 
                             <!-- Quantity Controls -->
-                            <div class="flex items-center mb-4 sm:mb-6 space-x-2">
-                                <button onclick="decreaseQuantity()" 
+                            <div class="flex items-center mb-4 space-x-2 sm:mb-6">
+                                <button onclick="decreaseQuantity()"
                                     class="px-3 py-1 text-lg font-bold text-green-600 border-2 border-green-600 rounded-lg hover:bg-green-600 hover:text-white active:bg-green-700 touch-manipulation">
                                     -
                                 </button>
-                                <input type="number" id="quantity" value="1" min="1" 
+                                <input type="number" id="quantity" value="{{ $product->minimum_purchase_qty }}"
+                                    min="1"
                                     class="w-20 px-3 py-1 text-center border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                                     oninput="validateQuantity()">
-                                <button onclick="increaseQuantity()" 
+                                <button onclick="increaseQuantity()"
                                     class="px-3 py-1 text-lg font-bold text-green-600 border-2 border-green-600 rounded-lg hover:bg-green-600 hover:text-white active:bg-green-700 touch-manipulation">
                                     +
                                 </button>
                             </div>
 
                             <!-- Action Buttons -->
-                            <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                                <button id="addToCartBtn" 
+                            <div class="flex flex-col gap-2 sm:flex-row sm:gap-4">
+                                <button id="addToCartBtn"
                                     class="w-full px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-lg sm:text-base hover:bg-green-600 active:bg-green-700 touch-manipulation">
                                     Add to Cart
                                 </button>
@@ -92,10 +94,10 @@
     <div class="py-8 bg-white sm:py-12">
         <div class="container px-4 mx-auto">
             <div class="mx-auto max-w-7xl">
-                <h2 class="mb-6 text-xl sm:text-2xl font-bold text-gray-800">Recommended Products</h2>
-                
+                <h2 class="mb-6 text-xl font-bold text-gray-800 sm:text-2xl">Recommended Products</h2>
+
                 <div class="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                    @foreach($relatedProducts as $product)
+                    @foreach ($relatedProducts as $product)
                         <a href="{{ route('retailers.products.show', $product->id) }}"
                             class="relative flex flex-col overflow-hidden transition-all duration-300 bg-white rounded-lg shadow-md group hover:shadow-xl">
                             <div class="relative w-full pt-[100%] overflow-hidden bg-gray-100">
@@ -105,15 +107,16 @@
                                     onerror="this.src='{{ asset('img/default-product.jpg') }}'">
                             </div>
                             <div class="flex flex-col flex-grow p-2 sm:p-4">
-                                <h3 class="mb-1 sm:mb-2 text-sm sm:text-lg font-bold text-gray-800 line-clamp-2">
+                                <h3 class="mb-1 text-sm font-bold text-gray-800 sm:mb-2 sm:text-lg line-clamp-2">
                                     {{ $product->product_name }}
                                 </h3>
-                                <p class="mt-1 text-xs sm:text-sm text-gray-500 line-clamp-1">
+                                <p class="mt-1 text-xs text-gray-500 sm:text-sm line-clamp-1">
                                     {{ $product->distributor->company_name }}
                                 </p>
-                                <div class="flex items-center justify-between pt-2 sm:pt-4 mt-auto">
-                                    <span class="text-sm sm:text-lg font-bold text-green-600">₱{{ number_format($product->price, 2) }}</span>
-                                    <span class="text-xs sm:text-sm text-gray-500">View Details →</span>
+                                <div class="flex items-center justify-between pt-2 mt-auto sm:pt-4">
+                                    <span
+                                        class="text-sm font-bold text-green-600 sm:text-lg">₱{{ number_format($product->price, 2) }}</span>
+                                    <span class="text-xs text-gray-500 sm:text-sm">View Details →</span>
                                 </div>
                             </div>
                         </a>
@@ -139,6 +142,17 @@
                 quantity: parseInt(document.getElementById('quantity').value)
             };
 
+            // Show loading state
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Adding product to cart',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
             // Send the add to cart request
             fetch('{{ route('retailers.cart.add') }}', {
                     method: 'POST',
@@ -150,10 +164,15 @@
                     body: JSON.stringify(formData)
                 })
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
+                    // First parse the JSON response regardless of status code
+                    return response.json().then(data => {
+                        // Then handle based on the HTTP status
+                        if (!response.ok) {
+                            // Server returned an error with a status code (4xx or 5xx)
+                            throw new Error(data.message || 'Server returned an error');
+                        }
+                        return data;
+                    });
                 })
                 .then(data => {
                     if (data.success) {
@@ -204,7 +223,7 @@
                         text: 'Preparing your checkout. Please wait.',
                         allowOutsideClick: false,
                         showConfirmButton: false,
-                        timer: 4000, 
+                        timer: 4000,
                         timerProgressBar: true,
                         willOpen: () => {
                             Swal.showLoading();

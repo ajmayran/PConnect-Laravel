@@ -29,7 +29,10 @@ class RetailerOrdersController extends Controller
         $user = Auth::user();
         $orders = Order::where('user_id', $user->id)
             ->where('status', 'processing')
-            ->with(['distributor', 'orderDetails.product'])
+            ->with(['distributor', 'orderDetails.product','payment'])
+            ->whereHas('payment', function ($query) {
+                $query->where('payment_status', 'unpaid');
+            })
             ->latest()
             ->paginate(3); 
 

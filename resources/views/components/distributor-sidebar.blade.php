@@ -42,7 +42,7 @@
     </a>
 
     <a href="{{ route('distributors.delivery.index') }}"
-        class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.delivery.index') || request()->routeIs('distributors.trucks.*') ? 'bg-green-600' : 'hover:bg-green-600' }}">
+        class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.delivery.*') || request()->routeIs('distributors.trucks.*') ? 'bg-green-600' : 'hover:bg-green-600' }}">
         <div class="flex items-center">
             <iconify-icon icon="mdi:truck-delivery" class="text-xl icon"></iconify-icon>
             <span class="ml-4 font-normal text-gray-200">Delivery</span>

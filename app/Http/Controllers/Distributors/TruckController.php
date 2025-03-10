@@ -16,7 +16,7 @@ class TruckController extends Controller
         $trucks = Trucks::where('distributor_id', Auth::user()->distributor->id)
             ->with('deliveryLocations')  // Only load the deliveryLocations relationship
             ->withCount(['deliveries as deliveries_count' => function ($query) {
-                $query->whereIn('status', ['pending', 'processing', 'in_transit']);
+                $query->whereIn('status', ['processing', 'in_transit', 'out_for_delivery']);
             }])
             ->get();
 
@@ -25,6 +25,12 @@ class TruckController extends Controller
 
     public function show(Trucks $truck)
     {
+        // Eager load the distributor's other trucks to make them available in the view
+        $distributor = Auth::user()->distributor;
+        if ($distributor) {
+            $distributor->load('trucks');
+        }
+
         $deliveries = $truck->deliveries()
             ->with([
                 'order',
@@ -35,6 +41,14 @@ class TruckController extends Controller
             ->where('status', '!=', 'delivered')
             ->latest('truck_delivery.started_at')
             ->paginate(10);
+
+            $deliveries->getCollection()->transform(function ($delivery) {
+                if ($delivery->order) {
+                    // Use the accessor from the Order model
+                    $delivery->order->setAttribute('formatted_order_id', $delivery->order->formatted_order_id);
+                }
+                return $delivery;
+            });
 
         return view('distributors.trucks.show', compact('truck', 'deliveries'));
     }
@@ -277,5 +291,64 @@ class TruckController extends Controller
         $deliveryHistory = $query->paginate(10)->withQueryString();
 
         return view('distributors.trucks.delivery-history', compact('truck', 'deliveryHistory'));
+    }
+
+    /**
+     * Move a delivery to another truck
+     */
+    public function moveDeliveryToTruck(Request $request)
+    {
+        $validated = $request->validate([
+            'delivery_id' => 'required|exists:deliveries,id',
+            'truck_id' => 'required|exists:trucks,id'
+        ]);
+
+        // Find the delivery and new truck
+        $delivery = Delivery::findOrFail($validated['delivery_id']);
+        $newTruck = Trucks::findOrFail($validated['truck_id']);
+
+        // Check if this delivery belongs to distributor
+        if ($delivery->order->distributor_id !== Auth::user()->distributor->id) {
+            return back()->with('error', 'You are not authorized to move this delivery.');
+        }
+
+        // Check if the new truck belongs to the distributor
+        if ($newTruck->distributor_id !== Auth::user()->distributor->id) {
+            return back()->with('error', 'You are not authorized to use this truck.');
+        }
+
+        // Check if the new truck is available
+        if ($newTruck->status !== 'available') {
+            return back()->with('error', 'The selected truck is not available.');
+        }
+
+        // Get the current truck
+        $currentTruck = $delivery->trucks()->first();
+
+        if ($currentTruck && $currentTruck->id === $newTruck->id) {
+            return back()->with('info', 'The delivery is already assigned to this truck.');
+        }
+
+        // Detach from the current truck (if any)
+        if ($currentTruck) {
+            $delivery->trucks()->detach($currentTruck->id);
+
+            // If this was the last delivery for the current truck, set it back to available
+            $activeDeliveriesCount = $currentTruck->deliveries()
+                ->whereIn('status', ['pending', 'in_transit', 'out_for_delivery'])
+                ->count();
+
+            if ($activeDeliveriesCount === 0) {
+                $currentTruck->update(['status' => 'available']);
+            }
+        }
+
+        // Attach to the new truck
+        $delivery->trucks()->attach($newTruck->id, [
+            'started_at' => now()
+        ]);
+
+        return redirect()->route('distributors.trucks.show', $newTruck)
+            ->with('success', 'Delivery successfully moved to ' . $newTruck->plate_number);
     }
 }

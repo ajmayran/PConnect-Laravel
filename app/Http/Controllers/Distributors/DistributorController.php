@@ -13,43 +13,43 @@ use Illuminate\Support\Facades\Auth;
 class DistributorController extends Controller
 {
 
-    public function create()
-    {
-        $categories = Category::all(); // Fetch categories
-        return view('distributors.create', compact('categories')); // Pass categories to the view
-    }
+    // public function create()
+    // {
+    //     $categories = Category::all(); // Fetch categories
+    //     return view('distributors.create', compact('categories')); // Pass categories to the view
+    // }
 
-    public function store(Request $request)
-    {
-        // Validate and create the distributor account
-        $request->validate([
-            'company_name' => 'required|string|max:255',
-            'company_email' => 'required|email|max:255|unique:distributors',
-            'region' => 'nullable|string|max:255',
-            'province' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:255',
-            'barangay' => 'required|string|max:255',
-            'street' => 'required|string|max:255',
-            'company_phone_number' => 'required|string|max:15',
-            'company_profile_image' => 'nullable|image|max:2048',
-        ]);
+    // public function store(Request $request)
+    // {
+    //     // Validate and create the distributor account
+    //     $request->validate([
+    //         'company_name' => 'required|string|max:255',
+    //         'company_email' => 'required|email|max:255|unique:distributors',
+    //         'region' => 'nullable|string|max:255',
+    //         'province' => 'nullable|string|max:255',
+    //         'city' => 'nullable|string|max:255',
+    //         'barangay' => 'required|string|max:255',
+    //         'street' => 'required|string|max:255',
+    //         'company_phone_number' => 'required|string|max:15',
+    //         'company_profile_image' => 'nullable|image|max:2048',
+    //     ]);
 
-        $distributor = Distributors::create([
-            'user_id' => Auth::id(),
-            'company_name' => $request->company_name,
-            'company_email' => $request->company_email,
-            'region' => $request->region,
-            'province' => $request->province,
-            'city' => $request->city,
-            'barangay' => $request->barangay,
-            'street' => $request->street,
-            'company_phone_number' => $request->company_phone_number,
-            // Handle file upload for company_profile_image if provided
-        ]);
+    //     $distributor = Distributors::create([
+    //         'user_id' => Auth::id(),
+    //         'company_name' => $request->company_name,
+    //         'company_email' => $request->company_email,
+    //         'region' => $request->region,
+    //         'province' => $request->province,
+    //         'city' => $request->city,
+    //         'barangay' => $request->barangay,
+    //         'street' => $request->street,
+    //         'company_phone_number' => $request->company_phone_number,
+    //         // Handle file upload for company_profile_image if provided
+    //     ]);
 
-        // Redirect or return response
-        return redirect()->route('distributors.dashboard')->with('status', 'Distributor account created.');
-    }
+    //     // Redirect or return response
+    //     return redirect()->route('distributors.dashboard')->with('status', 'Distributor account created.');
+    // }
 
     public function approvalWaiting()
     {
