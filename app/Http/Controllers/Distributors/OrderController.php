@@ -30,14 +30,19 @@ class OrderController extends Controller
             ->where('distributor_id', $distributorId)
             ->where('status', $status);
 
-        // For pending orders, show oldest first
+        // Order by different columns based on status
         if ($status === self::STATUS_PENDING) {
+            // For pending orders, show oldest first (first come, first served)
             $query = $query->oldest();
+        } else if ($status === self::STATUS_PROCESSING) {
+            // For processing orders, show latest status_updated_at first
+            $query = $query->orderBy('status_updated_at', 'desc');
         } else {
+            // For other statuses (rejected, etc.), show latest created first
             $query = $query->latest();
         }
 
-        // Apply search if provided
+        // Apply search
         if ($search) {
             $query->where(function ($query) use ($search) {
                 // Search in order_id
@@ -92,7 +97,7 @@ class OrderController extends Controller
 
             Payment::create([
                 'order_id'        => $order->id,
-                'distributor_id' => $order->distributor_id, 
+                'distributor_id' => $order->distributor_id,
                 'payment_status'  => 'unpaid',
 
             ]);

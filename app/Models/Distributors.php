@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo; 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Distributors extends Model
 {
@@ -27,7 +27,7 @@ class Distributors extends Model
     {
         return $this->belongsTo(User::class);
     }
-    
+
     public function products(): HasMany
     {
         return $this->hasMany(Product::class, 'distributor_id');
@@ -35,9 +35,13 @@ class Distributors extends Model
 
     public function getProfilePhotoUrlAttribute()
     {
-        return $this->profile_photo 
+        return $this->profile_photo
             ? Storage::url($this->company_profile_image)
             : asset('img/default-profile.png');
     }
-}
 
+    public function trucks()
+    {
+        return $this->hasMany(Trucks::class, 'distributor_id');
+    }
+}

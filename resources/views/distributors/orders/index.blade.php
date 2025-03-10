@@ -28,6 +28,15 @@
             </div>
         </div>
 
+        @if (request('status') === 'processing')
+            <div class="flex justify-end">
+                <button onclick="openBatchQrModal()"
+                    class="flex gap-2 px-4 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-600">
+                    <iconify-icon icon="mdi:qrcode" class="text-2xl icon"></iconify-icon> Generate QR Codes
+                </button>
+            </div>
+        @endif
+
         @if (request('search'))
             <div class="mb-4">
                 <div class="flex items-center">
@@ -78,7 +87,7 @@
                             <th class="px-4 py-3 font-medium text-left text-gray-700">Order ID</th>
                             <th class="px-4 py-3 font-medium text-left text-gray-700">Retailer Name</th>
                             <th class="px-4 py-3 font-medium text-left text-gray-700">Total Amount</th>
-                            <th class="px-4 py-3 font-medium text-left text-gray-700">Date and Time</th>
+                            <th class="px-4 py-3 font-medium text-left text-gray-700">Order Date</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
@@ -104,6 +113,13 @@
                                             class="px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
                                             {{ $order->created_at->format('h:i A') }}
                                         </span>
+                                        
+                                        @if (request('status') === 'processing' && $order->status_updated_at)
+                                            <span
+                                                class="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full">
+                                                Accepted: {{ $order->status_updated_at->format('M d, Y') }}
+                                            </span>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -150,6 +166,11 @@
                         Reject
                     </button>
                 </div>
+                <!-- Add QR Code Button -->
+                <a id="qrCodeButton" href="#"
+                    class="px-4 py-2 font-medium text-white transition-colors bg-blue-500 rounded-lg hover:bg-blue-600">
+                    QR Code
+                </a>
                 <button onclick="closeModal()"
                     class="px-4 py-2 font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">
                     Close
@@ -196,6 +217,65 @@
                     class="px-4 py-2 text-white bg-gray-600 rounded hover:bg-gray-700">
                     Cancel
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="batchQrModal"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="w-11/12 max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl md:w-2/3">
+            <!-- Modal Header -->
+            <div class="sticky top-0 z-10 flex items-center justify-between p-4 bg-white border-b">
+                <h2 class="text-xl font-bold text-gray-800">Generate Batch QR Codes</h2>
+                <button onclick="closeBatchQrModal()"
+                    class="p-2 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-6">
+                <div class="mb-4">
+                    <p class="mb-2 text-gray-700">Select the orders you want to generate QR codes for:</p>
+                    <div class="overflow-y-auto max-h-[40vh] border rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="sticky top-0 bg-gray-50">
+                                <tr>
+                                    <th class="w-10 px-4 py-3">
+                                        <input type="checkbox" id="selectAll"
+                                            class="border-gray-300 rounded cursor-pointer"
+                                            onchange="toggleAllCheckboxes()">
+                                    </th>
+                                    <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">Order
+                                        ID</th>
+                                    <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">
+                                        Retailer</th>
+                                    <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">Date
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="batchOrdersList">
+                                <!-- Orders will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="flex justify-between mt-6">
+                    <p class="text-sm text-gray-600"><span id="selectedCount">0</span> orders selected</p>
+                    <div class="space-x-2">
+                        <button onclick="generateSelectedQrCodes()" id="generateQrButton" disabled
+                            class="px-4 py-2 font-medium text-white transition-colors bg-blue-500 rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-600">
+                            Generate QR Codes
+                        </button>
+                        <button onclick="closeBatchQrModal()"
+                            class="px-4 py-2 font-medium text-gray-700 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -319,6 +399,21 @@
             } else {
                 document.getElementById('actionButtons').classList.remove('hidden');
             }
+
+            if (orderStatus !== 'pending') {
+                document.getElementById('actionButtons').classList.add('hidden');
+            } else {
+                document.getElementById('actionButtons').classList.remove('hidden');
+            }
+
+            // Show QR code button only for processing orders
+            const qrCodeButton = document.getElementById('qrCodeButton');
+            if (orderStatus === 'processing') {
+                qrCodeButton.href = "/orders/" + orderId + "/qrcode";
+                qrCodeButton.classList.remove('hidden');
+            } else {
+                qrCodeButton.classList.add('hidden');
+            }
         }
 
         function closeModal() {
@@ -408,6 +503,132 @@
                     document.getElementById('rejectForm').submit();
                 }
             });
+        }
+
+        function openBatchQrModal() {
+            // Show loading state while fetching data
+            const ordersList = document.getElementById('batchOrdersList');
+            ordersList.innerHTML =
+                '<tr><td colspan="4" class="px-4 py-3 text-center text-gray-500">Loading orders...</td></tr>';
+
+            document.getElementById('batchQrModal').classList.remove('hidden');
+
+            // Fetch processing orders for QR code generation
+            fetch('{{ route('distributors.orders.processing') }}')
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Response data:", data); // Debug log
+
+                    if (data.orders && data.orders.length > 0) {
+                        console.log("First order details:", data.orders[0]);
+                        console.log("formatted_order_id exists:", data.orders[0].hasOwnProperty('formatted_order_id'));
+                    }
+
+                    ordersList.innerHTML = '';
+
+                    if (!data.orders || data.orders.length === 0) {
+                        ordersList.innerHTML =
+                            '<tr><td colspan="4" class="px-4 py-3 text-center text-gray-500">No processing orders found</td></tr>';
+                        return;
+                    }
+
+                    data.orders.forEach(order => {
+
+
+                        ordersList.innerHTML += `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3">
+                        <input type="checkbox" class="border-gray-300 rounded cursor-pointer order-checkbox" 
+                            value="${order.id}" onchange="updateSelectedCount()">
+                    </td>
+                    <td class="px-4 py-3">${order.formatted_order_id}</td>
+                    <td class="px-4 py-3">${order.user.first_name} ${order.user.last_name}</td>
+                    <td class="px-4 py-3">${formatDate(order.created_at)}</td>
+                </tr>
+                `;
+                    });
+
+                    updateSelectedCount();
+                })
+                .catch(error => {
+                    console.error('Error fetching orders:', error);
+                    ordersList.innerHTML =
+                        '<tr><td colspan="4" class="px-4 py-3 text-center text-red-500">Error loading orders. Please try again.</td></tr>';
+                });
+        }
+
+        function closeBatchQrModal() {
+            document.getElementById('batchQrModal').classList.add('hidden');
+        }
+
+        function toggleAllCheckboxes() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.order-checkbox');
+
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+            });
+
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const selectedOrders = document.querySelectorAll('.order-checkbox:checked');
+            const selectedCount = document.getElementById('selectedCount');
+            const generateButton = document.getElementById('generateQrButton');
+
+            selectedCount.textContent = selectedOrders.length;
+            generateButton.disabled = selectedOrders.length === 0;
+        }
+
+        function generateSelectedQrCodes() {
+            const selectedOrders = Array.from(document.querySelectorAll('.order-checkbox:checked'))
+                .map(checkbox => checkbox.value);
+
+            if (selectedOrders.length === 0) {
+                return;
+            }
+
+            // Create a form to submit the selected order IDs
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ route('distributors.orders.batch-qrcode') }}';
+            form.style.display = 'none';
+
+            // Add CSRF token
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = '_token';
+            csrfToken.value = document.querySelector('meta[name="csrf-token"]').content;
+            form.appendChild(csrfToken);
+
+            // Add selected order IDs
+            selectedOrders.forEach(orderId => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'order_ids[]';
+                input.value = orderId;
+                form.appendChild(input);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            } catch (e) {
+                console.error('Error formatting date:', e);
+                return 'Invalid date';
+            }
         }
     </script>
 </x-distributor-layout>

@@ -140,22 +140,23 @@
                             </div>
 
                             <div
-                                class="flex flex-col items-center mt-6 space-y-4 md:flex-row md:justify-end md:space-y-0">
-                                <!-- Out for Delivery Button -->
-                                @if (!$deliveries->isEmpty() && $truck->status === 'available')
-                                    <button type="button" onclick="openEstimatedDeliveryModal()"
-                                        class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                                        Out for Delivery
-                                    </button>
-                                @else
-                                    <div></div>
-                                @endif
+                                class="flex flex-col items-center justify-end mt-6 space-y-4 md:flex-row md:justify-end md:space-y-0">
 
                                 <!-- Pagination -->
                                 <div class="mt-2 md:mt-0">
                                     {{ $deliveries->links() }}
                                 </div>
                             </div>
+                        @endif
+                    </div>
+
+                    <!-- Out for Delivery Button -->
+                    <div class="flex justify-end pt-4 mt-6 border-t border-gray-200">
+                        @if (!$deliveries->isEmpty() && $truck->status === 'available')
+                            <button type="button" onclick="openEstimatedDeliveryModal()"
+                                class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                Out for Delivery
+                            </button>
                         @endif
                     </div>
                 </div>
@@ -229,6 +230,25 @@
             <!-- Modal Footer -->
             <div class="sticky bottom-0 flex justify-end gap-4 p-4 bg-white border-t">
                 <div id="deliveryActionButtons">
+                    @php
+                        $availableTrucks = optional(Auth::user()->distributor)->trucks ?? collect();
+                        $availableTrucksCount = 0;
+
+                        // Check if $availableTrucks is a collection before using collection methods
+                        if ($availableTrucks instanceof \Illuminate\Support\Collection) {
+                            $availableTrucksCount = $availableTrucks
+                                ->where('status', 'available')
+                                ->where('id', '!=', $truck->id)
+                                ->count();
+                        }
+                    @endphp
+
+                    @if ($availableTrucksCount > 0)
+                        <button id="moveDeliveryBtn" onclick="openMoveDeliveryModal()"
+                            class="px-4 py-2 mr-2 font-medium text-white transition-colors bg-yellow-600 rounded-lg hover:bg-yellow-700">
+                            Move to Another Truck
+                        </button>
+                    @endif
                     <button id="markDeliveredBtn" onclick="markAsDelivered()"
                         class="px-4 py-2 font-medium text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700">
                         Mark as Delivered
@@ -239,6 +259,66 @@
                     Close
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Move Delivery Modal -->
+    <div id="moveDeliveryModal"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="w-11/12 max-w-md bg-white rounded-lg shadow-xl md:w-1/3 sm:w-2/3">
+            <div class="flex items-center justify-between p-4 border-b">
+                <h2 class="text-lg font-semibold text-gray-800">Move Delivery to Another Truck</h2>
+                <button onclick="closeMoveDeliveryModal()"
+                    class="p-1 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="moveDeliveryForm" action="{{ route('distributors.deliveries.move-to-truck') }}"
+                method="POST">
+                @csrf
+                <input type="hidden" id="delivery_id_to_move" name="delivery_id">
+
+                <div class="p-6">
+                    <div class="mb-4">
+                        <label for="new_truck_id" class="block mb-2 text-sm font-medium text-gray-700">
+                            Select Truck <span class="text-red-500">*</span>
+                        </label>
+                        <select id="new_truck_id" name="truck_id"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            required>
+                            <option value="">Select a truck...</option>
+                            @foreach (Auth::user()->distributor->trucks->where('status', 'available')->where('id', '!=', $truck->id) as $availableTruck)
+                                <option value="{{ $availableTruck->id }}">
+                                    {{ $availableTruck->plate_number }}
+                                    @if ($availableTruck->deliveries()->whereIn('status', ['pending', 'in_transit', 'out_for_delivery'])->count() > 0)
+                                        ({{ $availableTruck->deliveries()->whereIn('status', ['pending', 'in_transit', 'out_for_delivery'])->count() }}
+                                        deliveries)
+                                    @else
+                                        (No deliveries)
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="mt-1 text-sm text-gray-500">Only available trucks are shown</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 p-4 rounded-b-lg bg-gray-50">
+                    <button type="button" onclick="closeMoveDeliveryModal()"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Move Delivery
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -271,8 +351,19 @@
                     return;
                 }
 
+
                 currentDeliveryId = delivery.id;
-                document.getElementById('deliveryModalTitle').innerText = 'Order #' + (order.formatted_order_id || 'N/A');
+
+                // Create order ID even if formatted_order_id is missing
+                let orderId = 'N/A';
+                if (order.formatted_order_id) {
+                    orderId = order.formatted_order_id;
+                } else if (order.id) {
+                    // Create a simple formatted ID if the attribute is missing
+                    orderId = 'ORD-' + String(order.id).padStart(6, '0');
+                }
+
+                document.getElementById('deliveryModalTitle').innerText = 'Order ID: ' + orderId;
 
                 let modalHtml = '<div class="space-y-6">';
 
@@ -420,6 +511,15 @@
                 console.error('Error in openDeliveryModal:', error);
                 alert('An error occurred while displaying delivery details: ' + error.message);
             }
+
+            const moveBtn = document.getElementById('moveDeliveryBtn');
+            if (moveBtn) {
+                if (delivery.status === 'pending' || delivery.status === 'in_transit') {
+                    moveBtn.classList.remove('hidden');
+                } else {
+                    moveBtn.classList.add('hidden');
+                }
+            }
         }
 
         function closeDeliveryModal() {
@@ -463,6 +563,23 @@
 
         function closeEstimatedDeliveryModal() {
             document.getElementById('estimatedDeliveryModal').classList.add('hidden');
+        }
+
+        function openMoveDeliveryModal() {
+            if (!currentDeliveryId) return;
+
+            // Set the hidden delivery ID field
+            document.getElementById('delivery_id_to_move').value = currentDeliveryId;
+
+            // Show the modal
+            document.getElementById('moveDeliveryModal').classList.remove('hidden');
+
+            // Close the delivery details modal
+            closeDeliveryModal();
+        }
+
+        function closeMoveDeliveryModal() {
+            document.getElementById('moveDeliveryModal').classList.add('hidden');
         }
     </script>
 </x-distributor-layout>
