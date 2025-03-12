@@ -115,13 +115,33 @@ class RetailerMessageController extends Controller
         }
     }
 
+   
     public function getUnreadCount()
     {
-        $unreadCount = Message::where('receiver_id', Auth::id())
-            ->where('is_read', false)
-            ->count();
+        try {
+            // Get authenticated user ID
+            $userId = Auth::id();
 
-        return response()->json(['unread_count' => $unreadCount]);
+            // Query unread messages for this user based on the ACTUAL database columns
+            $unreadCount = \App\Models\Message::where('receiver_id', $userId)
+                ->where('is_read', false)  // Using is_read boolean instead of read_at
+                ->count();
+
+            return response()->json([
+                'success' => true,
+                'unread_count' => $unreadCount,
+                'count' => $unreadCount
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching unread message count: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching unread messages: ' . $e->getMessage(),
+                'count' => 0,
+                'unread_count' => 0
+            ]);
+        }
     }
 
     public function markAsRead(Request $request)
