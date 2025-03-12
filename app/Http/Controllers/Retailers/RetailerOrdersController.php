@@ -262,7 +262,7 @@ class RetailerOrdersController extends Controller
         $orders = Order::with(['orderDetails.product'])
             ->where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->paginate(5);
 
         return view('retailers.profile.my-purchase', compact('orders'));
     }

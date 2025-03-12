@@ -190,7 +190,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     // Delivery Routes
     Route::get('/delivery', [DeliveryController::class, 'index'])->name('distributors.delivery.index');
     Route::post('/delivery/{id}/update-status', [DeliveryController::class, 'updateStatus'])->name('delivery.update-status');
-    Route::patch('/deliveries/{delivery}/mark-delivered', [DeliveryController::class, 'markDelivered'])->name('distributors.deliveries.mark-delivered');
+    Route::post('/deliveries/{delivery}/mark-delivered', [DeliveryController::class, 'markDelivered'])->name('distributors.deliveries.mark-delivered');
     Route::post('/delivery/{delivery}/assign-truck', [TruckController::class, 'assignDelivery'])->name('distributors.delivery.assign-truck');
     Route::get('/delivery/{delivery}/scan-qr', [DeliveryController::class, 'scanQrCode'])->name('distributors.delivery.scan-qr-general');
     Route::post('/delivery/process-general-scan', [OrderQrController::class, 'processGeneralScan'])->name('distributors.delivery.process-general-scan');

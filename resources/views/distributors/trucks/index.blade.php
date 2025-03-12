@@ -185,12 +185,13 @@
                                     <th class="px-4 py-2">Location</th>
                                     <th class="px-4 py-2">Status</th>
                                     <th class="px-4 py-2">Active Deliveries</th>
-                                    <th class="px-4 py-2">Actions</th>
+                                    <th class="w-10 px-4 py-2"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($trucks as $truck)
-                                    <tr class="p-2 border-b border-gray-200">
+                                    <tr class="p-2 border-b border-gray-200 cursor-pointer hover:bg-gray-50"
+                                        onclick="viewTruckDetails({{ $truck->id }}, event)">
                                         <td class="px-4 py-2 text-center">{{ $truck->plate_number }}</td>
 
                                         <td class="px-4 py-2">
@@ -236,20 +237,16 @@
                                             </span>
                                         </td>
                                         <td class="px-4 py-2 text-center">{{ $truck->deliveries_count }}</td>
-                                        <td class="px-4 py-2">
-                                            <div class="flex justify-around">
-                                                <a href="{{ route('distributors.trucks.show', $truck) }}"
-                                                    class="text-blue-600 hover:text-blue-900">
-                                                    View
-                                                </a>
-                                                <button onclick="openEditModal({{ $truck->id }})"
-                                                    class="text-green-600 hover:text-green-900">
-                                                    Edit
-                                                </button>
-                                                <button type="button"
-                                                    onclick="confirmDelete({{ $truck->id }}, '{{ csrf_token() }}')"
-                                                    class="text-red-600 hover:text-red-900">
-                                                    Delete
+                                        <td class="relative px-4 py-2 text-right">
+                                            <div class="relative dropdown" onclick="event.stopPropagation()">
+                                                <button class="p-1 rounded-full dropdown-toggle hover:bg-gray-200"
+                                                    onclick="toggleDropdown({{ $truck->id }})">
+                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                        class="w-5 h-5 text-gray-500" viewBox="0 0 20 20"
+                                                        fill="currentColor">
+                                                        <path
+                                                            d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                                    </svg>
                                                 </button>
                                             </div>
                                         </td>
@@ -257,14 +254,83 @@
                                 @endforeach
                             </tbody>
                         </table>
+                        <div class="dropdown-container">
+                            @foreach ($trucks as $truck)
+                                <div id="dropdown-menu-{{ $truck->id }}"
+                                    class="fixed z-50 hidden w-48 mt-2 bg-white rounded-md shadow-lg dropdown-menu ring-1 ring-black ring-opacity-5">
+                                    <div class="py-1">
+                                        <button onclick="openEditModal({{ $truck->id }})"
+                                            class="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100">
+                                            Edit
+                                        </button>
+                                        <button onclick="confirmDelete({{ $truck->id }}, '{{ csrf_token() }}')"
+                                            class="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-gray-100">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
-
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        function toggleDropdown(truckId) {
+            const dropdown = document.getElementById(`dropdown-menu-${truckId}`);
+
+            // Toggle visibility
+            const isHidden = dropdown.classList.contains('hidden');
+
+            // Hide all dropdowns first
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.classList.add('hidden');
+            });
+
+            if (isHidden) {
+                dropdown.classList.remove('hidden');
+
+                // Position the dropdown relative to the button
+                const button = document.querySelector(`[onclick="toggleDropdown(${truckId})"]`);
+                const buttonRect = button.getBoundingClientRect();
+
+                // Set position
+                dropdown.style.top = `${buttonRect.bottom + window.scrollY}px`;
+                dropdown.style.left = `${buttonRect.right - dropdown.offsetWidth + window.scrollX}px`;
+
+                // Check if dropdown goes beyond viewport bottom
+                const dropdownRect = dropdown.getBoundingClientRect();
+                const viewportHeight = window.innerHeight;
+
+                if (dropdownRect.bottom > viewportHeight) {
+                    // Position above button instead
+                    dropdown.style.top = `${buttonRect.top - dropdown.offsetHeight + window.scrollY}px`;
+                }
+            }
+        }
+
+        // Close dropdowns when clicking elsewhere
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.dropdown-toggle')) {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                    menu.classList.add('hidden');
+                });
+            }
+        });t
+
+        // Function to handle row clicks (view truck details)
+        function viewTruckDetails(truckId, event) {
+            // Don't navigate if clicked on dropdown or the "more locations" text
+            if (event.target.closest('.dropdown') ||
+                event.target.closest('.text-blue-600')) {
+                return;
+            }
+
+            window.location.href = `{{ route('distributors.trucks.show', '') }}/${truckId}`;
+        }
+
         function openAddModal() {
             document.getElementById('addTruckModal').classList.remove('hidden');
             loadBarangays('barangay', 'barangayLoadingIndicator');
@@ -637,12 +703,12 @@
             <div class="flex justify-between mb-2">
                 <span class="text-sm font-medium">${isFirstLocation ? 'Primary Location' : 'Additional Location'}</span>
                 ${!isFirstLocation ? `
-                            <button type="button" class="text-red-600 remove-location-btn">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                            ` : ''}
+                                                <button type="button" class="text-red-600 remove-location-btn">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                                    </svg>
+                                                </button>
+                                                ` : ''}
             </div>
             <input type="hidden" name="locations[${index}][id]" value="${location ? location.id || '' : ''}">
             <input type="hidden" name="locations[${index}][region]" value="09">

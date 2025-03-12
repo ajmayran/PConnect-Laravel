@@ -126,6 +126,9 @@
                                             Status</th>
                                         <th
                                             class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                            Payment</th>
+                                        <th
+                                            class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                             Completed At</th>
                                         <th
                                             class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
@@ -135,13 +138,18 @@
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     @foreach ($deliveryHistory as $delivery)
                                         <tr class="hover:bg-gray-50">
-                                            <td class="px-6 py-4">{{ $delivery->order->formatted_order_id }}</td>
-                                            <td class="px-6 py-4">
-                                                {{ $delivery->order->user->first_name }}
-                                                {{ $delivery->order->user->last_name }}
+                                            <td class="px-6 py-4">{{ $delivery->order->formatted_order_id ?? 'N/A' }}
                                             </td>
                                             <td class="px-6 py-4">
-                                                @if ($delivery->order->orderDetails->isNotEmpty())
+                                                @if ($delivery->order && $delivery->order->user)
+                                                    {{ $delivery->order->user->first_name }}
+                                                    {{ $delivery->order->user->last_name }}
+                                                @else
+                                                    <span class="text-gray-400">Unknown</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                @if ($delivery->order && $delivery->order->orderDetails && $delivery->order->orderDetails->isNotEmpty())
                                                     {{ $delivery->order->orderDetails->first()->delivery_address }}
                                                 @else
                                                     <span class="text-gray-400">No address provided</span>
@@ -153,6 +161,22 @@
                                                     {{ $delivery->status === 'delivered' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                                     {{ ucfirst(str_replace('_', ' ', $delivery->status)) }}
                                                 </span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                @if ($delivery->order && $delivery->order->payment)
+                                                    <span
+                                                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                                        {{ $delivery->order->payment->payment_status === 'paid'
+                                                            ? 'bg-green-100 text-green-800'
+                                                            : 'bg-yellow-100 text-yellow-800' }}">
+                                                        {{ ucfirst($delivery->order->payment->payment_status) }}
+                                                    </span>
+                                                @else
+                                                    <span
+                                                        class="inline-flex px-2 py-1 text-xs font-semibold text-gray-600 bg-gray-100 rounded-full">
+                                                        No record
+                                                    </span>
+                                                @endif
                                             </td>
                                             <td class="px-6 py-4 text-sm text-gray-600">
                                                 {{ $delivery->updated_at->format('M d, Y H:i') }}
@@ -238,6 +262,44 @@
                 modalHtml += '<br>Completed on: ' + new Date(delivery.updated_at).toLocaleString();
                 modalHtml += '</div>';
                 modalHtml += '</div>';
+
+                if (order && order.payment) {
+                    const paymentStatus = order.payment.payment_status === 'paid' ? {
+                        bg: 'bg-green-50',
+                        border: 'border-green-200',
+                        text: 'text-green-700',
+                        badge: 'bg-green-100 text-green-800'
+                    } : {
+                        bg: 'bg-yellow-50',
+                        border: 'border-yellow-200',
+                        text: 'text-yellow-700',
+                        badge: 'bg-yellow-100 text-yellow-800'
+                    };
+
+                    modalHtml += `<div class="p-3 rounded-lg ${paymentStatus.bg} border ${paymentStatus.border}">`;
+                    modalHtml += '<div class="flex items-center justify-between">';
+                    modalHtml += `<h3 class="text-lg font-semibold ${paymentStatus.text}">Payment Information</h3>`;
+                    modalHtml +=
+                        `<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${paymentStatus.badge}">`;
+                    modalHtml += order.payment.payment_status.charAt(0).toUpperCase() + order.payment.payment_status.slice(
+                        1);
+                    modalHtml += '</span>';
+                    modalHtml += '</div>';
+                    modalHtml += `<div class="mt-1 text-sm ${paymentStatus.text}">`;
+
+                    if (order.payment.paid_at) {
+                        modalHtml += 'Paid on: ' + new Date(order.payment.paid_at).toLocaleString();
+                    }
+
+                    if (order.payment.payment_note) {
+                        modalHtml += '<div class="p-2 mt-2 border-l-4 border-gray-300 bg-gray-50">';
+                        modalHtml += '<p class="italic text-gray-700">' + order.payment.payment_note + '</p>';
+                        modalHtml += '</div>';
+                    }
+
+                    modalHtml += '</div>';
+                    modalHtml += '</div>';
+                }
 
                 // Products Section
                 if (orderDetails && Array.isArray(orderDetails) && orderDetails.length > 0) {

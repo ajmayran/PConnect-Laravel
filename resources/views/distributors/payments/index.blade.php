@@ -41,7 +41,7 @@
 
         @if ($payments->isEmpty())
             <div class="p-8 text-center bg-white rounded-lg shadow-sm">
-                <p class="text-gray-600 sm:text-lg">No payments found.</p>
+                <p class="text-gray-600 sm:text-lg">No payments found.</p>t
             </div>
         @else
             <form id="batchActionForm" method="POST" action="{{ route('distributors.payments.batch-delete') }}">

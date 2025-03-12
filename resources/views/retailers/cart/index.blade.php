@@ -478,3 +478,4 @@
         }
     </script>
 </x-app-layout>
+<x-footer />

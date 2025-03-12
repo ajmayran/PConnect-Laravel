@@ -7,10 +7,16 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="flex py-12 mx-auto max-w-7xl sm:px-6 lg:px-8">
         <x-retailer-sidebar :user="Auth::user()" /> <!-- Retailder Side bar -->
 
-        <div class="flex-1 space-y-6 lg:px-8 h-[760px] overflow-y-auto"> <!-- Retailder form edit -->
+        <div class="flex-1 space-y-6 lg:pl-8">
+            <div class="px-4 mb-6">
+                <h1 class="text-2xl font-semibold text-gray-800">Profile</h1>
+                <div>
+                    <span class="text-sm text-gray-500">Edit your profile</span>
+                </div>
+            </div>
             <div class="p-4 bg-white shadow sm:p-8 sm:rounded-lg">
                 <header>
                     <h2 class="text-lg font-medium text-gray-900 dark:text-gray-900">
@@ -135,7 +141,8 @@
             const barangaySelectSection = document.getElementById('barangaySelectSection');
             const currentBarangayDisplay = document.getElementById('currentBarangayDisplay');
             const barangayCodeInput = document.getElementById('barangayCode');
-            const savedBarangay = '{{ isset($user->retailerProfile) && $user->retailerProfile ? ($user->retailerProfile->barangay ?? '') : '' }}';
+            const savedBarangay =
+                '{{ isset($user->retailerProfile) && $user->retailerProfile ? $user->retailerProfile->barangay ?? '' : '' }}';
 
             changeBarangayBtn.addEventListener('click', function() {
                 barangayDisplaySection.classList.add('hidden');
@@ -285,3 +292,4 @@
         });
     </script>
 </x-app-layout>
+<x-footer />

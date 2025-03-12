@@ -4,7 +4,9 @@
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <x-retailer-sidebar />
             <!-- Main Content Area -->
+            
             <div class="p-3 bg-white border-b border-gray-200 rounded-lg shadow-sm md:p-5">
+            
                 <h2 class="mb-4 text-xl font-semibold text-gray-800">Messages</h2>
 
                 <div class="flex flex-col md:flex-row h-[calc(100vh-240px)]">
@@ -555,3 +557,4 @@
         }
     </style>
 </x-app-layout>
+<x-footer />

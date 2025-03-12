@@ -1,5 +1,5 @@
 <div class="container flex gap-2 mx-auto">
-    <div class="w-1/4 pt-5 bg-white shadow-md sm:rounded-lg ">
+    <div class="hidden w-1/4 pt-5 bg-white shadow-md md:block sm:rounded-lg">
         <h2 class="p-4 mb-4 text-xl font-bold text-center">Account</h2>
 
         <ul class="text-center tab-list space-y">
@@ -32,3 +32,4 @@
             </li>
         </ul>
     </div>
+

@@ -296,6 +296,7 @@
 
         function openModal(row) {
             var orderId = row.getAttribute('data-order-id');
+            var formattedOrderId = row.querySelector('td:first-child').textContent.trim();
             var orderStatus = row.getAttribute('data-status');
             currentOrderId = orderId;
             var retailer = JSON.parse(row.getAttribute('data-retailer'));
@@ -303,7 +304,7 @@
             var dateTime = row.getAttribute('data-created-at');
             var deliveryAddress = row.getAttribute('data-delivery-address');
 
-            document.getElementById('modalTitle').innerText = 'Order #' + orderId;
+            document.getElementById('modalTitle').innerText = 'Order ' + formattedOrderId;
 
             var modalHtml = '<div class="space-y-6">';
 
