@@ -2,24 +2,46 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
+use Illuminate\Database\Eloque
+use Illuminate\Support\Facades\Storage;
+ase\Eloquent\Relations\Has
+use Illuminate\Database\Elo
 class Distributors extends Model
 {
-    protected $fillable = [
-        'user_id',
+  
         'company_name',
         'company_email',
         'company_address',
-        'company_phone_number',
         'bir_form',
         'sec_document',
         'profile_completed',
+        'region',
+        'province',
+        'city',
+        'barangay',
+        'street',
+        'company_phone_number'
     ];
-
+  
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+  
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class, 'distributor_id');
+    }
+
+    public function getProfilePhotoUrlAttribute()
+    {
+        return $this->profile_photo
+            ? Storage::url($this->company_profile_image)
+            : asset('img/default-profile.png');
+    }
+
+    public function trucks()
+    {
+        return $this->hasMany(Trucks::class, 'distributor_id');
     }
 }

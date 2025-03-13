@@ -62,13 +62,17 @@
                         </div>
                     @endforelse
                 </div>
+
+                <div class="mt-6">
+                    {{ $orders->links() }}
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Modal -->
     <div id="orderModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-black bg-opacity-50">
-        <div class="relative max-w-4xl p-8 mx-auto mt-20 bg-white rounded-lg shadow-xl">
+        <div class="relative max-w-4xl p-8 mx-auto mt-10 bg-white rounded-lg shadow-xl">
             <!-- Remove the X button and replace with content wrapper -->
             <div class="space-y-6">
                 <div id="modalContent" class="mt-4">

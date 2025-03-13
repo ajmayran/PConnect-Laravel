@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Distributors;
 
 use App\Models\Order;
 use Illuminate\Http\Request;
+use App\Models\Payment;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Delivery;
@@ -21,15 +22,44 @@ class OrderController extends Controller
     public function index()
     {
         $distributorId = Auth::user()->distributor->id;
-        $orders = Order::with(['orderDetails.product', 'user.retailerProfile']) // 'user' is the retailer who ordered
+        $status = request('status', self::STATUS_PENDING);
+        $search = request('search');
+
+        // Base query with relationships
+        $query = Order::with(['orderDetails.product', 'user.retailerProfile'])
             ->where('distributor_id', $distributorId)
-            ->where('status', self::STATUS_PENDING)
-            ->latest()
-            ->get()
-            ->map(function ($order) {
-                $order->formatted_id = $order->formatted_order_id;
-                return $order;
+            ->where('status', $status);
+
+        // Order by different columns based on status
+        if ($status === self::STATUS_PENDING) {
+            // For pending orders, show oldest first (first come, first served)
+            $query = $query->oldest();
+        } else if ($status === self::STATUS_PROCESSING) {
+            // For processing orders, show latest status_updated_at first
+            $query = $query->orderBy('status_updated_at', 'desc');
+        } else {
+            // For other statuses (rejected, etc.), show latest created first
+            $query = $query->latest();
+        }
+
+        // Apply search
+        if ($search) {
+            $query->where(function ($query) use ($search) {
+                // Search in order_id
+                $query->where('order_id', 'like', "%{$search}%")
+                    // Join and search in user table
+                    ->orWhereHas('user', function ($q) use ($search) {
+                        $q->where(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%");
+                    });
             });
+        }
+
+        // Paginate the results
+        $orders = $query->paginate(10);
+        if (request()->has('search') || request()->has('status')) {
+            $orders->appends(request()->only(['search', 'status']));
+        }
+
 
         return view('distributors.orders.index', compact('orders'));
     }
@@ -64,7 +94,15 @@ class OrderController extends Controller
 
                 // Add additional fields as per your Delivery model
             ]);
+
+            Payment::create([
+                'order_id'        => $order->id,
+                'distributor_id' => $order->distributor_id,
+                'payment_status'  => 'unpaid',
+
+            ]);
         });
+
 
         return redirect()->back()->with('success', 'Order accepted successfully.');
     }
@@ -87,5 +125,17 @@ class OrderController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Order rejected successfully.');
+    }
+
+    public function getOrderDetails($id)
+    {
+        $order = Order::with(['user.retailer_profile', 'orderDetails.product'])->findOrFail($id);
+        $html = view('distributors.orders.order-details-content', [
+            'orderDetails'   => $order->orderDetails,
+            'retailer'       => $order->user,
+            'storageBaseUrl' => asset('storage')
+        ])->render();
+
+        return response()->json(['html' => $html]);
     }
 }

@@ -4,6 +4,11 @@
         @if ($checkoutProducts->count())
             <form id="orderForm" action="{{ route('retailers.checkout.placeOrderAll') }}" method="POST">
                 @csrf
+
+                @foreach ($carts as $cart)
+                    <input type="hidden" name="all_carts[]" value="{{ $cart->id }}">
+                @endforeach
+
                 <div class="flex flex-col gap-8 md:flex-row">
                     <!-- Left Column: Checkout Products -->
                     <div class="md:w-2/3">
@@ -50,13 +55,18 @@
                                         <div class="flex px-4 py-4 font-semibold border-t border-gray-200">
                                             <span class="flex-1 text-right">Total Amount:</span>
                                             <span
-                                                class="w-24 text-right">₱{{ number_format($products->sum('subtotal'), 2) }}</span>
+                                                class="w-24 text-right">₱{{ number_format($distributorTotals[$distributorId] ?? 0, 2) }}</span>
                                         </div>
                                     </div>
                                     <input type="hidden" name="carts[]" value="{{ $products->first()->cart_id }}">
                                 @endif
                             </div>
                         @endforeach
+
+                        <!-- Pagination links -->
+                        <div class="flex justify-end mt-6">
+                            {{ $checkoutProducts->links() }}
+                        </div>
                     </div>
 
                     <!-- Right Column: Retailer Profile & Delivery Address -->
@@ -79,7 +89,9 @@
                                 <p><strong>Business Name:</strong> {{ $user->retailerProfile->business_name ?? 'N/A' }}
                                 </p>
                                 <p><strong>Phone:</strong> {{ $user->retailerProfile->phone ?? 'N/A' }}</p>
-                                <p><strong>Address:</strong> {{ $user->retailerProfile->address ?? 'N/A' }}</p>
+                                <p><strong>Address:</strong>
+                                    {{ $user->retailerProfile->barangay_name }},{{ $user->retailerProfile->street ?? '' }}
+                                </p>
                             </div>
 
                             <div class="pt-4 mt-6 border-t">
@@ -98,7 +110,8 @@
                                         checked class="form-radio">
                                     <label for="default_address" class="ml-2">
                                         Use my default address:
-                                        <span class="font-medium">{{ $user->retailerProfile->address ?? 'N/A' }}</span>
+                                        <span
+                                            class="font-medium">{{ $user->retailerProfile->barangay_name }},{{ $user->retailerProfile->street ?? '' }}</span>
                                     </label>
                                 </div>
                                 <div class="flex items-center">
