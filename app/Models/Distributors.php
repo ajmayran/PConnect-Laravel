@@ -2,18 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloque
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
+ase\Eloquent\Relations\Has
+use Illuminate\Database\Elo
 class Distributors extends Model
 {
-    protected $fillable = [
-        'user_id',
-        'company_profile_image',
+  
         'company_name',
         'company_email',
+        'company_address',
+        'bir_form',
+        'sec_document',
+        'profile_completed',
         'region',
         'province',
         'city',
@@ -21,13 +22,12 @@ class Distributors extends Model
         'street',
         'company_phone_number'
     ];
-
-
+  
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
-
+  
     public function products(): HasMany
     {
         return $this->hasMany(Product::class, 'distributor_id');

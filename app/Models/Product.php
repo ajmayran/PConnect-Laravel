@@ -54,6 +54,6 @@ class Product extends Model
 
     public function distributor(): BelongsTo
     {
-        return $this->belongsTo(Distributors::class, 'distributor_id');
+        return $this->belongsTo(Distributors::class, foreignKey: 'distributor_id');
     }
 }

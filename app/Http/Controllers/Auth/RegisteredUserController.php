@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Models\Credential;
+use App\Models\Distributors;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -15,9 +16,6 @@ use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Display the registration view.
-     */
     public function createRetailer(): View
     {
         return view('auth.register-retailer');
@@ -42,11 +40,9 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'user_type' => ['required', 'in:retailer,distributor'],
             'credentials' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
-            'credentials2' => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
+            'credentials2' => ['required_if:user_type,distributor', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
-
-        $credentialsPath = $request->file('credentials')->store('credentials', 'public');
 
         $user = User::create([
             'first_name' => $validated['first_name'],
@@ -76,6 +72,17 @@ class RegisteredUserController extends Controller
             ]);
         }
 
+        if ($validated['user_type'] === 'distributor') {
+            Distributors::create([
+                'user_id' => $user->id,
+                'company_name' => $request->input('company_name'),
+                'company_email' => $request->input('company_email'),
+                'company_address' => $request->input('company_address'),
+                'company_phone_number' => $request->input('company_phone_number'),
+                'bir_form' => $filePath,
+                'sec_document' => $filePath2,
+            ]);
+        }
 
         event(new Registered($user));
 
