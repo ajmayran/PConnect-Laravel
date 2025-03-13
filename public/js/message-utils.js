@@ -39,24 +39,26 @@ function fetchAndUpdateUnreadCount() {
             return response.json();
         })
         .then(data => {
+            // Log the full response for debugging
+            console.log('Unread count API response:', data);
+
             if (data.success) {
-                updateAllMessageBadges(data.unread_count || data.count || 0);
+                // Use unread_count which should be the senders count
+                updateAllMessageBadges(data.unread_count || 0);
             } else {
                 console.warn('API returned error:', data.message);
-                // Still update badges but with 0 to avoid showing stale data
                 updateAllMessageBadges(0);
             }
         })
         .catch(error => {
             console.error('Error fetching unread message count:', error);
-            // Don't update badges or set to 0 on error - keep existing state
         })
         .finally(() => {
             // Hide indicator
             if (indicator) {
                 setTimeout(() => {
                     indicator.classList.add('hidden');
-                }, 300); // Short delay for visual feedback
+                }, 300);
             }
         });
 }
@@ -68,7 +70,7 @@ function fetchAndUpdateUnreadCount() {
 function updateAllMessageBadges(count) {
     try {
         const badges = document.querySelectorAll('[id$="unread-message-badge"]');
-        
+
         badges.forEach(badge => {
             if (count > 0) {
                 badge.textContent = count;

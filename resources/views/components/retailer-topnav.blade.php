@@ -40,7 +40,7 @@
 
                 <!-- Messages -->
                 <div class="relative ml-4">
-                    <a href="{{ route('retailers.messages.index') }}" class="p-2 text-gray-500 hover:text-gray-700">
+                    <button onclick="toggleMessagesDropdown()" class="p-2 text-gray-500 hover:text-gray-700">
                         <div class="relative w-6 h-6">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -50,7 +50,27 @@
                                 class="absolute flex items-center justify-center w-4 h-4 text-xs font-bold text-white bg-red-500 rounded-full -top-1 -right-1">
                             </div>
                         </div>
-                    </a>
+                    </button>
+
+                    <!-- Messages Dropdown -->
+                    <div id="messagesDropdown"
+                        class="absolute right-0 z-[100] hidden mt-2 bg-white rounded-lg shadow-xl w-80 border">
+                        <div class="p-3 border-b border-gray-200">
+                            <h3 class="font-semibold text-gray-800">Messages</h3>
+                        </div>
+                        <!-- Messages Content -->
+                        <div class="overflow-y-auto divide-y divide-gray-200 max-h-80" id="messages-preview-container">
+                            <div class="p-3 text-sm text-center text-gray-500">
+                                Loading messages...
+                            </div>
+                        </div>
+                        <div class="p-3 text-center border-t border-gray-200">
+                            <a href="{{ route('retailers.messages.index') }}"
+                                class="text-sm text-green-600 hover:text-green-700">
+                                See All Messages
+                            </a>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Notifications -->
@@ -64,7 +84,7 @@
 
                     <!-- Notifications Popup -->
                     <div id="notificationsPopup"
-                        class="absolute right-0 z-[100] hidden mt-2 bg-white rounded-lg shadow-xl w-80">
+                        class="absolute right-0 z-[100] hidden mt-2 bg-white rounded-lg shadow-xl w-80 border">
                         <div class="p-4 border-b border-gray-200">
                             <h3 class="font-semibold text-gray-800">Notifications</h3>
                         </div>
@@ -136,69 +156,6 @@
                         </div>
                     </div>
                 </div>
-
-                <script>
-                    function toggleNotifications() {
-                        const popup = document.getElementById('notificationsPopup');
-                        const backdrop = document.getElementById('backdrop');
-                        popup.classList.toggle('hidden');
-                        backdrop.classList.toggle('hidden');
-                    }
-
-                    function closeAll() {
-                        document.getElementById('notificationsPopup').classList.add('hidden');
-                        document.getElementById('backdrop').classList.add('hidden');
-                    }
-
-                    // Close popups when clicking outside
-                    document.addEventListener('click', function(event) {
-                        if (!event.target.closest('#notificationsPopup') &&
-                            !event.target.closest('button') &&
-                            !document.getElementById('notificationsPopup').classList.contains('hidden')) {
-                            closeAll();
-                        }
-                    });
-
-                    function openNotificationModal() {
-                        document.getElementById('allNotificationsModal').classList.remove('hidden');
-                        document.getElementById('notificationsPopup').classList.add('hidden');
-                    }
-
-                    function closeNotificationModal() {
-                        document.getElementById('allNotificationsModal').classList.add('hidden');
-                    }
-
-                    // Update the existing click event listener
-                    document.addEventListener('click', function(event) {
-                        if (!event.target.closest('#notificationsPopup') &&
-                            !event.target.closest('#allNotificationsModal') &&
-                            !event.target.closest('button')) {
-                            closeAll();
-                            closeNotificationModal();
-                        }
-                    });
-
-                    // Add escape key listener for modal
-                    document.addEventListener('keydown', function(event) {
-                        if (event.key === 'Escape') {
-                            closeNotificationModal();
-                        }
-                    });
-
-                    // Close modal when clicking outside
-                    document.getElementById('allNotificationsModal').addEventListener('click', function(event) {
-                        if (event.target === this) {
-                            closeNotificationModal();
-                        }
-                    });
-
-                    // Close on escape key
-                    document.addEventListener('keydown', function(event) {
-                        if (event.key === 'Escape') {
-                            closeNotificationModal();
-                        }
-                    });
-                </script>
 
                 <!-- Profile Section with Dropdown - Hidden on mobile -->
                 <div class="relative hidden ml-4 sm:block">
@@ -404,6 +361,67 @@
     window.pusherAppKey = "{{ env('PUSHER_APP_KEY') }}";
     window.pusherAppCluster = "{{ env('PUSHER_APP_CLUSTER') }}";
 
+    function toggleNotifications() {
+        const popup = document.getElementById('notificationsPopup');
+        const backdrop = document.getElementById('backdrop');
+        popup.classList.toggle('hidden');
+        backdrop.classList.toggle('hidden');
+    }
+
+    function closeAll() {
+        document.getElementById('notificationsPopup').classList.add('hidden');
+        document.getElementById('backdrop').classList.add('hidden');
+    }
+
+    // Close popups when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('#notificationsPopup') &&
+            !event.target.closest('button') &&
+            !document.getElementById('notificationsPopup').classList.contains('hidden')) {
+            closeAll();
+        }
+    });
+
+    function openNotificationModal() {
+        document.getElementById('allNotificationsModal').classList.remove('hidden');
+        document.getElementById('notificationsPopup').classList.add('hidden');
+    }
+
+    function closeNotificationModal() {
+        document.getElementById('allNotificationsModal').classList.add('hidden');
+    }
+
+    // Update the existing click event listener
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('#notificationsPopup') &&
+            !event.target.closest('#allNotificationsModal') &&
+            !event.target.closest('button')) {
+            closeAll();
+            closeNotificationModal();
+        }
+    });
+
+    // Add escape key listener for modal
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeNotificationModal();
+        }
+    });
+
+    // Close modal when clicking outside
+    document.getElementById('allNotificationsModal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeNotificationModal();
+        }
+    });
+
+    // Close on escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeNotificationModal();
+        }
+    });
+
     // Mobile menu functionality
     document.addEventListener('DOMContentLoaded', function() {
         const mobileMenuButton = document.getElementById('mobile-menu-button');
@@ -512,6 +530,182 @@
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
             closeNotificationModal();
+        }
+    });
+
+    // Messages dropdown functionality
+    function toggleMessagesDropdown() {
+        const dropdown = document.getElementById('messagesDropdown');
+        dropdown.classList.toggle('hidden');
+
+        // Load preview messages when opened
+        if (!dropdown.classList.contains('hidden')) {
+            fetchMessagePreviews();
+        }
+    }
+
+    function fetchMessagePreviews() {
+        const container = document.getElementById('messages-preview-container');
+
+        // Show loading state
+        container.innerHTML = '<div class="p-3 text-sm text-center text-gray-500">Loading messages...</div>';
+
+        fetch('/retailers/messages/preview')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.messages.length === 0) {
+                        container.innerHTML =
+                            '<div class="p-3 text-sm text-center text-gray-500">No messages yet</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    data.messages.forEach(message => {
+                        // Format date to show relative time (e.g. "2 hours ago")
+                        const messageDate = new Date(message.created_at);
+                        const now = new Date();
+                        const diffTime = Math.abs(now - messageDate);
+                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                        const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+                        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+
+                        let timeAgo;
+                        if (diffDays > 0) {
+                            timeAgo = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+                        } else if (diffHours > 0) {
+                            timeAgo = `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+                        } else if (diffMinutes > 0) {
+                            timeAgo = `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+                        } else {
+                            timeAgo = 'Just now';
+                        }
+
+                        const unreadClass = message.is_read ? '' : 'font-semibold bg-blue-50';
+
+                        html += `
+                    <a href="/retailers/messages?distributor=${message.sender_id}" class="block hover:bg-gray-50 ${unreadClass}">
+                        <div class="flex items-start p-3">
+                            <img src="${message.sender_image || '/img/default-profile.png'}" alt="${message.sender_name}" 
+                                class="object-cover w-10 h-10 mr-3 border rounded-full">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate">
+                                    ${message.sender_name}
+                                </p>
+                                <p class="text-sm text-gray-500 truncate">
+                                    ${message.message}
+                                </p>
+                                <p class="mt-1 text-xs text-gray-400">
+                                    ${timeAgo}
+                                </p>
+                            </div>
+                            ${!message.is_read ? '<span class="w-2 h-2 ml-2 bg-blue-600 rounded-full"></span>' : ''}
+                        </div>
+                    </a>`;
+                    });
+
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML =
+                        '<div class="p-3 text-sm text-center text-gray-500">Error loading messages</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching message previews:', error);
+                container.innerHTML =
+                    '<div class="p-3 text-sm text-center text-gray-500">Error loading messages</div>';
+            });
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('messagesDropdown');
+        const messageButton = document.querySelector('.relative.ml-4 button');
+
+        if (!event.target.closest('#messagesDropdown') &&
+            !event.target.closest('.relative.ml-4 button') &&
+            !dropdown.classList.contains('hidden')) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    // Add this to your existing event listeners list
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            document.getElementById('messagesDropdown').classList.add('hidden');
+            // Your existing code for other dropdowns
+        }
+    });
+
+    // Add this to the end of your script section
+
+    // Simple coordination between dropdowns
+    const originalToggleMessages = toggleMessagesDropdown;
+    const originalToggleNotifications = toggleNotifications;
+
+    // Replace the toggleMessagesDropdown function
+    toggleMessagesDropdown = function() {
+        // Close notifications if open
+        const notificationsPopup = document.getElementById('notificationsPopup');
+        if (notificationsPopup && !notificationsPopup.classList.contains('hidden')) {
+            notificationsPopup.classList.add('hidden');
+
+            // Also hide backdrop if it exists
+            if (document.getElementById('backdrop')) {
+                document.getElementById('backdrop').classList.add('hidden');
+            }
+        }
+
+        // Close profile dropdown if open
+        const profileDropdown = document.querySelector('.dropdown-menu');
+        if (profileDropdown && !profileDropdown.classList.contains('hidden')) {
+            profileDropdown.classList.add('hidden');
+        }
+
+        // Call the original function
+        originalToggleMessages();
+    }
+
+    // Replace the toggleNotifications function
+    toggleNotifications = function() {
+        // Close messages if open
+        const messagesDropdown = document.getElementById('messagesDropdown');
+        if (messagesDropdown && !messagesDropdown.classList.contains('hidden')) {
+            messagesDropdown.classList.add('hidden');
+        }
+
+        // Close profile dropdown if open
+        const profileDropdown = document.querySelector('.dropdown-menu');
+        if (profileDropdown && !profileDropdown.classList.contains('hidden')) {
+            profileDropdown.classList.add('hidden');
+        }
+
+        // Call the original function
+        originalToggleNotifications();
+    }
+
+    // Add click handler for profile dropdown button
+    document.addEventListener('DOMContentLoaded', function() {
+        const profileButton = document.querySelector('.relative.hidden.ml-4.sm\\:block button');
+        if (profileButton) {
+            profileButton.addEventListener('click', function() {
+                // Close messages if open
+                const messagesDropdown = document.getElementById('messagesDropdown');
+                if (messagesDropdown && !messagesDropdown.classList.contains('hidden')) {
+                    messagesDropdown.classList.add('hidden');
+                }
+
+                // Close notifications if open
+                const notificationsPopup = document.getElementById('notificationsPopup');
+                if (notificationsPopup && !notificationsPopup.classList.contains('hidden')) {
+                    notificationsPopup.classList.add('hidden');
+
+                    // Also hide backdrop if it exists
+                    if (document.getElementById('backdrop')) {
+                        document.getElementById('backdrop').classList.add('hidden');
+                    }
+                }
+            });
         }
     });
 </script>
