@@ -180,7 +180,6 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     Route::get('/products/{product}', [ProductDescController::class, 'show'])->name('products.show');
 });
 use App\Http\Controllers\Distributors\DistributorTicketController;
-use App\Http\Controllers\Distributors\DistributorProductController;
 
 // Distributor Routes
 Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'profile.completed'])->group(function () {

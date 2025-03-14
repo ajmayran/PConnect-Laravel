@@ -10,7 +10,7 @@
     <div class="py-12">
         <x-retailer-sidebar :user="Auth::user()" /> <!-- Retailder Side bar -->
 
-        <div class="flex-1 space-y-6 lg:px-8 h-[760px] overflow-y-auto"> <!-- Retailder form edit -->
+        <div class="flex-1 space-y-6 lg:px-8"> <!-- Retailder form edit -->
             <div class="p-4 bg-white shadow sm:p-8 sm:rounded-lg">
                 <header>
                     <h2 class="text-lg font-medium text-gray-900 dark:text-gray-900">
@@ -58,7 +58,7 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="address" class="block mb-2 text-sm font-medium text-gray-700">
+                                <label for="address" class="block mb-2 texgit pt-sm font-medium text-gray-700">
                                     Address
                                 </label>
                                 <input type="hidden" id="region" name="region" value="09">

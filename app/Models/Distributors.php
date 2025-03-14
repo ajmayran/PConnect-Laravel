@@ -2,16 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloque
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
-ase\Eloquent\Relations\Has
-use Illuminate\Database\Elo
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class Distributors extends Model
 {
-  
+    protected $fillable = [
+        'user_id',
         'company_name',
         'company_email',
-        'company_address',
+        'company_phone_number',
         'bir_form',
         'sec_document',
         'profile_completed',
@@ -20,7 +22,7 @@ class Distributors extends Model
         'city',
         'barangay',
         'street',
-        'company_phone_number'
+        'company_profile_image'
     ];
   
     public function user(): BelongsTo
