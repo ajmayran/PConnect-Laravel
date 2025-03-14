@@ -3,6 +3,17 @@
     <div class="container px-4 py-8 mx-auto max-w-7xl">
         <div class="flex items-center justify-between mb-8">
             <h1 class="text-3xl font-bold text-gray-900">Orders To Pay</h1>
+
+            <!-- Add Track Order Form -->
+            <div class="relative">
+                <form action="{{ route('retailers.orders.track') }}" method="GET" class="flex">
+                    <input type="text" name="tracking_number" placeholder="Enter tracking number"
+                        class="px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    <button type="submit" class="px-4 py-2 text-white bg-green-600 rounded-r-md hover:bg-green-700">
+                        Track Order
+                    </button>
+                </form>
+            </div>
         </div>
 
         <x-retailer-orderstatus-tabs />
@@ -27,10 +38,18 @@
                                     </p>
                                     <p class="text-gray-600">
                                         <span class="font-medium">Status:</span>
-                                        <span class="px-3 py-1 text-sm font-medium text-yellow-800 bg-yellow-100 rounded-full">
+                                        <span
+                                            class="px-3 py-1 text-sm font-medium text-yellow-800 bg-yellow-100 rounded-full">
                                             Processing
                                         </span>
                                     </p>
+                                    <!-- Add Tracking Number display if available -->
+                                    @if ($order->delivery && $order->delivery->tracking_number)
+                                        <p class="text-gray-600">
+                                            <span class="font-medium">Tracking Number:</span>
+                                            <span class="font-mono">{{ $order->delivery->tracking_number }}</span>
+                                        </p>
+                                    @endif
                                 </div>
                                 <div class="text-right">
                                     <p class="text-sm font-medium text-gray-500">Order Date</p>
@@ -42,11 +61,14 @@
                                 <table class="w-full">
                                     <thead class="bg-gray-50">
                                         <tr>
-                                            <th class="px-6 py-3 text-sm font-medium tracking-wider text-left text-gray-500">
+                                            <th
+                                                class="px-6 py-3 text-sm font-medium tracking-wider text-left text-gray-500">
                                                 Product</th>
-                                            <th class="px-6 py-3 text-sm font-medium tracking-wider text-center text-gray-500">
+                                            <th
+                                                class="px-6 py-3 text-sm font-medium tracking-wider text-center text-gray-500">
                                                 Quantity</th>
-                                            <th class="px-6 py-3 text-sm font-medium tracking-wider text-right text-gray-500">
+                                            <th
+                                                class="px-6 py-3 text-sm font-medium tracking-wider text-right text-gray-500">
                                                 Total</th>
                                         </tr>
                                     </thead>
@@ -65,7 +87,8 @@
                                     </tbody>
                                     <tfoot class="bg-gray-50">
                                         <tr>
-                                            <td colspan="2" class="px-6 py-4 text-sm font-bold text-right text-gray-900">
+                                            <td colspan="2"
+                                                class="px-6 py-4 text-sm font-bold text-right text-gray-900">
                                                 Total Amount:</td>
                                             <td class="px-6 py-4 text-sm font-bold text-right text-gray-900">
                                                 ₱{{ number_format($order->orderDetails->sum('subtotal'), 2) }}

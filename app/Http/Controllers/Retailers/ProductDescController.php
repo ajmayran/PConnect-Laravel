@@ -3,26 +3,24 @@
 namespace App\Http\Controllers\Retailers;
 
 use App\Models\Product;
+use App\Models\Distributors;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
 class ProductDescController extends Controller
 {
-    public function show(Product $product)
+    public function show($id)
     {
-        // Load the product with its relationships
-        $product->load(['distributor', 'category']);
+        $product = Product::findOrFail($id);
+        $distributor = Distributors::findOrFail($product->distributor_id);
 
-        // Get related products from the same category and distributor
-        $relatedProducts = Product::where('category_id', $product->category_id)
-            ->where('distributor_id', $product->distributor_id)
+        $relatedProducts = Product::where('distributor_id', $product->distributor_id)
             ->where('id', '!=', $product->id)
-            ->take(4)
+            ->where('status', 'active')
+            ->where('stock_quantity', '>', 0)
+            ->limit(5)
             ->get();
 
-        return view('retailers.products.show', [
-            'product' => $product,
-            'relatedProducts' => $relatedProducts
-        ]);
+        return view('retailers.products.show', compact('product', 'distributor', 'relatedProducts'));
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Distributors;
 
+use App\Models\Order;
 use App\Models\Trucks;
 use App\Models\Payment;
 use App\Models\Delivery;
@@ -10,6 +11,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Services\NotificationService;
 
 class DeliveryController extends Controller
 {
@@ -58,7 +60,7 @@ class DeliveryController extends Controller
         return redirect()->back()->with('success', 'Delivery status updated successfully.');
     }
 
-    public function markDelivered(Request $request, Delivery $delivery)
+    public function markDelivered(Request $request, Delivery $delivery, Order $order)
     {
         $validated = $request->validate([
             'payment_status' => ['required', 'string', Rule::in(['paid', 'unpaid'])],
@@ -130,6 +132,12 @@ class DeliveryController extends Controller
                 // $truck->deliveries()->detach($completedDeliveries);
             }
         }
+        app(NotificationService::class)->orderStatusChanged(
+            $order->id,
+            'completed',
+            $order->user_id,
+            $order->distributor_id
+        );
 
         return back()->with('success', 'Order completed!.');
     }

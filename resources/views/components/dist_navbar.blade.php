@@ -1,5 +1,5 @@
 <nav id="navbar" class="sticky top-0 w-full transition-transform duration-300 bg-white border-b border-gray-200">
-
+    <!-- Your existing navbar HTML -->
     <div class="px-4 py-3 lg:px-6">
         <div class="flex items-center justify-between">
             <!-- Left side -->
@@ -14,9 +14,38 @@
             <!-- Right side -->
             <div class="flex items-center gap-4">
                 <!-- Notifications -->
-                <button type="button" class="p-2 text-gray-600 rounded-lg hover:bg-gray-100">
-                    <i class="text-xl bi bi-bell"></i>
-                </button>
+                <div class="relative" x-data="{ open: false }">
+                    <button id="notification-btn" type="button" @click="open = !open" 
+                        class="relative p-2 text-gray-600 rounded-lg hover:bg-gray-100">
+                        <div class="relative">
+                            <i class="text-xl bi bi-bell"></i>
+                            <span id="notification-badge"
+                                class="absolute flex items-center justify-center hidden w-4 h-4 text-xs font-bold text-white bg-red-500 rounded-full -top-1 -right-1">
+                            </span>
+                        </div>
+                    </button>
+                    
+                    <!-- Notifications Dropdown -->
+                    <div id="notificationsPopup" x-show="open" @click.away="open = false"
+                        class="absolute z-[100] mt-2 origin-top-right bg-white rounded-lg shadow-xl w-80 border overflow-hidden max-h-[480px] right-0">
+                        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                            <h3 class="font-semibold text-gray-800">Notifications</h3>
+                            <button id="mark-all-notifications-read" class="text-xs text-blue-600 hover:text-blue-800">
+                                Mark all as read
+                            </button>
+                        </div>
+                        <div class="overflow-y-auto divide-y divide-gray-200 max-h-96" id="notifications-preview-container">
+                            <div class="p-3 text-sm text-center text-gray-500">
+                                Loading notifications...
+                            </div>
+                        </div>
+                        <div class="p-2 text-center border-t border-gray-200">
+                            <a href="{{ route('distributors.notifications.index') }}" class="text-sm text-blue-600 hover:text-blue-800">
+                                View all notifications
+                            </a>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Profile Dropdown -->
                 <div class="relative" x-data="{ open: false }">
@@ -40,7 +69,7 @@
                                 <p class="font-medium">{{ Auth::user()->distributor->company_name }}</p>
                                 <p class="text-xs text-gray-500">{{ Auth::user()->email }}</p>
                             </div>
-                            <a href="{{ 'distributors.profile.edit' }}"
+                            <a href="{{ route('distributors.profile.edit') }}"
                                 class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                 Company Settings
                             </a>
@@ -75,5 +104,30 @@
         }
 
         lastScrollY = currentScrollY;
+    });
+
+    // Initialize notification system
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load initial notification count
+        fetchUnreadNotificationCount();
+        
+        // Set up notification preview
+        const notificationBtn = document.getElementById('notification-btn');
+        if (notificationBtn) {
+            notificationBtn.addEventListener('click', function() {
+                fetchNotificationsPreview();
+            });
+        }
+        
+        // Set up mark all as read functionality
+        const markAllBtn = document.getElementById('mark-all-notifications-read');
+        if (markAllBtn) {
+            markAllBtn.addEventListener('click', function() {
+                markAllNotificationsAsRead();
+            });
+        }
+        
+        // Setup Pusher for real-time notifications
+        setupPusherNotifications();
     });
 </script>

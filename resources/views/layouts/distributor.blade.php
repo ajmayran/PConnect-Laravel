@@ -101,7 +101,13 @@
         </script>
     @endif
 </body>
+<script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+<script src="{{ asset('js/distributornotif-utils.js') }}"></script>
 <script>
+    window.pusherAppKey = '{{ env('PUSHER_APP_KEY') }}';
+    window.pusherAppCluster = '{{ env('PUSHER_APP_CLUSTER') }}';
+    window.userId = {{ auth()->id() }};
+
     function dropdown() {
         document.querySelector("#submenu").classList.toggle("hidden");
         document.querySelector("#arrow").classList.toggle("rotate-180");

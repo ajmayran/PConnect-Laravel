@@ -3,15 +3,25 @@
 namespace App\Http\Controllers\Retailers;
 
 use App\Models\Product;
+use App\Models\Order;
 use App\Models\OrderDetails;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Session;
 
 class BuynowController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     public function buyNow(Request $request)
     {
         try {
@@ -49,6 +59,9 @@ class BuynowController extends Controller
 
             // Store in session
             Session::put('direct_purchase', $directPurchase);
+            Session::save(); // Ensure session is saved
+
+            Log::info('Direct purchase data stored in session: ', $directPurchase);
 
             return response()->json([
                 'success' => true,
@@ -68,9 +81,14 @@ class BuynowController extends Controller
         $directPurchase = Session::get('direct_purchase');
 
         if (!$directPurchase) {
-            return redirect()->route('retailers.products.index')
+            // Log for debugging
+            Log::error('Direct purchase data missing in checkout. Session ID: ' . Session::getId());
+
+            return redirect()->route('retailers.all-product')
                 ->with('error', 'No direct purchase information found.');
         }
+
+        Log::info('Direct purchase data found in checkout: ', $directPurchase);
 
         $user = Auth::user();
         $directProduct = Product::with('distributor')->findOrFail($directPurchase['product_id']);
@@ -82,10 +100,24 @@ class BuynowController extends Controller
     {
         $directPurchase = Session::get('direct_purchase');
 
+        if (!$directPurchase && $request->has('product_id')) {
+            Log::warning('Rebuilding direct purchase from form data. Session ID: ' . Session::getId());
+            $directPurchase = [
+                'product_id' => $request->input('product_id'),
+                'distributor_id' => $request->input('distributor_id'),
+                'quantity' => $request->input('quantity'),
+                'price' => $request->input('price'),
+                'subtotal' => $request->input('subtotal')
+            ];
+        }
+
         if (!$directPurchase) {
-            return redirect()->route('retailers.products.index')
+            Log::error('Direct purchase data missing in placeOrder. Session ID: ' . Session::getId());
+            return redirect()->route('retailers.all-product')
                 ->with('error', 'No direct purchase information found.');
         }
+
+        Log::info('Direct purchase data found in placeOrder: ', $directPurchase);
 
         // Validate the checkout form based on your actual form fields
         $validated = $request->validate([
@@ -114,42 +146,72 @@ class BuynowController extends Controller
 
         DB::beginTransaction();
 
-        try {
-            // Create the order 
-            $order = \App\Models\Order::create([
-                'user_id' => $user->id,
-                'distributor_id' => $directPurchase['distributor_id'],
-                'total_amount' => $directPurchase['subtotal'],
-                'status' => 'pending',
-                'status_updated_at' => now(),
-            ]);
+        // Create the order 
+        $order = Order::create([
+            'user_id' => $user->id,
+            'distributor_id' => $directPurchase['distributor_id'],
+            'total_amount' => $directPurchase['subtotal'],
+            'status' => 'pending',
+            'status_updated_at' => now(),
+        ]);
 
-            // Create order details
-            OrderDetails::create([
-                'order_id' => $order->id,
-                'product_id' => $product->id,
-                'quantity' => $directPurchase['quantity'],
-                'price' => $directPurchase['price'],
-                'subtotal' => $directPurchase['subtotal'],
-                'delivery_address' => $deliveryAddress,
-            ]);
+        // Create order details
+        OrderDetails::create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'quantity' => $directPurchase['quantity'],
+            'price' => $directPurchase['price'],
+            'subtotal' => $directPurchase['subtotal'],
+            'delivery_address' => $deliveryAddress,
+        ]);
 
-            // Update product stock
-            $product->stock_quantity -= $directPurchase['quantity'];
-            $product->save();
+        // Update product stock
+        $product->stock_quantity -= $directPurchase['quantity'];
+        $product->save();
 
-            // Commit the transaction
-            DB::commit();
+        // Commit the transaction
+        DB::commit();
 
-            // Clear the session data
-            Session::forget('direct_purchase');
+        // Clear the session data
+        Session::forget('direct_purchase');
 
-            return redirect()->route('retailers.orders.index')
-                ->with('success', 'Order placed successfully!');
-        } catch (\Exception $e) {
-            DB::rollback();
-            return redirect()->back()
-                ->with('error', 'Failed to place order: ' . $e->getMessage());
+        // Send notification to the distributor about the new order
+        // Get retailer details for a better notification message
+        $retailerName = $user->first_name . ' ' . $user->last_name;
+
+        // Format order ID for display
+        $formattedOrderId = 'ORD-' . str_pad($order->id, 6, '0', STR_PAD_LEFT);
+        $distributor = \App\Models\Distributors::findOrFail($directPurchase['distributor_id']);
+
+        if (!$distributor || !$distributor->user_id) {
+            Log::error("Failed to create notification: No user_id associated with distributor ID {$directPurchase['distributor_id']}");
+        } else {
+            // Create notification using the distributor's user_id
+            $notification = $this->notificationService->create(
+                $distributor->user_id, // Use the user_id associated with the distributor
+                'new_order', // notification type
+                [
+                    'title' => 'New Order Received',
+                    'message' => "New order #{$formattedOrderId} received from {$retailerName}",
+                    'order_id' => $order->id
+                ],
+                $order->id // related ID
+            );
+
+            if ($notification) {
+                Log::info('Notification created successfully for order #' . $order->id, ['notification_id' => $notification->id]);
+            } else {
+                Log::error('Failed to create notification for order #' . $order->id);
+            }
         }
+
+        if ($notification) {
+            Log::info('Notification created successfully for order #' . $order->id, ['notification_id' => $notification->id]);
+        } else {
+            Log::error('Failed to create notification for order #' . $order->id);
+        }
+
+        return redirect()->route('retailers.orders.index')
+            ->with('success', 'Order placed successfully!');
     }
 }

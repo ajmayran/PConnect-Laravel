@@ -66,5 +66,6 @@
         </script>
     @endif
 </body>
+<script src="https://js.pusher.com/7.0/pusher.min.js"></script>
 
 </html>

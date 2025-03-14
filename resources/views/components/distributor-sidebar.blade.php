@@ -79,6 +79,18 @@
         </div>
     </a>
 
+    <a href="{{ route('distributors.notifications.index') }}"
+        class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.notifications.*') ? 'bg-green-600' : 'hover:bg-green-600' }}">
+        <div class="flex items-center">
+            <iconify-icon icon="ion:notifcations" class="text-xl icon"></iconify-icon>
+            <span class="ml-4 font-normal text-gray-200">Notifications</span>
+            <span id="unread-message-badge"
+                class="inline-flex items-center justify-center hidden px-2 py-1 ml-2 text-xs font-bold leading-none text-white bg-red-500 rounded-full"></span>
+        </div>
+    </a>
+
+
+
     <div class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer hover:bg-green-600"
         onclick="dropdown()">
         <iconify-icon icon="material-symbols:block" class="text-xl icon"></iconify-icon>
@@ -129,12 +141,12 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Initial check for unread messages
         fetchUnreadMessagesCount();
-        
+
         // Periodically check for new messages (every 30 seconds)
         setInterval(fetchUnreadMessagesCount, 30000);
-        
+
         function fetchUnreadMessagesCount() {
-            fetch('{{ route("distributors.messages.unread-count") }}')
+            fetch('{{ route('distributors.messages.unread-count') }}')
                 .then(response => response.json())
                 .then(data => {
                     const unreadBadge = document.getElementById('unread-message-badge');
@@ -151,7 +163,7 @@
                     console.error('Error fetching unread messages:', error);
                 });
         }
-        
+
         // Set up Pusher for real-time notifications
         const pusher = new Pusher("{{ env('PUSHER_APP_KEY') }}", {
             cluster: "{{ env('PUSHER_APP_CLUSTER') }}",
@@ -159,14 +171,15 @@
             authEndpoint: '/broadcasting/auth',
             auth: {
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                        'content')
                 }
             }
         });
-        
+
         // Subscribe to the private channel
         const channel = pusher.subscribe('private-chat.{{ Auth::id() }}');
-        
+
         // Update badge when new message arrives
         channel.bind('message.sent', function(data) {
             // Increment badge immediately without waiting for the next fetch

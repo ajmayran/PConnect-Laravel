@@ -10,12 +10,14 @@ return new class extends Migration
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('user_id');
             $table->string('type'); // 'order_status', 'delivery_update', etc.
             $table->json('data'); // Store all relevant data
             $table->boolean('is_read')->default(false);
             $table->unsignedBigInteger('related_id')->nullable(); // Order ID, Delivery ID, etc.
             $table->timestamps();
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

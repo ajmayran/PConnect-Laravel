@@ -3,6 +3,17 @@
     <div class="container px-4 py-8 mx-auto max-w-7xl">
         <div class="flex items-center justify-between mb-8">
             <h1 class="text-3xl font-bold text-gray-900">Orders To Receive</h1>
+
+            <!-- Add Track Order Form -->
+            <div class="relative">
+                <form action="{{ route('retailers.orders.track') }}" method="GET" class="flex">
+                    <input type="text" name="tracking_number" placeholder="Enter tracking number"
+                        class="px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    <button type="submit" class="px-4 py-2 text-white bg-green-600 rounded-r-md hover:bg-green-700">
+                        Track Order
+                    </button>
+                </form>
+            </div>
         </div>
 
         <x-retailer-orderstatus-tabs />
@@ -27,15 +38,23 @@
                                     </p>
                                     <p class="text-gray-600">
                                         <span class="font-medium">Status:</span>
-                                        <span class="px-3 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">
+                                        <span
+                                            class="px-3 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">
                                             Out for delivery
                                         </span>
                                     </p>
-                                    @if($order->delivery)
-                                    <p class="text-gray-600">
-                                        <span class="font-medium">Expected Delivery:</span>
-                                        {{ $order->delivery->estimated_delivery ? \Carbon\Carbon::parse($order->delivery->estimated_delivery)->format('M d, Y') : 'Not specified' }}
-                                    </p>
+                                    @if ($order->delivery)
+                                        <p class="text-gray-600">
+                                            <span class="font-medium">Expected Delivery:</span>
+                                            {{ $order->delivery->estimated_delivery ? \Carbon\Carbon::parse($order->delivery->estimated_delivery)->format('M d, Y') : 'Not specified' }}
+                                        </p>
+                                    @endif
+                                    
+                                    @if ($order->delivery && $order->delivery->tracking_number)
+                                        <p class="text-gray-600">
+                                            <span class="font-medium">Tracking Number:</span>
+                                            <span class="font-mono">{{ $order->delivery->tracking_number }}</span>
+                                        </p>
                                     @endif
                                 </div>
                                 <div class="text-right">
@@ -48,11 +67,14 @@
                                 <table class="w-full">
                                     <thead class="bg-gray-50">
                                         <tr>
-                                            <th class="px-6 py-3 text-sm font-medium tracking-wider text-left text-gray-500">
+                                            <th
+                                                class="px-6 py-3 text-sm font-medium tracking-wider text-left text-gray-500">
                                                 Product</th>
-                                            <th class="px-6 py-3 text-sm font-medium tracking-wider text-center text-gray-500">
+                                            <th
+                                                class="px-6 py-3 text-sm font-medium tracking-wider text-center text-gray-500">
                                                 Quantity</th>
-                                            <th class="px-6 py-3 text-sm font-medium tracking-wider text-right text-gray-500">
+                                            <th
+                                                class="px-6 py-3 text-sm font-medium tracking-wider text-right text-gray-500">
                                                 Total</th>
                                         </tr>
                                     </thead>
@@ -71,7 +93,9 @@
                                     </tbody>
                                     <tfoot class="bg-gray-50">
                                         <tr>
-                                            <td colspan="2" class="px-6 py-4 text-sm font-bold text-right text-gray-900">Total Amount:</td>
+                                            <td colspan="2"
+                                                class="px-6 py-4 text-sm font-bold text-right text-gray-900">Total
+                                                Amount:</td>
                                             <td class="px-6 py-4 text-sm font-bold text-right text-gray-900">
                                                 ₱{{ number_format($order->orderDetails->sum('subtotal'), 2) }}
                                             </td>
@@ -82,7 +106,8 @@
 
                             <div class="pt-6 mt-6 border-t border-gray-200">
                                 <div class="flex items-center text-sm text-gray-600">
-                                    <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -92,13 +117,15 @@
                                 </div>
                             </div>
 
-                            @if($order->delivery && $order->delivery->courier_name)
-                            <div class="pt-3 text-sm text-gray-600">
-                                <span class="font-medium">Delivery Courier:</span> {{ $order->delivery->courier_name }}
-                                @if($order->delivery->tracking_number)
-                                <span class="ml-4 font-medium">Tracking Number:</span> {{ $order->delivery->tracking_number }}
-                                @endif
-                            </div>
+                            @if ($order->delivery && $order->delivery->courier_name)
+                                <div class="pt-3 text-sm text-gray-600">
+                                    <span class="font-medium">Delivery Courier:</span>
+                                    {{ $order->delivery->courier_name }}
+                                    @if ($order->delivery->tracking_number)
+                                        <span class="ml-4 font-medium">Tracking Number:</span>
+                                        {{ $order->delivery->tracking_number }}
+                                    @endif
+                                </div>
                             @endif
                         </div>
                     </div>

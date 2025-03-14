@@ -9,9 +9,18 @@ use App\Models\CartDetail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Services\NotificationService;
 
 class RetailerOrdersController extends Controller
 {
+
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     public function index()
     {
         $user = Auth::user();
@@ -19,7 +28,7 @@ class RetailerOrdersController extends Controller
             ->where('status', 'pending')
             ->with(['orderDetails.product', 'distributor'])
             ->latest()
-            ->paginate(3); 
+            ->paginate(3);
 
         return view('retailers.orders.index', compact('orders'));
     }
@@ -29,12 +38,12 @@ class RetailerOrdersController extends Controller
         $user = Auth::user();
         $orders = Order::where('user_id', $user->id)
             ->where('status', 'processing')
-            ->with(['distributor', 'orderDetails.product','payment'])
+            ->with(['distributor', 'orderDetails.product', 'payment', 'delivery']) // Added delivery relationship
             ->whereHas('payment', function ($query) {
                 $query->where('payment_status', 'unpaid');
             })
             ->latest()
-            ->paginate(3); 
+            ->paginate(3);
 
         return view('retailers.orders.to-pay', compact('orders'));
     }
@@ -49,7 +58,7 @@ class RetailerOrdersController extends Controller
             })
             ->with(['distributor', 'orderDetails.product', 'delivery'])
             ->latest()
-            ->paginate(3); 
+            ->paginate(3);
 
         return view('retailers.orders.to-receive', compact('orders'));
     }
@@ -62,7 +71,7 @@ class RetailerOrdersController extends Controller
 
             ->with(['distributor', 'orderDetails.product'])
             ->latest()
-            ->paginate(3); 
+            ->paginate(3);
 
         return view('retailers.orders.completed', compact('orders'));
     }
@@ -74,7 +83,7 @@ class RetailerOrdersController extends Controller
             ->whereIn('status', ['cancelled', 'rejected'])
             ->with(['distributor', 'orderDetails.product'])
             ->latest()
-            ->paginate(3); 
+            ->paginate(3);
 
         return view('retailers.orders.cancelled', compact('orders'));
     }
@@ -87,33 +96,75 @@ class RetailerOrdersController extends Controller
             ->whereIn('status', ['returned'])
             ->with(['distributor', 'orderDetails.product'])
             ->latest()
-            ->paginate(3); 
+            ->paginate(3);
 
         return view('retailers.orders.returned', compact('orders'));
     }
 
-    public function cancel(Request $request, Order $order)
+    public function returnOrder(Request $request, Order $order)
     {
-        if ($order->status !== 'pending') {
-            return back()->with('error', 'Only pending orders can be cancelled.');
+        // Check if the order belongs to the authenticated user
+        if ($order->user_id !== Auth::user()->id) {
+            return redirect()->back()->with('error', 'You are not authorized to return this order.');
         }
 
-        $reason = $request->input('cancel_reason');
-        if ($reason === 'other') {
-            $reason = $request->input('custom_reason');
+        // Check if the order status allows return (usually only delivered/completed orders can be returned)
+        if (!in_array($order->status, ['completed', 'delivered'])) {
+            return redirect()->back()->with('error', 'This order cannot be returned.');
+        }
+
+        // Validate return reason
+        $data = $request->validate([
+            'return_reason' => 'required|string|max:255',
+        ]);
+
+        $order->update([
+            'status' => 'returned',
+            'return_reason' => $data['return_reason'],
+            'status_updated_at' => now()
+        ]);
+
+        // Send notification to both retailer and distributor
+        app(NotificationService::class)->orderStatusChanged(
+            $order->id,
+            'returned',
+            $order->user_id,
+            $order->distributor_id
+        );
+
+        return redirect()->back()->with('success', 'Return request submitted successfully.');
+    }
+
+    public function cancelOrder(Request $request, Order $order)
+    {
+        // Check if the order belongs to the authenticated user
+        if ($order->user_id !== Auth::user()->id) {
+            return redirect()->back()->with('error', 'You are not authorized to cancel this order.');
+        }
+
+        // Check if the order status allows cancellation (usually only pending orders can be cancelled)
+        if ($order->status !== 'pending') {
+            return redirect()->back()->with('error', 'This order cannot be cancelled.');
         }
 
         $order->update([
             'status' => 'cancelled',
-            'status_updated_at' => now(),
-            'cancel_reason' => $reason
+            'status_updated_at' => now()
         ]);
 
-        return back()->with('success', 'Order cancelled successfully.');
+        // Send notification to both retailer and distributor
+        app(NotificationService::class)->orderStatusChanged(
+            $order->id,
+            'cancelled',
+            $order->user_id,
+            $order->distributor_id
+        );
+
+        return redirect()->back()->with('success', 'Order cancelled successfully.');
     }
 
 
-    public function placeOrder(Request $request, $distributorId)
+    public function placeOrder(Request $request, $distributorId, NotificationService $notificationService)
     {
         try {
 
@@ -180,7 +231,7 @@ class RetailerOrdersController extends Controller
     }
 
 
-    public function placeOrderAll(Request $request)
+    public function placeOrderAll(Request $request, NotificationService $notificationService)
     {
         try {
             $request->validate([
@@ -257,6 +308,7 @@ class RetailerOrdersController extends Controller
             return redirect()->back()->with('error', 'An error occurred while placing the order: ' . $e->getMessage());
         }
     }
+
     public function myPurchases()
     {
         $orders = Order::with(['orderDetails.product'])
@@ -284,5 +336,24 @@ class RetailerOrdersController extends Controller
 
         $order->load(['orderDetails.product']);
         return view('retailers.profile.order-details', compact('order'));
+    }
+
+    public function trackOrder(Request $request)
+    {
+        $trackingNumber = $request->tracking_number;
+
+        // Find the delivery by tracking number
+        $delivery = \App\Models\Delivery::where('tracking_number', $trackingNumber)
+            ->whereHas('order', function ($query) {
+                $query->where('user_id', Auth::id()); // Only allow the user to track their own orders
+            })
+            ->with(['order', 'order.distributor', 'order.orderDetails.product'])
+            ->first();
+
+        if (!$delivery) {
+            return back()->with('error', 'No delivery found with this tracking number or it does not belong to your account.');
+        }
+
+        return view('retailers.orders.track', compact('delivery'));
     }
 }
