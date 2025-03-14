@@ -655,27 +655,41 @@
         const mobileMenuButton = document.getElementById('mobile-menu-button');
         const mobileMenu = document.getElementById('mobile-menu');
         const mobileBackdrop = document.getElementById('mobile-backdrop');
+        const mobileMenuPanel = mobileMenu.querySelector('div:not(#mobile-backdrop)');
         const burgerIcon = document.getElementById('burger-icon');
         const closeIcon = document.getElementById('close-icon');
 
         if (mobileMenuButton && mobileMenu) {
             function toggleMobileMenu() {
-                mobileMenu.classList.toggle('hidden');
-                document.body.classList.toggle('overflow-hidden');
+                if (mobileMenu.classList.contains('hidden')) {
+                    // Open menu
+                    mobileMenu.classList.remove('hidden');
+                    document.body.classList.add('overflow-hidden');
 
-                // Toggle icons
-                if (burgerIcon && closeIcon) {
-                    burgerIcon.classList.toggle('hidden');
-                    closeIcon.classList.toggle('hidden');
-                }
+                    // Allow DOM to update before adding transform
+                    setTimeout(() => {
+                        mobileMenuPanel.classList.remove('translate-x-full');
+                    }, 10);
 
-                // Animate the panel
-                const panel = mobileMenu.querySelector('div:not(#mobile-backdrop)');
-                if (panel) {
-                    if (mobileMenu.classList.contains('hidden')) {
-                        panel.classList.add('translate-x-full');
-                    } else {
-                        panel.classList.remove('translate-x-full');
+                    // Toggle icons
+                    if (burgerIcon && closeIcon) {
+                        burgerIcon.classList.add('hidden');
+                        closeIcon.classList.remove('hidden');
+                    }
+                } else {
+                    // Close menu - first animate, then hide
+                    mobileMenuPanel.classList.add('translate-x-full');
+
+                    // Wait for animation to finish before hiding completely
+                    setTimeout(() => {
+                        mobileMenu.classList.add('hidden');
+                        document.body.classList.remove('overflow-hidden');
+                    }, 300); // Match this to your transition duration
+
+                    // Toggle icons
+                    if (burgerIcon && closeIcon) {
+                        burgerIcon.classList.remove('hidden');
+                        closeIcon.classList.add('hidden');
                     }
                 }
             }
