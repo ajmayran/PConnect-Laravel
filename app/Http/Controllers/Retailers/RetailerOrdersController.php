@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\Retailers;
 
-use App\Models\Order;
-use App\Models\OrderDetails;
 use App\Models\Cart;
+use App\Models\Order;
+use App\Models\Product;
 use App\Models\CartDetail;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Distributors;
+use App\Models\OrderDetails;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Services\NotificationService;
 
 class RetailerOrdersController extends Controller
@@ -101,39 +105,50 @@ class RetailerOrdersController extends Controller
         return view('retailers.orders.returned', compact('orders'));
     }
 
-    public function returnOrder(Request $request, Order $order)
-    {
-        // Check if the order belongs to the authenticated user
-        if ($order->user_id !== Auth::user()->id) {
-            return redirect()->back()->with('error', 'You are not authorized to return this order.');
-        }
+    // public function returnOrder(Request $request, Order $order)
+    // {
+    //     // Check if the order belongs to the authenticated user
+    //     if ($order->user_id !== Auth::user()->id) {
+    //         return redirect()->back()->with('error', 'You are not authorized to return this order.');
+    //     }
 
-        // Check if the order status allows return (usually only delivered/completed orders can be returned)
-        if (!in_array($order->status, ['completed', 'delivered'])) {
-            return redirect()->back()->with('error', 'This order cannot be returned.');
-        }
+    //     // Check if the order status allows return (usually only delivered/completed orders can be returned)
+    //     if (!in_array($order->status, ['completed', 'delivered'])) {
+    //         return redirect()->back()->with('error', 'This order cannot be returned.');
+    //     }
 
-        // Validate return reason
-        $data = $request->validate([
-            'return_reason' => 'required|string|max:255',
-        ]);
+    //     // Validate return reason
+    //     $data = $request->validate([
+    //         'return_reason' => 'required|string|max:255',
+    //     ]);
 
-        $order->update([
-            'status' => 'returned',
-            'return_reason' => $data['return_reason'],
-            'status_updated_at' => now()
-        ]);
+    //     // Start a transaction to ensure data consistency
+    //     DB::beginTransaction();
 
-        // Send notification to both retailer and distributor
-        app(NotificationService::class)->orderStatusChanged(
-            $order->id,
-            'returned',
-            $order->user_id,
-            $order->distributor_id
-        );
+    //     try {
+    //         $order->update([
+    //             'status' => 'returned',
+    //             'return_reason' => $data['return_reason'],
+    //             'status_updated_at' => now()
+    //         ]);
 
-        return redirect()->back()->with('success', 'Return request submitted successfully.');
-    }
+    //         // Send notification to both retailer and distributor
+    //         $this->notificationService->orderStatusChanged(
+    //             $order->id,
+    //             'returned',
+    //             $order->user_id,
+    //             $order->distributor_id,
+    //             $data['return_reason']
+    //         );
+
+    //         DB::commit();
+    //         return redirect()->back()->with('success', 'Return request submitted successfully.');
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         Log::error('Order return failed: ' . $e->getMessage());
+    //         return redirect()->back()->with('error', 'Failed to submit return request: ' . $e->getMessage());
+    //     }
+    // }
 
     public function cancelOrder(Request $request, Order $order)
     {
@@ -147,27 +162,49 @@ class RetailerOrdersController extends Controller
             return redirect()->back()->with('error', 'This order cannot be cancelled.');
         }
 
-        $order->update([
-            'status' => 'cancelled',
-            'status_updated_at' => now()
-        ]);
+        // Start a transaction to ensure data consistency
+        DB::beginTransaction();
 
-        // Send notification to both retailer and distributor
-        app(NotificationService::class)->orderStatusChanged(
-            $order->id,
-            'cancelled',
-            $order->user_id,
-            $order->distributor_id
-        );
+        try {
+            $order->update([
+                'status' => 'cancelled',
+                'status_updated_at' => now()
+            ]);
 
-        return redirect()->back()->with('success', 'Order cancelled successfully.');
+            // Send notification to both retailer and distributor with the correct recipient_type
+            $this->notificationService->orderStatusChanged(
+                $order->id,
+                'cancelled',
+                $order->user_id,
+                $order->distributor_id
+            );
+
+            // Add additional retailer-specific notification with better context
+                // $this->notificationService->create(
+                //     $order->user_id,
+                //     'order_cancelled',
+                //     [
+                //         'title' => 'Order Cancelled',
+                //         'message' => "You have successfully cancelled your order {$order->formatted_order_id}.",
+                //         'order_id' => $order->id,
+                //         'recipient_type' => 'retailer'
+                //     ],
+                //     $order->id
+                // );
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Order cancelled successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Order cancellation failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to cancel order: ' . $e->getMessage());
+        }
     }
 
 
-    public function placeOrder(Request $request, $distributorId, NotificationService $notificationService)
+    public function placeOrder(Request $request, $distributorId)
     {
         try {
-
             $request->validate([
                 'delivery_option' => 'required|in:default,other',
                 'new_delivery_address' => 'nullable|required_if:delivery_option,other|string',
@@ -187,12 +224,16 @@ class RetailerOrdersController extends Controller
                 $deliveryAddress = $request->input('new_delivery_address');
             }
 
+            // Start a transaction
+            DB::beginTransaction();
+
             // Find the cart
             $cart = Cart::where('user_id', $user->id)
                 ->where('distributor_id', $distributorId)
                 ->first();
 
             if (!$cart) {
+                DB::rollBack();
                 return redirect()->back()->with('error', 'Cart not found.');
             }
 
@@ -206,6 +247,7 @@ class RetailerOrdersController extends Controller
 
             // Get cart details and create order details
             $cartDetails = CartDetail::where('cart_id', $cart->id)->get();
+            $totalAmount = 0;
 
             foreach ($cartDetails as $cartDetail) {
                 OrderDetails::create([
@@ -216,22 +258,67 @@ class RetailerOrdersController extends Controller
                     'price' => $cartDetail->price,
                     'delivery_address' => $deliveryAddress,
                 ]);
+
+                // Calculate total amount
+                $totalAmount += $cartDetail->subtotal;
+
+                // Update product stock
+                $product = Product::find($cartDetail->product_id);
+                if ($product) {
+                    $product->stock_quantity -= $cartDetail->quantity;
+                    $product->save();
+                }
             }
+
+            // Update order with total amount
+            $order->total_amount = $totalAmount;
+            $order->save();
 
             // Clear the cart after successful order creation
             $cart->details()->delete();
             $cart->delete();
 
+            // Get distributor information for better notification
+            $distributor = Distributors::find($distributorId);
+
+            // Send notification to distributor about new order
+            $this->notificationService->newOrderNotification(
+                $order->id,
+                $user->id,
+                $distributorId
+            );
+
+            // Add notification for retailer
+            $distributorName = $distributor ? $distributor->business_name : 'the distributor';
+            $this->notificationService->create(
+                $user->id,
+                'order_placed',
+                [
+                    'title' => 'Order Placed Successfully',
+                    'message' => "Your order has been placed successfully and is awaiting confirmation from {$distributorName}.",
+                    'order_id' => $order->id,
+                    'recipient_type' => 'retailer'
+                ],
+                $order->id
+            );
+
+            DB::commit();
+
             return redirect()->route('retailers.orders.index')
                 ->with('success', 'Order placed successfully.');
         } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error placing order: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return redirect()->back()
                 ->with('error', 'An error occurred while placing the order: ' . $e->getMessage());
         }
     }
 
 
-    public function placeOrderAll(Request $request, NotificationService $notificationService)
+    public function placeOrderAll(Request $request)
     {
         try {
             $request->validate([
@@ -253,10 +340,14 @@ class RetailerOrdersController extends Controller
                 $deliveryAddress = $request->input('new_delivery_address');
             }
 
+            // Start a transaction
+            DB::beginTransaction();
+
             // Get all carts for this user
             $carts = Cart::where('user_id', $user->id)->get();
 
             if ($carts->isEmpty()) {
+                DB::rollBack();
                 return redirect()->back()->with('error', 'No items found in cart.');
             }
 
@@ -270,6 +361,8 @@ class RetailerOrdersController extends Controller
                 $cartsByDistributor[$distributorId][] = $cart;
             }
 
+            $createdOrders = [];
+
             // Create one order per distributor
             foreach ($cartsByDistributor as $distributorId => $distributorCarts) {
                 // Create single order for this distributor
@@ -279,6 +372,9 @@ class RetailerOrdersController extends Controller
                     'status' => 'pending',
                     'status_updated_at' => now(),
                 ]);
+
+                $createdOrders[] = $order;
+                $totalAmount = 0;
 
                 // Process all cart items for this distributor
                 foreach ($distributorCarts as $cart) {
@@ -295,17 +391,63 @@ class RetailerOrdersController extends Controller
                             'subtotal' => $cartDetail->subtotal,
                             'delivery_address' => $deliveryAddress,
                         ]);
+
+                        $totalAmount += $cartDetail->subtotal;
+
+                        // Update product stock
+                        $product = Product::find($cartDetail->product_id);
+                        if ($product) {
+                            $product->stock_quantity -= $cartDetail->quantity;
+                            $product->save();
+                        }
                     }
+
+                    // Update order total
+                    $order->total_amount = $totalAmount;
+                    $order->save();
 
                     // Clear the processed cart
                     $cart->details()->delete();
                     $cart->delete();
                 }
+
+                // Get distributor information
+                $distributor = Distributors::find($distributorId);
+
+                // Send notification to distributor about new order
+                $this->notificationService->newOrderNotification(
+                    $order->id,
+                    $user->id,
+                    $distributorId
+                );
+
+                // Add notification for retailer
+                $distributorName = $distributor ? $distributor->business_name : 'the distributor';
+                $this->notificationService->create(
+                    $user->id,
+                    'order_placed',
+                    [
+                        'title' => 'Order Placed Successfully',
+                        'message' => "Your order has been placed successfully and is awaiting confirmation from {$distributorName}.",
+                        'order_id' => $order->id,
+                        'recipient_type' => 'retailer'
+                    ],
+                    $order->id
+                );
             }
 
-            return redirect()->route('retailers.orders.index')->with('success', 'Orders placed successfully.');
+            DB::commit();
+
+            return redirect()->route('retailers.orders.index')
+                ->with('success', 'Orders placed successfully.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'An error occurred while placing the order: ' . $e->getMessage());
+            DB::rollBack();
+            Log::error('Error placing multiple orders: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'An error occurred while placing the order: ' . $e->getMessage());
         }
     }
 

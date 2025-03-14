@@ -131,7 +131,7 @@
                                             class="font-medium text-gray-700">{{ $order->created_at->format('F d, Y') }}</span>
                                         <span
                                             class="px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
-                                            {{ $order->created_at->format('h:i A') }}
+                                            {{ $order->created_at->setTimezone('Asia/Manila')->format('h:i A') }}
                                         </span>
 
                                         @if (request('status') === 'processing' && $order->status_updated_at)

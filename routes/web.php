@@ -28,6 +28,7 @@ use App\Http\Controllers\Retailers\AllProductController;
 use App\Http\Controllers\Distributors\DeliveryController;
 use App\Http\Controllers\Distributors\InsightsController;
 use App\Http\Controllers\Retailers\ProductDescController;
+use App\Http\Controllers\Distributors\DashboardController;
 use App\Http\Controllers\Distributors\InventoryController;
 use App\Http\Controllers\Retailers\RetailerNotifController;
 use App\Http\Controllers\Distributors\DistributorController;
@@ -173,7 +174,8 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::post('/profile/update-password', [DistributorProfileController::class, 'updatePassword'])->name('distributors.profile.update-password');
 
     Route::get('/distributors', [DistributorDashboardController::class, 'index'])->name('distributors.index');
-    Route::get('/dashboard', [DistributorDashboardController::class, 'dashboard'])->name('distributors.dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('distributors.dashboard');
+    Route::get('/dashboard/sales-data', [DashboardController::class, 'getSalesData'])->name('distributors.dashboard.sales-data');
 
     // Product Routes   
     Route::get('/products', [DistributorProductController::class, 'index'])->name('distributors.products.index');

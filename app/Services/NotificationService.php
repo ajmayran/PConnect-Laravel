@@ -125,7 +125,7 @@ class NotificationService
                 'message' => "Your order {$formattedOrderId} has been cancelled."
             ],
             'returned' => [
-                'title' => 'Order Returned',
+                'title' => 'Order Returned',    
                 'message' => "Your order {$formattedOrderId} return has been processed."
             ],
         ];

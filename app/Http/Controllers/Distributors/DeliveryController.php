@@ -72,7 +72,10 @@ class DeliveryController extends Controller
         }
 
         // Update delivery status to delivered
-        $delivery->update(['status' => 'delivered']);
+        $delivery->update([
+            'status' => 'delivered',
+            'updated_at' => now()
+        ]);
 
         // Find existing payment record and update it, or create a new one if none exists
         $payment = Payment::firstOrNew(
@@ -107,6 +110,8 @@ class DeliveryController extends Controller
                 'new_status' => $orderStatus,
                 'payment_status' => $validated['payment_status']
             ]);
+
+            // Get the notification service
         }
 
         // Check if this is the last active delivery for this truck
@@ -132,12 +137,6 @@ class DeliveryController extends Controller
                 // $truck->deliveries()->detach($completedDeliveries);
             }
         }
-        app(NotificationService::class)->orderStatusChanged(
-            $order->id,
-            'completed',
-            $order->user_id,
-            $order->distributor_id
-        );
 
         return back()->with('success', 'Order completed!.');
     }

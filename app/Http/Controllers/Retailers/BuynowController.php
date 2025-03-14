@@ -176,39 +176,30 @@ class BuynowController extends Controller
         Session::forget('direct_purchase');
 
         // Send notification to the distributor about the new order
-        // Get retailer details for a better notification message
-        $retailerName = $user->first_name . ' ' . $user->last_name;
+  
+        // Get distributor details
+        $distributor = \App\Models\Distributors::find($directPurchase['distributor_id']);
 
-        // Format order ID for display
-        $formattedOrderId = 'ORD-' . str_pad($order->id, 6, '0', STR_PAD_LEFT);
-        $distributor = \App\Models\Distributors::findOrFail($directPurchase['distributor_id']);
-
-        if (!$distributor || !$distributor->user_id) {
-            Log::error("Failed to create notification: No user_id associated with distributor ID {$directPurchase['distributor_id']}");
-        } else {
-            // Create notification using the distributor's user_id
-            $notification = $this->notificationService->create(
-                $distributor->user_id, // Use the user_id associated with the distributor
-                'new_order', // notification type
-                [
-                    'title' => 'New Order Received',
-                    'message' => "New order #{$formattedOrderId} received from {$retailerName}",
-                    'order_id' => $order->id
-                ],
-                $order->id // related ID
+        if ($distributor) {
+            // Create a new order notification (fix parameters order)
+            $this->notificationService->newOrderNotification(
+                $order->id,
+                $user->id,
+                $distributor->id
             );
 
-            if ($notification) {
-                Log::info('Notification created successfully for order #' . $order->id, ['notification_id' => $notification->id]);
-            } else {
-                Log::error('Failed to create notification for order #' . $order->id);
-            }
-        }
-
-        if ($notification) {
-            Log::info('Notification created successfully for order #' . $order->id, ['notification_id' => $notification->id]);
-        } else {
-            Log::error('Failed to create notification for order #' . $order->id);
+            // Create confirmation notification for retailer
+            $this->notificationService->create(
+                $user->id,
+                'order_placed',
+                [
+                    'title' => 'Order Placed Successfully',
+                    'message' => "Your order has been placed successfully and is awaiting confirmation from {$distributor->business_name}.",
+                    'order_id' => $order->id,
+                    'recipient_type' => 'retailer'
+                ],
+                $order->id
+            );
         }
 
         return redirect()->route('retailers.orders.index')
