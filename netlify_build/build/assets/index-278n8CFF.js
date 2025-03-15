@@ -1,1 +1,0 @@
-let c=0;const n=document.querySelectorAll(".section"),l=document.querySelectorAll(".circle-button");function s(e){n.forEach((t,o)=>{t.classList.toggle("hidden",o!==e),t.classList.toggle("active",o===e)}),l.forEach((t,o)=>{t.classList.toggle("active",o===e)})}function r(){c=(c+1)%n.length,s(c)}l.forEach((e,t)=>{e.addEventListener("click",()=>{c=t,s(c)})});setInterval(r,5e3);

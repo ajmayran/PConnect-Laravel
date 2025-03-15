@@ -27,7 +27,9 @@ use App\Http\Controllers\Retailers\AllProductController;
 use App\Http\Controllers\Distributors\DeliveryController;
 use App\Http\Controllers\Distributors\InsightsController;
 use App\Http\Controllers\Retailers\ProductDescController;
+use App\Http\Controllers\Distributors\DashboardController;
 use App\Http\Controllers\Distributors\InventoryController;
+use App\Http\Controllers\Retailers\RetailerNotifController;
 use App\Http\Controllers\Distributors\DistributorController;
 use App\Http\Controllers\Retailers\AllDistributorController;
 use App\Http\Controllers\Retailers\RetailerOrdersController;
@@ -37,7 +39,7 @@ use App\Http\Controllers\Retailers\DistributorPageController;
 use App\Http\Controllers\Retailers\RetailerMessageController;
 use App\Http\Controllers\Retailers\RetailerProductController;
 use App\Http\Controllers\Retailers\RetailerDashboardController;
-
+use App\Http\Controllers\Distributors\DistributorNotifController;
 use App\Http\Controllers\Distributors\DistributorMessageController;
 use App\Http\Controllers\Distributors\DistributorProductController;
 use App\Http\Controllers\Distributors\DistributorProfileController;
@@ -48,7 +50,6 @@ Route::get('register/distributor', [RegisteredUserController::class, 'createDist
 Route::post('register/distributor/step1', [RegisteredUserController::class, 'storeStep1'])->name('register.distributor.step1');
 Route::get('register/distributor/step2', [RegisteredUserController::class, 'createDistributorStep2'])->name('register.distributor.step2');
 Route::post('register/distributor/step2', [RegisteredUserController::class, 'storeStep2'])->name('register.distributor.step2');
-
 
 Route::post('/broadcasting/auth', [BroadcastAuthController::class, 'authenticate'])
     ->middleware(['web', 'auth'])
@@ -130,6 +131,7 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     Route::post('/messages/send', [App\Http\Controllers\Retailers\RetailerMessageController::class, 'sendMessage'])->name('messages.send');
     Route::get('/messages/unread-count', [App\Http\Controllers\Retailers\RetailerMessageController::class, 'getUnreadCount'])->name('messages.unread-count');
     Route::post('/messages/mark-read', [RetailerMessageController::class, 'markAsRead'])->name('messages.mark-read');
+    Route::get('/messages/preview', [RetailerMessageController::class, 'getMessagePreviews'])->name('retailers.messages.preview');
 
     // Product Routes
     Route::get('/products', [RetailerProductController::class, 'index'])->name('products.index');
@@ -165,10 +167,12 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     Route::get('/orders/completed', [RetailerOrdersController::class, 'completed'])->name('orders.completed');
     Route::get('/orders/cancelled', [RetailerOrdersController::class, 'cancelled'])->name('orders.cancelled');
     Route::get('/orders/returned', [RetailerOrdersController::class, 'returned'])->name('orders.returned');
+    Route::get('/orders/track', [RetailerOrdersController::class, 'trackOrder'])->name('orders.track');
 
     Route::get('/orders/{order}', [RetailerOrdersController::class, 'show'])->name('orders.show');
-    Route::post('/orders/{order}/cancel', [RetailerOrdersController::class, 'cancel'])->name('orders.cancel');
-    Route::post('/orders/{order}/return', [RetailerOrdersController::class, 'return'])->name('orders.return');
+    Route::post('/orders/{order}/cancel', [RetailerOrdersController::class, 'cancelOrder'])->name('orders.cancel');
+    Route::post('/orders/{order}/return', [RetailerOrdersController::class, 'returnOrder'])->name('orders.return');
+
 
     //Nav Routes
     Route::get('/all-distributors', [AllDistributorController::class, 'index'])->name('all-distributor');
@@ -178,6 +182,13 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     Route::get('/search', [RetailerSearchController::class, 'search'])->name('search');
     Route::get('/all-products', [AllProductController::class, 'index'])->name('all-product');
     Route::get('/products/{product}', [ProductDescController::class, 'show'])->name('products.show');
+
+    // Notification Routes
+    Route::get('/notifications', [RetailerNotifController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [RetailerNotifController::class, 'getUnreadCount'])->name('notifications.unread-count');
+    Route::get('/notifications/latest', [RetailerNotifController::class, 'getLatestNotifications'])->name('notifications.latest');
+    Route::post('/notifications/mark-read', [RetailerNotifController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('/notifications/mark-all-read', [RetailerNotifController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
 });
 use App\Http\Controllers\Distributors\DistributorTicketController;
 
@@ -185,9 +196,15 @@ use App\Http\Controllers\Distributors\DistributorTicketController;
 Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'profile.completed'])->group(function () {
     Route::get('/distributors/setup', [DistributorProfileController::class, 'setup'])->name('distributors.setup');
     Route::post('/profile/setup', [DistributorProfileController::class, 'updateSetup'])->name('profile.updateSetup');
+    Route::get('/profile', [DistributorProfileController::class, 'edit'])->name('distributors.profile.edit');
+    Route::patch('/profile/update', [DistributorProfileController::class, 'update'])->name('distributors.profile.update');
+    Route::put('/profile/update-distributor', [DistributorProfileController::class, 'updateDistributorProfile'])->name('distributors.profile.update.distributor');
+    Route::delete('/profile', [DistributorProfileController::class, 'destroy'])->name('distributors.profile.destroy');
+    Route::post('/profile/update-password', [DistributorProfileController::class, 'updatePassword'])->name('distributors.profile.update-password');
 
     Route::get('/distributors', [DistributorDashboardController::class, 'index'])->name('distributors.index');
-    Route::get('/dashboard', [DistributorDashboardController::class, 'dashboard'])->name('distributors.dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('distributors.dashboard');
+    Route::get('/dashboard/sales-data', [DashboardController::class, 'getSalesData'])->name('distributors.dashboard.sales-data');
 
     // Product Routes   
     Route::get('/products', [DistributorProductController::class, 'index'])->name('distributors.products.index');
@@ -204,12 +221,14 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::post('/orders/{order}/accept', [OrderController::class, 'acceptOrder'])->name('orders.accept');
     Route::post('/orders/{order}/reject', [OrderController::class, 'rejectOrder'])->name('orders.reject');
     Route::get('/orders/{id}/details', [OrderController::class, 'getOrderDetails'])->name('orders.details');
+    Route::post('/toggle-order-acceptance', [OrderController::class, 'toggleOrderAcceptance'])->name('distributors.toggle-order-acceptance');
+
+    // Order QR Routes
     Route::get('/orders/{order}/qrcode', [OrderQrController::class, 'showQrCode'])->name('distributors.orders.qrcode');
     Route::get('/orders/verify/{token}', [OrderQrController::class, 'verifyOrder'])->name('distributors.orders.verify');
     Route::post('/orders/action/{token}', [OrderQrController::class, 'processAction'])->name('distributors.orders.action');
     Route::get('/orders/processing', [OrderQrController::class, 'getProcessingOrders'])->name('distributors.orders.processing');
     Route::post('/orders/batch-qrcode', [OrderQrController::class, 'generateBatchQrCodes'])->name('distributors.orders.batch-qrcode');
-
 
     // Return Routes
     Route::get('/returns', [ReturnController::class, 'index'])->name('distributors.returns.index');
@@ -220,7 +239,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     // Delivery Routes
     Route::get('/delivery', [DeliveryController::class, 'index'])->name('distributors.delivery.index');
     Route::post('/delivery/{id}/update-status', [DeliveryController::class, 'updateStatus'])->name('delivery.update-status');
-    Route::patch('/deliveries/{delivery}/mark-delivered', [DeliveryController::class, 'markDelivered'])->name('distributors.deliveries.mark-delivered');
+    Route::post('/deliveries/{delivery}/mark-delivered', [DeliveryController::class, 'markDelivered'])->name('distributors.deliveries.mark-delivered');
     Route::post('/delivery/{delivery}/assign-truck', [TruckController::class, 'assignDelivery'])->name('distributors.delivery.assign-truck');
     Route::get('/delivery/{delivery}/scan-qr', [DeliveryController::class, 'scanQrCode'])->name('distributors.delivery.scan-qr-general');
     Route::post('/delivery/process-general-scan', [OrderQrController::class, 'processGeneralScan'])->name('distributors.delivery.process-general-scan');
@@ -237,6 +256,12 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::get('/messages/unread-count', [DistributorMessageController::class, 'getUnreadCount'])->name('distributors.messages.unread-count');
     Route::post('/messages/mark-read', [DistributorMessageController::class, 'markAsRead'])->name('distributors.messages.mark-read');
 
+    // Notification Routes
+    Route::get('/notifications', [DistributorNotifController::class, 'index'])->name('distributors.notifications.index');
+    Route::post('/notifications/mark-read', [DistributorNotifController::class, 'markAsRead'])->name('distributors.notifications.mark-read');
+    Route::post('/notifications/mark-all-read', [DistributorNotifController::class, 'markAllAsRead'])->name('distributors.notifications.mark-all-read');
+    Route::get('/notifications/unread-count', [DistributorNotifController::class, 'getUnreadCount'])->name('distributors.notifications.unread-count');
+    Route::get('/notifications/latest', [DistributorNotifController::class, 'getLatestNotifications'])->name('distributors.notifications.latest');
 
     // Insights Routes
     Route::get('/insights', [InsightsController::class, 'index'])->name('distributors.insights.index');

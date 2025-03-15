@@ -74,14 +74,25 @@
 
                             <!-- Action Buttons -->
                             <div class="flex flex-col gap-2 sm:flex-row sm:gap-4">
-                                <button id="addToCartBtn"
-                                    class="w-full px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-lg sm:text-base hover:bg-green-600 active:bg-green-700 touch-manipulation">
-                                    Add to Cart
-                                </button>
-                                <button id="buyNowBtn"
-                                    class="w-full px-4 py-2 text-sm font-medium text-green-600 bg-white border-2 border-green-600 rounded-lg sm:text-base hover:bg-green-600 hover:text-white active:bg-green-700 touch-manipulation">
-                                    Buy Now
-                                </button>
+                                @if (!$product->distributor->accepting_orders)
+                                    <div
+                                        class="w-full p-4 text-center bg-yellow-100 border border-yellow-200 rounded-lg">
+                                        <p class="flex items-center justify-center text-yellow-700">
+                                            <i class="mr-2 bi bi-exclamation-triangle"></i>
+                                            This distributor is currently not accepting new orders. Please check back
+                                            later.
+                                        </p>
+                                    </div>
+                                @else
+                                    <button id="addToCartBtn" type="submit"
+                                        class="px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600">
+                                        Add to Cart
+                                    </button>
+                                    <button id="buyNowBtn"
+                                        class="w-full px-4 py-2 text-sm font-medium text-green-600 bg-white border-2 border-green-600 rounded-lg sm:text-base hover:bg-green-600 hover:text-white active:bg-green-700 touch-manipulation">
+                                        Buy Now
+                                    </button>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -338,6 +349,24 @@
 
             return true;
         }
+        document.addEventListener('DOMContentLoaded', function() {
+            const addToCartBtn = document.getElementById('addToCartBtn');
+            const buyNowBtn = document.getElementById('buyNowBtn');
+
+            if (addToCartBtn) {
+                addToCartBtn.addEventListener('click', function(event) {
+                    // Your existing code
+                });
+            }
+
+            if (buyNowBtn) {
+                buyNowBtn.addEventListener('click', function(event) {
+                    // Your existing code
+                });
+            }
+
+            // Rest of your functions
+        });
     </script>
 
     <x-footer />

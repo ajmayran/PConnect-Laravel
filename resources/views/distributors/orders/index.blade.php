@@ -4,7 +4,27 @@
     </span>
 
     <div class="container p-4 mx-auto">
-        <h1 class="mb-6 text-2xl font-bold text-left text-gray-800 sm:text-3xl">Orders Management</h1>
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold text-left text-gray-800 sm:text-3xl">Orders Management</h1>
+
+            <!-- Order Acceptance Toggle -->
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-medium text-gray-700">Accept New Orders:</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="orderToggle" class="sr-only peer"
+                        {{ Auth::user()->distributor->accepting_orders ? 'checked' : '' }}>
+                    <div
+                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 
+                               peer-focus:ring-blue-300 rounded-full peer 
+                               peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full 
+                               peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] 
+                               after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full 
+                               after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600">
+                    </div>
+                </label>
+                <div id="statusIndicator" class="text-sm font-medium"></div>
+            </div>
+        </div>
 
         <!-- Search Bar -->
         <div class="flex items-center justify-between mb-4">
@@ -111,9 +131,9 @@
                                             class="font-medium text-gray-700">{{ $order->created_at->format('F d, Y') }}</span>
                                         <span
                                             class="px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
-                                            {{ $order->created_at->format('h:i A') }}
+                                            {{ $order->created_at->setTimezone('Asia/Manila')->format('h:i A') }}
                                         </span>
-                                        
+
                                         @if (request('status') === 'processing' && $order->status_updated_at)
                                             <span
                                                 class="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full">
@@ -296,6 +316,7 @@
 
         function openModal(row) {
             var orderId = row.getAttribute('data-order-id');
+            var formattedOrderId = row.querySelector('td:first-child').textContent.trim();
             var orderStatus = row.getAttribute('data-status');
             currentOrderId = orderId;
             var retailer = JSON.parse(row.getAttribute('data-retailer'));
@@ -303,7 +324,7 @@
             var dateTime = row.getAttribute('data-created-at');
             var deliveryAddress = row.getAttribute('data-delivery-address');
 
-            document.getElementById('modalTitle').innerText = 'Order #' + orderId;
+            document.getElementById('modalTitle').innerText = 'Order ' + formattedOrderId;
 
             var modalHtml = '<div class="space-y-6">';
 
@@ -630,5 +651,60 @@
                 return 'Invalid date';
             }
         }
+
+        // Add this to the existing script section at the bottom
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggle = document.getElementById('orderToggle');
+            const statusIndicator = document.getElementById('statusIndicator');
+
+            // Set initial status text
+            updateStatusIndicator();
+
+            toggle.addEventListener('change', function() {
+                // Show loading indicator
+                statusIndicator.textContent = "Updating...";
+                statusIndicator.className = "text-sm font-medium text-blue-500";
+
+                // Send AJAX request to update status
+                fetch('{{ route('distributors.toggle-order-acceptance') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        },
+                        body: JSON.stringify({
+                            accepting_orders: toggle.checked
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            updateStatusIndicator();
+                        } else {
+                            // Revert toggle if there was an error
+                            toggle.checked = !toggle.checked;
+                            statusIndicator.textContent = "Update failed";
+                            statusIndicator.className = "text-sm font-medium text-red-500";
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // Revert toggle if there was an error
+                        toggle.checked = !toggle.checked;
+                        statusIndicator.textContent = "Update failed";
+                        statusIndicator.className = "text-sm font-medium text-red-500";
+                    });
+            });
+
+            function updateStatusIndicator() {
+                if (toggle.checked) {
+                    statusIndicator.textContent = "Accepting Orders";
+                    statusIndicator.className = "text-sm font-medium text-green-500";
+                } else {
+                    statusIndicator.textContent = "Not Accepting Orders";
+                    statusIndicator.className = "text-sm font-medium text-red-500";
+                }
+            }
+        });
     </script>
 </x-distributor-layout>

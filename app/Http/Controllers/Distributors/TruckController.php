@@ -16,7 +16,7 @@ class TruckController extends Controller
         $trucks = Trucks::where('distributor_id', Auth::user()->distributor->id)
             ->with('deliveryLocations')  // Only load the deliveryLocations relationship
             ->withCount(['deliveries as deliveries_count' => function ($query) {
-                $query->whereIn('status', ['processing', 'in_transit', 'out_for_delivery']);
+                $query->whereIn('status', ['in_transit', 'out_for_delivery']);
             }])
             ->get();
 
@@ -266,6 +266,7 @@ class TruckController extends Controller
             ->with([
                 'order.user',
                 'order.orderDetails.product',
+                'order.payment',
             ])
             ->latest('updated_at');
 
@@ -289,6 +290,13 @@ class TruckController extends Controller
         }
 
         $deliveryHistory = $query->paginate(10)->withQueryString();
+
+        $deliveryHistory->getCollection()->transform(function ($delivery) {
+            if ($delivery->order) {
+                $delivery->order->setAttribute('formatted_order_id', $delivery->order->formatted_order_id);
+            }
+            return $delivery;
+        });
 
         return view('distributors.trucks.delivery-history', compact('truck', 'deliveryHistory'));
     }

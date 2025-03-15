@@ -4,7 +4,9 @@
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <x-retailer-sidebar />
             <!-- Main Content Area -->
+
             <div class="p-3 bg-white border-b border-gray-200 rounded-lg shadow-sm md:p-5">
+
                 <h2 class="mb-4 text-xl font-semibold text-gray-800">Messages</h2>
 
                 <div class="flex flex-col md:flex-row h-[calc(100vh-240px)]">
@@ -234,7 +236,6 @@
     </div>
 
     @push('scripts')
-        <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 const messagesContainer = document.getElementById('messages-container');
@@ -553,5 +554,89 @@
             position: relative;
             border-radius: 18px 18px 18px 4px;
         }
+
+        /* Fix message input position on mobile */
+        @media (max-width: 768px) {
+
+            /* Container height adjustments */
+            .flex.flex-col.md\:flex-row.h-\[calc\(100vh-240px\)\] {
+                height: calc(100vh - 180px);
+                display: flex;
+                flex-direction: column;
+            }
+
+            #chat-area {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                position: relative;
+            }
+
+            #messages-container {
+                flex: 1;
+                overflow-y: auto;
+                max-height: calc(100vh - 300px);
+                padding-bottom: 10px;
+            }
+
+            /* Keep the input naturally positioned but styled properly */
+            .p-3.bg-white.border-t.border-gray-200 {
+                background-color: white;
+                z-index: 10;
+                box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+                width: calc(100% + 2rem);
+                /* Expand beyond parent container */
+                margin-left: -1rem;
+                margin-right: -1rem;
+                padding-left: 1rem;
+                padding-right: 1rem;
+                position: relative;
+                /* Add this */
+                left: 0;
+                /* Position properly */
+            }
+
+            /* Make sure the parent container doesn't clip the input area */
+            .p-3.bg-white.border-b.border-gray-200.rounded-lg.shadow-sm.md\:p-5 {
+                overflow: visible !important;
+                /* Prevent clipping */
+                position: relative;
+            }
+
+            /* Fix input form to take full available width */
+            #message-form {
+                width: 100%;
+                display: flex;
+            }
+
+            /* Fix rounded corners of input for better mobile display */
+            #message-input {
+                width: 100%;
+                border-radius: 20px;
+            }
+
+            /* Make sure the page has proper spacing at the bottom for footer */
+            x-footer {
+                margin-top: 20px;
+            }
+        }
+
+        /* Animation for new messages */
+        .new-message-animation {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </x-app-layout>
+<x-footer />

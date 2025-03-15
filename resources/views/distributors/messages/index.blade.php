@@ -108,7 +108,6 @@
     </div>
 
     @push('scripts')
-        <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 const messagesContainer = document.getElementById('messages-container');
