@@ -23,6 +23,12 @@ class DistributorProductController extends Controller
             return back()->with('error', 'No distributor profile found.');
         }
 
+        $status = $request->input('status');
+      
+          if ($status) 
+          {
+              $query->where('status', $status);
+          }
         $query = Product::where('distributor_id', $distributor->id)
             ->orderBy('created_at', 'desc');
 
@@ -40,7 +46,7 @@ class DistributorProductController extends Controller
         $categories = Category::all();
         $latestPriceUpdate = Product::where('distributor_id', $distributor->id)->max('price_updated_at');
 
-        return view('distributors.products.index', compact('products', 'categories', 'latestPriceUpdate'));
+        return view('distributors.products.index', compact('products', 'categories', 'latestPriceUpdate', 'status'));
     }
 
     public function create()

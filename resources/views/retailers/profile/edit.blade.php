@@ -17,6 +17,7 @@
                     <span class="text-sm text-gray-500">Edit your profile</span>
                 </div>
             </div>
+
             <div class="p-4 bg-white shadow sm:p-8 sm:rounded-lg">
                 <header>
                     <h2 class="text-lg font-medium text-gray-900 dark:text-gray-900">
@@ -64,7 +65,7 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="address" class="block mb-2 text-sm font-medium text-gray-700">
+                                <label for="address" class="block mb-2 texgit pt-sm font-medium text-gray-700">
                                     Address
                                 </label>
                                 <input type="hidden" id="region" name="region" value="09">

@@ -8,25 +8,27 @@ use Illuminate\Database\Eloquent\Model;
 
 class RetailerProfile extends Model
 {
-    protected $table = 'retailer_profile';
+    protected $table = 'retailer_profiles'; // Ensure this matches your database table name
 
     protected $fillable = [
         'user_id',
         'business_name',
         'phone',
+        'address',
+        'profile_picture', 
+        'bir_image', 
         'region',
         'city',
         'province',
         'barangay',
         'street',
-        'profile_picture',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-
+  
     public function getBarangayNameAttribute()
     {
         if (!$this->barangay) {

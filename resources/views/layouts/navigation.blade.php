@@ -1,3 +1,4 @@
+{{-- filepath: /c:/Users/nunez/Documents/PConnect-Laravel/resources/views/layouts/navigation.blade.php --}}
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-100 dark:bg-gray-800 dark:border-gray-700">
     <!-- Primary Navigation Menu -->
     <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
@@ -6,7 +7,7 @@
                 <!-- Logo -->
                 <div class="flex items-center shrink-0">
                     <a href="{{ route('retailers.dashboard') }}">
-
+                        <!-- Add your logo here -->
                     </a>
                 </div>
 
@@ -36,6 +37,10 @@
                     <x-slot name="content">
                         <x-dropdown-link :href="route('profile.edit')">
                             {{ __('Profile') }}
+                        </x-dropdown-link>
+
+                        <x-dropdown-link :href="route('retailers.tickets.create')">
+                            {{ __('Create Ticket') }}
                         </x-dropdown-link>
 
                         <!-- Authentication -->
@@ -82,6 +87,10 @@
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile.edit')">
                     {{ __('Profile') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('retailers.tickets.create')">
+                    {{ __('Create Ticket') }}
                 </x-responsive-nav-link>
 
                 <!-- Authentication -->

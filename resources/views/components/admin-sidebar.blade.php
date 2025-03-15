@@ -1,4 +1,14 @@
-<div class="fixed top-0 left-0 z-50 w-64 h-full p-4 transition-transform sidebar-menu" style="background-color: #abebc6;">
+<x-app-layout>
+    @if (session('success'))
+        <div class="relative px-4 py-3 text-green-700 bg-green-100 border border-green-400 rounded" role="alert">
+            <span class="block sm:inline">{{ session('success') }}</span>
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="relative px-4 py-3 text-red-700 bg-red-100 border border-red-400 rounded" role="alert">
+            <span class="block sm:inline">{{ session('error') }}</span>
+        </div>
+    @endif<div class="fixed top-0 left-0 z-50 w-64 h-full p-4 transition-transform sidebar-menu" style="background-color: #abebc6;">
     <a href="#" class="flex items-center pb-4 border-b border-b-gray-800">
         <img src="\img\Pconnect Logo.png" alt="Logo" class="object-cover w-8 h-8">
         <span class="ml-3 text-lg font-bold">PConnect</span>
@@ -20,18 +30,13 @@
             </a>
             <ul class="pl-7 mt-2 hidden group-[.selected]:block">
                 <li class="mb-4">
-                    <a href="#"
+                    <a href="{{ route('admin.allProducts') }}"
                         class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">All
                         Products</a>
                 </li>
                 <li class="mb-4">
                     <a href="{{ route('admin.pendingProducts') }}"
                         class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Pending
-                        Products</a>
-                </li>
-                <li class="mb-4">
-                    <a href="#"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Removed
                         Products</a>
                 </li>
             </ul>
@@ -81,6 +86,10 @@
                         class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Banned
                         Retailers</a>
                 </li>
+                <li class="mb-4">
+                    <a href="{{ route('admin.allRetailers') }}"
+                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">All Retailers</a>
+                </li>
             </ul>
         </li>
         <li class="mb-1 group">
@@ -98,19 +107,6 @@
                         Distributor</a>
                 </li>
                 <li class="mb-4">
-                    <a href="./distributors/activeDist.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Active
-                        Distributor</a>
-                </li>
-                <li class="mb-4">
-                    <a href="./distributors/restrictedDist.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Restricted</a>
-                </li>
-                <li class="mb-4">
-                    <a href="./distributors/bannedDist.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Banned</a>
-                </li>
-                <li class="mb-4">
                     <a href="{{ route('admin.approvedDistributors') }}"
                         class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Manage</a>
                 </li>
@@ -126,12 +122,18 @@
             </a>
             <ul class="pl-7 mt-2 hidden group-[.selected]:block">
                 <li class="mb-4">
-                    <a href="./support/tickets.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Tickets</a>
+                    <a href="{{ route('admin.tickets.index') }}"
+                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Pending Tickets</a>
                 </li>
-                <li class="mb-4">
-                    <a href="./support/resolved.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Resolved</a>
+                <li class="mb-1 group">
+                    <a href="{{ route('admin.tickets.resolved') }}" class="flex items-center py-2 px-4 hover:bg-green-500 hover:text-gray-100 rounded-md">
+                        <span class="text-sm">Resolved Tickets</span>
+                    </a>
+                </li>
+                <li class="mb-1 group">
+                    <a href="{{ route('admin.tickets.rejected') }}" class="flex items-center py-2 px-4 hover:bg-green-500 hover:text-gray-100 rounded-md">
+                        <span class="text-sm">Rejected Tickets</span>
+                    </a>
                 </li>
             </ul>
         </li>
@@ -155,3 +157,4 @@
         </li>
     </ul>
 </div>
+</x-app-layout>

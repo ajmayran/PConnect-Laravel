@@ -1,5 +1,4 @@
 <x-profile-completion-alert :user="Auth::user()" />
-
 <nav class="bg-white border-b border-gray-100 shadow-sm">
     <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
         <!-- Top Navigation Bar -->
@@ -39,6 +38,7 @@
                 </div>
 
                 <!-- Messages -->
+
                 <div class="relative ml-4">
                     <button onclick="toggleMessagesDropdown()" class="p-2 text-gray-500 hover:text-gray-700">
                         <div class="relative w-6 h-6">
@@ -138,6 +138,10 @@
                         <x-slot name="content">
                             <x-dropdown-link :href="route('retailers.profile.edit')">
                                 {{ __('Profile') }}
+                            </x-dropdown-link>
+
+                            <x-dropdown-link :href="route('retailers.tickets.create')">
+                                {{ __('Create Ticket') }}
                             </x-dropdown-link>
 
                             <!-- Authentication -->

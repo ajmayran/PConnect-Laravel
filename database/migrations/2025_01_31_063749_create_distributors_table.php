@@ -4,36 +4,41 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class CreateDistributorsTable extends Migration
 {
     /**
      * Run the migrations.
+     *
+     * @return void
      */
-    public function up(): void
+    public function up()
     {
         Schema::create('distributors', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');  
-            $table->string('company_profile_image');
-            $table->string('company_name');
-            $table->string('company_email');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('company_name')->nullable();;
+            $table->string('company_email')->nullable();;
+            $table->string('company_address')->nullable();;
+            $table->string('company_phone_number')->nullable();
+            $table->string('company_profile_image')->nullable();
+            $table->string('bir_form');
+            $table->string('sec_document');
             $table->string('region')->nullable();
             $table->string('province')->nullable();
             $table->string('city')->nullable();
             $table->string('barangay')->nullable();
             $table->string('street')->nullable();
-            $table->string('company_phone_number');
             $table->timestamps();
-
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
     /**
      * Reverse the migrations.
+     *
+     * @return void
      */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('distributors');
     }
-};
+}

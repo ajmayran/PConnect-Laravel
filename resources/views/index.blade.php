@@ -1,4 +1,4 @@
-
+<x-app-layout>
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
@@ -369,6 +369,7 @@
             });
         }
 
+
         // Mobile signup button
         if(mobileSignupBtn) {
             mobileSignupBtn.addEventListener('click', function(e) {
@@ -386,3 +387,4 @@
     </script>
 </body>
 </html>
+</x-app-layout>

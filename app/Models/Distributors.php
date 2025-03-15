@@ -11,23 +11,25 @@ class Distributors extends Model
 {
     protected $fillable = [
         'user_id',
-        'company_profile_image',
         'company_name',
         'company_email',
+        'company_phone_number',
+        'bir_form',
+        'sec_document',
+        'profile_completed',
         'region',
         'province',
         'city',
         'barangay',
         'street',
-        'company_phone_number'
+        'company_profile_image'
     ];
-
-
+  
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
-
+  
     public function products(): HasMany
     {
         return $this->hasMany(Product::class, 'distributor_id');
