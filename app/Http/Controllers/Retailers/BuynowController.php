@@ -194,7 +194,7 @@ class BuynowController extends Controller
                 'order_placed',
                 [
                     'title' => 'Order Placed Successfully',
-                    'message' => "Your order has been placed successfully and is awaiting confirmation from {$distributor->business_name}.",
+                    'message' => "Your order has been placed successfully and is awaiting confirmation from {$distributor->company_name}.",
                     'order_id' => $order->id,
                     'recipient_type' => 'retailer'
                 ],

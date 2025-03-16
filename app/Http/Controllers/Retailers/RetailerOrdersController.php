@@ -289,7 +289,7 @@ class RetailerOrdersController extends Controller
             );
 
             // Add notification for retailer
-            $distributorName = $distributor ? $distributor->business_name : 'the distributor';
+            $distributorName = $distributor ? $distributor->company_name : 'the distributor';
             $this->notificationService->create(
                 $user->id,
                 'order_placed',
@@ -422,7 +422,7 @@ class RetailerOrdersController extends Controller
                 );
 
                 // Add notification for retailer
-                $distributorName = $distributor ? $distributor->business_name : 'the distributor';
+                $distributorName = $distributor ? $distributor->company_name : 'the distributor';
                 $this->notificationService->create(
                     $user->id,
                     'order_placed',
