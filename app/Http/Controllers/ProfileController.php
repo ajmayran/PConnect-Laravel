@@ -57,9 +57,9 @@ class ProfileController extends Controller
         $request->validate([
             'business_name' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:15'],
-            'city' => ['required', 'string', 'max:10'],
-            'province' => ['required', 'string', 'max:10'],
-            'region' => ['required', 'string', 'max:10'],
+            'city' => ['nullable', 'string', 'max:10'],
+            'province' => ['nullable', 'string', 'max:10'],
+            'region' => ['nullable', 'string', 'max:10'],
             'barangay' => ['nullable', 'string', 'max:20'],
             'street' => ['nullable', 'string', 'max:255'],
             'profile_picture' => ['nullable', 'image', 'max:2048'],

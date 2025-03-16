@@ -16,7 +16,8 @@ class DistributorSeeder extends Seeder
             'last_name' => 'Distributor',
             'email' => 'test@dist.com',
             'password' => bcrypt('password'),
-            'user_type' => 'distributor',
+            'user_type' => 'distributor', 
+            'credensials' => '',
             'profile_completed' => true, // Set profile_completed to true
             'status' => 'approved', // Set status to approved
         ]);

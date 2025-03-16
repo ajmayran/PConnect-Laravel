@@ -68,9 +68,9 @@
                                 <label for="address" class="block mb-2 texgit pt-sm font-medium text-gray-700">
                                     Address
                                 </label>
-                                <input type="hidden" id="region" name="region" value="09">
+                                {{-- <input type="hidden" id="region" name="region" value="09">
                                 <input type="hidden" id="province" name="province" value="097300">
-                                <input type="hidden" id="city" name="city" value="093170">
+                                <input type="hidden" id="city" name="city" value="093170"> --}}
 
                                 <div class="mb-4">
                                     <label for="barangay"

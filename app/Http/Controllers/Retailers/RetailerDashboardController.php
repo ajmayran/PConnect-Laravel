@@ -14,7 +14,7 @@ class RetailerDashboardController extends Controller
     {
         $distributors = Distributors::all(); // Fetch all distributors
         
-        $products = Product::where('status', 'accepted')
+        $products = Product::where('status', 'pending')
             ->paginate(15);
         
         return view('retailers.dashboard', [

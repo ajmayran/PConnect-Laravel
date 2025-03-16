@@ -123,14 +123,7 @@
             <span class="ml-4 font-normal text-gray-200">Business Insights</span>
         </div>
     </a>
-
-    <a  href="{{ route('tickets.create') }}" class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.insights.index') ? 'bg-green-600' : 'hover:bg-green-600' }}">
-        <div class="flex items-center">
-            <iconify-icon icon="gg:insights" class="text-xl icon"></iconify-icon>
-            <span class="ml-4 font-normal text-gray-200">Tickets</span>
-        </div>
-    </a>
-
+    
     <div class="flex items-center px-4 py-2 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer hover:bg-green-600">
 
         <form method="POST" action="{{ route('logout') }}">

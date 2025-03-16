@@ -229,4 +229,9 @@ class RetailerMessageController extends Controller
             ], 500);
         }
     }
+
+    public function show($userId)
+    {
+        return redirect()->route('retailers.messages.index', ['distributor' => $userId]);
+    }
 }

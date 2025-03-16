@@ -1,6 +1,6 @@
 <?php 
 
-namespace App\Http\Controllers\Retailer;
+namespace App\Http\Controllers\Retailers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -36,6 +36,6 @@ class RetailerTicketController extends Controller
             'image' => $imagePath,
         ]);
 
-        return redirect()->route('retailers.dashboard')->with('success', 'Ticket created successfully.');
+        return redirect()->route('retailers.dashboard')->with('success', 'Ticket created successfully, we will get back to you soon.');
     }
 }

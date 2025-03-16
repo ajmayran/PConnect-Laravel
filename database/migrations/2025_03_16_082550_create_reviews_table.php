@@ -1,3 +1,4 @@
+.php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -11,17 +12,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('retailer_profiles', function (Blueprint $table) {
+        Schema::create('reviews', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->string('profile_picture')->nullable();
-            $table->string('business_name');
-            $table->string('phone');
-            $table->text('address');
-            $table->string('bir_image')->nullable(); // Make this field nullable
+            $table->unsignedBigInteger('distributor_id');
+            $table->integer('rating');
+            $table->text('review')->nullable();
             $table->timestamps();
             
+            // Foreign keys
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('distributor_id')->references('id')->on('distributors')->onDelete('cascade');
         });
     }
 
@@ -30,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('retailer_profiles');
+        Schema::dropIfExists('reviews');
     }
 };

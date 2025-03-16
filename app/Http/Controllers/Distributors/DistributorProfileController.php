@@ -143,11 +143,11 @@ class DistributorProfileController extends Controller
         $request->validate([
             'company_name' => ['required', 'string', 'max:255'],
             'company_email' => ['required', 'email', 'max:255'],
-            'region' => ['required', 'string', 'max:10'],
-            'province' => ['required', 'string', 'max:10'],
-            'city' => ['required', 'string', 'max:10'],
-            'barangay' => ['required', 'string', 'max:20'],
-            'street' => ['required', 'string', 'max:255'],
+            'region' => ['nullable', 'string', 'max:10'],
+            'province' => ['nullable', 'string', 'max:10'],
+            'city' => ['nullable', 'string', 'max:10'],
+            'barangay' => ['nullable', 'string', 'max:20'],
+            'street' => ['nullable', 'string', 'max:255'],
             'company_phone_number' => ['required', 'string', 'max:15'],
             'company_profile_image' => ['nullable', 'image', 'max:2048'],
         ]);

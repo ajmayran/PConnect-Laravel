@@ -24,12 +24,12 @@ class Distributors extends Model
         'street',
         'company_profile_image'
     ];
-  
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
-  
+
     public function products(): HasMany
     {
         return $this->hasMany(Product::class, 'distributor_id');
@@ -45,5 +45,15 @@ class Distributors extends Model
     public function trucks()
     {
         return $this->hasMany(Trucks::class, 'distributor_id');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'distributor_id');
+    }
+
+    public function getAverageRatingAttribute()
+    {
+        return $this->reviews()->avg('rating') ?: 0;
     }
 }

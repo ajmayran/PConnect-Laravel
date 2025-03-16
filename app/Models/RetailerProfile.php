@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class RetailerProfile extends Model
 {
-    protected $table = 'retailer_profiles'; // Ensure this matches your database table name
+    protected $table = 'retailer_profile'; // Ensure this matches your database table name
 
     protected $fillable = [
         'user_id',
@@ -34,7 +34,6 @@ class RetailerProfile extends Model
         if (!$this->barangay) {
             return 'N/A';
         }
-
 
         static $barangays = [];
 

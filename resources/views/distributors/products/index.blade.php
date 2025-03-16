@@ -57,19 +57,6 @@
                 </div>
             @endif
 
-            <!-- Filter Form -->
-            <form method="GET" action="{{ route('distributors.products.index') }}" class="mb-6">
-                <div class="flex items-center space-x-4">
-                    <select name="status" class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                        <option value="">All</option>
-                        <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Approved</option>
-                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                    </select>
-                    <button type="submit" class="px-4 py-2 font-bold text-white transition duration-200 bg-green-500 rounded-lg hover:bg-green-600">
-                        Filter
-                    </button>
-                </div>
-            </form>
             @if (request('search'))
                 <div class="mb-4">
                     <div class="flex items-center">
@@ -102,11 +89,6 @@
                                 {{ $categories->firstWhere('id', $product->category_id)->name ?? 'N/A' }}
                             </p>
                             <p class="text-sm text-gray-500">Min: {{ $product->minimum_purchase_qty }}</p>
-                            <p class="text-sm font-bold text-gray-800">Status: 
-                                <span class="{{ $product->status == 'approved' ? 'text-green-500' : 'text-yellow-500' }}">
-                                    {{ ucfirst($product->status) }}
-                                </span>
-                            </p>
                             <div class="flex mt-4 space-x-4">
                                 <button onclick="openEditModal({{ $product->id }})"
                                     class="text-blue-500 hover:text-blue-700">

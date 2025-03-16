@@ -1,4 +1,14 @@
 <x-app-layout>
+
+    <div class="py-4">
+        <a href="{{ route('retailers.dashboard') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700  hover:text-green-400">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Back to Dashboard
+        </a>
+    </div>
+
     <div class="container px-4 py-8 mx-auto">
         <div class="overflow-hidden bg-white rounded-lg shadow-lg">
             <div class="px-6 py-4 bg-gray-800">

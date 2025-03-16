@@ -5,7 +5,7 @@
                 <h1 class="text-2xl font-bold text-white">Create Ticket</h1>
             </div>
             <div class="p-6">
-                <form id="ticketForm" method="POST" action="{{ route('tickets.store') }}" enctype="multipart/form-data">
+                <form id="ticketForm" method="POST" action="{{ route('distributors.tickets.store') }}" enctype="multipart/form-data">
                     @csrf
                     <div id="step1">
                         <div class="mb-4">

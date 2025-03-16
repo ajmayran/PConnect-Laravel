@@ -21,8 +21,8 @@ class CreateDistributorsTable extends Migration
             $table->string('company_address')->nullable();;
             $table->string('company_phone_number')->nullable();
             $table->string('company_profile_image')->nullable();
-            $table->string('bir_form');
-            $table->string('sec_document');
+            // $table->string('bir_form');
+            // $table->string('sec_document');
             $table->string('region')->nullable();
             $table->string('province')->nullable();
             $table->string('city')->nullable();

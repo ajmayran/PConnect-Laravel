@@ -21,7 +21,9 @@
             </div>
         </form>
     </div>
+
     <div id="searchOverlay" class="fixed inset-0 z-10 hidden transition-opacity bg-black bg-opacity-50"></div>
+
     <div id="mainContent">
         <!-- Distributors Section - Improved grid responsiveness -->
         <section class="py-4 sm:py-8 bg-gray-200">
@@ -168,5 +170,6 @@
             });
         </script>
     @endpush
+
     <x-footer />
 </x-app-layout>
