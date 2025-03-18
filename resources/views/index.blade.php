@@ -138,7 +138,6 @@
                 <li class="whitespace-nowrap hover:text-green-500"><a href="./index.php">HOME</a></li>
                 <li class="whitespace-nowrap hover:text-green-500"><a href="{{ route('login') }}">DISTRIBUTORS</a></li>
                 <li class="whitespace-nowrap hover:text-green-500"><a href="{{ route('login') }}">PRODUCTS</a></li>
-                <li class="whitespace-nowrap hover:text-green-500"><a href="{{ route('login') }}">CATEGORY</a></li>
             </ul>
         </div>
     </nav>
@@ -208,7 +207,7 @@
     </section>
 
     <!-- Distributors Section -->
-    <section class="py-6 bg-white md:py-8">
+    <section class="py-6 bg-gray-200 md:py-8">
         <div class="container px-4 mx-auto">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-xl font-bold md:text-2xl">Explore Distributors</h2>
@@ -218,16 +217,19 @@
                         All
                     </button>
                     <button class="px-3 py-1 mr-2 text-sm font-bold text-gray-700 bg-gray-200 rounded hover:bg-gray-300 md:px-4 md:py-2">
-                        Drinks
+                        Ready To Cook
                     </button>
                     <button class="px-3 py-1 mr-2 text-sm font-bold text-gray-700 bg-gray-200 rounded hover:bg-gray-300 md:px-4 md:py-2">
                         Frozen Products
                     </button>
                     <button class="px-3 py-1 mr-2 text-sm font-bold text-gray-700 bg-gray-200 rounded hover:bg-gray-300 md:px-4 md:py-2">
-                        Instant Drink
+                        Beverages
                     </button>
                     <button class="px-3 py-1 text-sm font-bold text-gray-700 bg-gray-200 rounded hover:bg-gray-300 md:px-4 md:py-2">
-                        Toiletries
+                        Dairy Products
+                    </button>
+                    <button class="px-3 py-1 text-sm font-bold text-gray-700 bg-gray-200 rounded hover:bg-gray-300 md:px-4 md:py-2">
+                        Sauces & Condiments
                     </button>
                     <i class="ml-2 fa-solid fa-angle-right"></i>
                 </div>
@@ -236,10 +238,11 @@
             <!-- Mobile Category Selector -->
             <div class="flex pb-3 overflow-x-auto md:hidden">
                 <button class="px-3 py-1 mr-2 text-sm font-bold text-gray-700 bg-gray-200 rounded whitespace-nowrap">All</button>
-                <button class="px-3 py-1 mr-2 text-sm font-bold text-gray-700 bg-gray-200 rounded whitespace-nowrap">Drinks</button>
+                <button class="px-3 py-1 mr-2 text-sm font-bold text-gray-700 bg-gray-200 rounded whitespace-nowrap">Ready To Cook</button>
                 <button class="px-3 py-1 mr-2 text-sm font-bold text-gray-700 bg-gray-200 rounded whitespace-nowrap">Frozen Products</button>
-                <button class="px-3 py-1 mr-2 text-sm font-bold text-gray-700 bg-gray-200 rounded whitespace-nowrap">Instant Drink</button>
-                <button class="px-3 py-1 text-sm font-bold text-gray-700 bg-gray-200 rounded whitespace-nowrap">Toiletries</button>
+                <button class="px-3 py-1 mr-2 text-sm font-bold text-gray-700 bg-gray-200 rounded whitespace-nowrap">Beverages</button>
+                <button class="px-3 py-1 text-sm font-bold text-gray-700 bg-gray-200 rounded whitespace-nowrap">Dairy Products</button>
+                <button class="px-3 py-1 text-sm font-bold text-gray-700 bg-gray-200 rounded whitespace-nowrap">Sauces & Condiments</button>
             </div>
 
             <div class="grid grid-cols-2 gap-2 py-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 md:gap-4 md:py-10">
@@ -273,7 +276,7 @@
     </section>
 
     <!-- Products Section -->
-    <section class="py-5 bg-white">
+    <section class="py-5 bg-gray-200">
         <div class="container px-4 mx-auto">
             <div class="flex items-center justify-between">
                 <h2 class="text-xl font-bold md:text-2xl">Popular Products</h2>
@@ -282,29 +285,29 @@
                 <a href="{{ route('login') }}" 
                    class="p-3 text-center bg-white border-2 border-gray-100 rounded-lg shadow-md product md:p-6">
                     <div class="flex justify-center">
-                        <img src="{{ asset('img/Products/rtc-chicken-tocino.png') }}" alt="Product Image"
+                        <img src="{{ asset('img/Products/magnolia-c-tocino.png') }}" alt="Product Image"
                             class="w-24 h-16 mb-2 md:h-20 md:mb-4 md:w-30">
                     </div>
                     <div class="p-2 md:p-4">
                         <h3 class="text-base font-normal md:text-lg">Chicken Tocino Templados</h3>
-                        <p class="text-xs text-gray-500 md:text-sm">By Magnolia</p>
+                        <p class="text-xs text-gray-500 md:text-sm">By Boss jim grocery</p>
                     </div>
                     <div class="flex items-center justify-center mt-2 md:mt-4">
-                        <span class="font-sans text-lg md:text-xl">₱250.00</span>
+                        <span class="font-sans text-lg md:text-xl">₱230.00</span>
                     </div>
                 </a>
                 <a href="{{ route('login') }}"
                    class="p-3 text-center bg-white border-2 border-gray-100 rounded-lg shadow-md product md:p-6">
                     <div class="flex justify-center">
-                        <img src="{{ asset('img/Products/Chicken-lumpia-shanghai-mix.png') }}" alt="Product Image"
+                        <img src="{{ asset('img/Products/magnolia-spicy-fc.png') }}" alt="Product Image"
                             class="w-16 h-16 mb-2 rounded-lg md:w-20 md:h-20 md:mb-4">
                     </div>
                     <div class="p-2 md:p-4">
-                        <h3 class="text-base font-normal md:text-lg">Chicken Lumpia Shanghai Mix</h3>
-                        <p class="text-xs text-gray-500 md:text-sm">By Magnolia</p>
+                        <h3 class="text-base font-normal md:text-lg">Fried Chicken Spicy</h3>
+                        <p class="text-xs text-gray-500 md:text-sm">By Boss jim grocery</p>
                     </div>
                     <div class="flex items-center justify-center mt-2 md:mt-4">
-                        <span class="font-sans text-lg md:text-xl">₱250.00</span>
+                        <span class="font-sans text-lg md:text-xl">₱270.00</span>
                     </div>
                 </a>
             </div>

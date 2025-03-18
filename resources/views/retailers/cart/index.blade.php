@@ -2,7 +2,10 @@
     <x-dashboard-nav />
 
     <div class="container px-4 py-6 mx-auto" id="cartContainer">
-        <h2 class="mb-6 text-3xl font-bold text-gray-800">Shopping Cart</h2>
+        <div class="center px-4 py-6 mx-auto">
+            <h2 class="mb-6 text-3xl font-bold text-gray-800">Shopping Cart</h2>
+            <a href="{{ route('retailers.profile.my-purchase') }}" class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">My Purchases</a>
+        </div>
 
         @forelse($groupedItems as $distributorId => $items)
             <div class="p-4 mb-6 bg-white rounded-lg shadow-md sm:p-6 cart-group"

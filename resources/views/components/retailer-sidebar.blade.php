@@ -8,10 +8,6 @@
                 <a href="{{ route('retailers.profile.edit') }}">Profile</a>
             </li>
             <li
-                class="p-2 m-2 cursor-pointer tab-item hover:bg-green-200 {{ request()->routeIs('retailers.profile.my-purchase') ? 'bg-gray-200 p-2 m-2 rounded-lg' : '' }}">
-                <a href="{{ route('retailers.profile.my-purchase') }}">My Purchase</a>
-            </li>
-            <li
                 class="p-2 cursor-pointer tab-item hover:bg-green-200 {{ request()->routeIs('retailers.notifications.*') ? 'bg-gray-200 p-2 m-2 rounded-lg' : '' }}">
                 <a href="{{ route('retailers.notifications.index') }}">Notifications</a>
             </li>

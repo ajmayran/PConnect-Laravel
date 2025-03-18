@@ -67,7 +67,7 @@
     }
 </style>
 
-<body class="bg-gray-100" data-user-id="{{ Auth::id() ?? '' }}" data-user-type="distributor">
+<body class="bg-gray-200" data-user-id="{{ Auth::id() ?? '' }}" data-user-type="distributor">
 
 
 
@@ -85,7 +85,7 @@
         {{ $slot }}
     </div>
 
-    <x-footer />
+
 
     @stack('scripts')
 
