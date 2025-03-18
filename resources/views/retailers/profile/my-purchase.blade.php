@@ -9,7 +9,7 @@
     <div class="py-12">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row">
-                <x-retailer-sidebar :user="Auth::user()" />
+                
 
                 <div class="flex-1">
                     <div class="px-4 mb-6">
