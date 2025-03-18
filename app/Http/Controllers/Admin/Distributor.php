@@ -11,14 +11,21 @@ use Illuminate\Support\Facades\Storage;
 
 class Distributor extends Controller
 {
+    
     public function pendingDistributors()
-    {
-        $pendingDistributors = User::where('user_type', 'distributor')
-            ->where('status', 'pending')
-            ->with('distributor')
-            ->get();
-        return view('admin.distributors.pending', compact('pendingDistributors'));
+{
+    $pendingDistributors = User::where('user_type', 'distributor')
+        ->where('status', 'pending')
+        ->with('credentials') // Eager-load the credentials relationship
+        ->get();
+
+    foreach ($pendingDistributors as $distributor) {
+        logger('Distributor ID: ' . $distributor->id);
+        logger('Credentials: ' . $distributor->credentials);
     }
+
+    return view('admin.distributors.pending', compact('pendingDistributors'));
+}
 
     public function acceptDistributor($id)
     {

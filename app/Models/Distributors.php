@@ -72,4 +72,9 @@ class Distributors extends Model
     {
         return $this->reviews()->avg('rating') ?: 0;
     }
+
+    public function credentials()
+{
+    return $this->hasMany(Credential::class, 'user_id', 'id');
+}
 }

@@ -72,8 +72,8 @@
                         <label for="credentials" class="block mb-1 text-sm font-medium text-gray-700">BIR Form 2303</label>
                         <input id="credentials"
                             class="w-full px-3 py-2 border border-gray-300 sm:px-4 sm:py-3 rounded-xl focus:ring-green-500 focus:border-green-500 file:mr-4 file:py-1 file:px-3 sm:file:py-2 sm:file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
-                            type="file" name="credentials" required />
-                        <div class="mt-1 text-xs text-gray-400">Image or PDF (Maximum of 20MB)</div>
+                            type="file" name="credentials" accept=".jpg,.jpeg,.png,.svg" required />
+                            <div class="mt-1 text-xs text-gray-400">Image or PDF (Maximum of 20MB)</div>
                         <x-input-error :messages="$errors->get('credentials')" class="mt-2" />
                     </div>
 
@@ -81,8 +81,8 @@
                         <label for="credentials2" class="block mb-1 text-sm font-medium text-gray-700">SEC Registration</label>
                         <input id="credentials2"
                             class="w-full px-3 py-2 border border-gray-300 sm:px-4 sm:py-3 rounded-xl focus:ring-green-500 focus:border-green-500 file:mr-4 file:py-1 file:px-3 sm:file:py-2 sm:file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
-                            type="file" name="credentials2" required />
-                        <div class="mt-1 text-xs text-gray-400">Image or PDF (Maximum of 20MB)</div>
+                            type="file" name="credentials2" accept=".jpg,.jpeg,.png,.svg" required />
+                            <div class="mt-1 text-xs text-gray-400">Image or PDF (Maximum of 20MB)</div>
                         <x-input-error :messages="$errors->get('credentials2')" class="mt-2" />
                     </div>
 

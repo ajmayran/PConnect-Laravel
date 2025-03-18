@@ -55,7 +55,7 @@ class RegisteredUserController extends Controller
         ]);
 
         if ($request->hasFile('credentials')) {
-            $filePath = $request->file('credentials')->store('credentials', 'public');
+            $filePath = $request->file('credentials')->store('credentials/bir', 'public');
 
             // Store file path in the credentials table
             Credential::create([
@@ -65,7 +65,7 @@ class RegisteredUserController extends Controller
         }
 
         if ($request->hasFile('credentials2')) {
-            $filePath2 = $request->file('credentials2')->store('credentials', 'public');
+            $filePath2 = $request->file('credentials2')->store('credentials/sec', 'public');
             Credential::create([
                 'user_id'   => $user->id,
                 'file_path' => $filePath2,

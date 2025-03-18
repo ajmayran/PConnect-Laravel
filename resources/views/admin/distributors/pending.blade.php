@@ -50,19 +50,27 @@
                                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $distributor->middle_name }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ $distributor->last_name }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
-                                        @if ($distributor->distributor && $distributor->distributor->bir_form)
-                                            <a href="{{ asset('storage/' . $distributor->distributor->bir_form) }}" target="_blank" class="text-blue-600 hover:text-blue-900">View BIR Form</a>
-                                            <a href="{{ asset('storage/' . $distributor->distributor->bir_form) }}" download class="text-blue-600 hover:text-blue-900">Download BIR Form</a>
+                                        @php
+                                            $birForm = $distributor->credentials->first(function ($credential) {
+                                                return str_contains($credential->file_path, 'credentials/bir/');
+                                            });
+                                        @endphp
+                                        @if ($birForm)
+                                            <img src="{{ asset('storage/' . $birForm->file_path) }}" alt="BIR Form" class="w-16 h-16 cursor-pointer" onclick="openModal('{{ asset('storage/' . $birForm->file_path) }}')">
                                         @else
-                                            N/A
+                                            <span class="text-gray-500">No BIR Form uploaded</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
-                                        @if ($distributor->distributor && $distributor->distributor->sec_document)
-                                            <a href="{{ asset('storage/' . $distributor->distributor->sec_document) }}" target="_blank" class="text-blue-600 hover:text-blue-900">View SEC Document</a>
-                                            <a href="{{ asset('storage/' . $distributor->distributor->sec_document) }}" download class="text-blue-600 hover:text-blue-900">Download SEC Document</a>
+                                        @php
+                                            $secDocument = $distributor->credentials->first(function ($credential) {
+                                                return str_contains($credential->file_path, 'credentials/sec/');
+                                            });
+                                        @endphp
+                                        @if ($secDocument)
+                                            <img src="{{ asset('storage/' . $secDocument->file_path) }}" alt="SEC Document" class="w-16 h-16 cursor-pointer" onclick="openModal('{{ asset('storage/' . $secDocument->file_path) }}')">
                                         @else
-                                            N/A
+                                            <span class="text-gray-500">No SEC Document uploaded</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 text-sm whitespace-nowrap">
@@ -71,27 +79,6 @@
                                             <button type="submit" class="px-4 py-2 font-medium text-white bg-green-500 rounded hover:bg-green-700">Accept</button>
                                         </form>
                                         <button type="button" onclick="openReasonModal('{{ $distributor->id }}')" class="px-4 py-2 font-medium text-white bg-red-500 rounded hover:bg-red-700">Decline</button>
-                                        <div id="reasonModal-{{ $distributor->id }}" class="fixed inset-0 z-50 hidden overflow-y-auto">
-                                            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                                                <div class="fixed inset-0 transition-opacity">
-                                                    <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-                                                </div>
-                                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen"></span>​
-                                                <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                                                    <div class="px-4 pt-5 pb-4 bg-white sm:p-6 sm:pb-4">
-                                                        <form action="{{ route('admin.declineDistributor', $distributor->id) }}" method="POST">
-                                                            @csrf
-                                                            <label for="reason" class="block mb-2 text-sm font-medium text-gray-700">Reason for Decline</label>
-                                                            <textarea id="reason" name="reason" rows="4" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"></textarea>
-                                                            <div class="px-4 py-3 bg-gray-50 sm:px-6 sm:flex sm:flex-row-reverse">
-                                                                <button type="submit" class="inline-flex justify-center w-full px-4 py-2 text-base font-medium text-white bg-red-500 border border-transparent rounded-md shadow-sm hover:bg-red-700 sm:ml-3 sm:w-auto sm:text-sm">Submit</button>
-                                                                <button type="button" onclick="closeReasonModal('{{ $distributor->id }}')" class="inline-flex justify-center w-full px-4 py-2 mt-2 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -102,6 +89,33 @@
         </div>
     </div>
 
+    <!-- Image Modal -->
+<div id="imageModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity">
+            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen"></span>​
+        <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="px-4 pt-5 pb-4 bg-white sm:p-6 sm:pb-4">
+                <img id="modalImage" src="" alt="Document" class="w-full h-auto">
+            </div>
+            <div class="px-4 py-3 bg-gray-50 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" onclick="closeModal()" class="inline-flex justify-center w-full px-4 py-2 text-base font-medium text-white bg-red-500 border border-transparent rounded-md shadow-sm hover:bg-red-700 sm:ml-3 sm:w-auto sm:text-sm">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function openModal(imageSrc) {
+        document.getElementById('modalImage').src = imageSrc;
+        document.getElementById('imageModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('imageModal').classList.add('hidden');
+    }
+</script>
     <script>
         function openReasonModal(distributorId) {
             document.getElementById('reasonModal-' + distributorId).classList.remove('hidden');
