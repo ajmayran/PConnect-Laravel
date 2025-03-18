@@ -221,14 +221,6 @@
                     ')" class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-700">Assign Truck</button>';
                 modalContent += '</div>';
             }
-            // For in_transit or out_for_delivery, allow manual status changes
-            else if (deliveryStatus === 'in_transit' || deliveryStatus === 'out_for_delivery') {
-                modalContent += '<div class="flex justify-end pt-4 mt-6 border-t">';
-                modalContent += '<button onclick="openChangeStatusModal(' + deliveryId + ', \'' + deliveryStatus +
-                    '\')" class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-700">Change Status</button>';
-                modalContent += '</div>';
-            }
-
 
             modalContent += '<div class="mt-4 text-right">';
             modalContent +=

@@ -13,7 +13,7 @@
                                         <a href="{{ route('distributors.messages.index', ['retailer' => $retailer->id]) }}"
                                             class="block rounded-md p-2 hover:bg-gray-100 {{ $currentRetailer && $currentRetailer->id == $retailer->id ? 'bg-green-100' : '' }}">
                                             <div class="flex items-center space-x-3">
-                                                <div class="flex-shrink-0">
+                                                <div class="relative flex-shrink-0">
                                                     @if ($retailer->retailerProfile->profile_picture)
                                                         <img src="{{ Storage::url($retailer->retailerProfile->profile_picture) }}"
                                                             alt="{{ $retailer->retailerProfile->company_name }}"
@@ -21,19 +21,39 @@
                                                     @else
                                                         <div
                                                             class="flex items-center justify-center w-10 h-10 text-gray-600 bg-gray-200 rounded-full">
-                                                            {{ strtoupper(substr($retailer->retailerProfile->company_name, 0, 2)) }}
+                                                            {{ strtoupper(substr($retailer->first_name, 0, 2)) }}
                                                         </div>
+                                                    @endif
+
+                                                    @if ($retailer->unread_count > 0)
+                                                        <span
+                                                            class="absolute flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full -top-1 -right-1">
+                                                            {{ $retailer->unread_count }}
+                                                        </span>
                                                     @endif
                                                 </div>
                                                 <div class="flex-1 min-w-0">
-                                                    <p class="text-sm font-medium text-gray-900">
-                                                        {{ $retailer->first_name }}
+                                                    <p class="text-sm font-medium text-gray-900 truncate">
+                                                        {{ $retailer->first_name }} {{ $retailer->last_name }}
+                                                    </p>
+                                                    <p class="text-xs text-gray-500 truncate">
+                                                        {{ $retailer->retailerProfile->business_name }}
                                                     </p>
                                                 </div>
                                             </div>
                                         </a>
                                     @empty
-                                        <div class="py-4 text-center text-gray-500">No retailers available</div>
+                                        <div class="flex flex-col items-center justify-center h-full">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mb-4 text-gray-300"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                                            </svg>
+                                            <p class="mb-1 text-gray-500">Select a retailer to view your conversation
+                                            </p>
+                                            <p class="text-sm text-gray-400">Only retailers you've messaged with are
+                                                shown</p>
+                                        </div>
                                     @endforelse
                                 </div>
                             </div>
@@ -47,7 +67,7 @@
                                     <div class="flex-shrink-0">
                                         @if ($currentRetailer->retailerProfile->profile_picture)
                                             <img src="{{ Storage::url($currentRetailer->retailerProfile->profile_picture) }}"
-                                                alt="{{ $currentRetailer->retailerProfile->profile_picture }}"
+                                                alt="{{ $currentRetailer->first_name }}"
                                                 class="object-cover w-10 h-10 rounded-full">
                                         @else
                                             <div
@@ -57,29 +77,57 @@
                                         @endif
                                     </div>
                                     <div class="ml-3">
-                                        <p class="text-sm font-medium text-gray-900">{{ $currentRetailer->first_name }}
-                                            {{ $currentRetailer->last_name }}</p>
+                                        <p class="text-sm font-medium text-gray-900">
+                                            {{ $currentRetailer->first_name }} {{ $currentRetailer->last_name }}
+                                        </p>
+                                        <p class="text-xs text-gray-500">
+                                            {{ $currentRetailer->retailerProfile->business_name }}
+                                            @if ($currentRetailer->retailerProfile->phone)
+                                                • {{ $currentRetailer->retailerProfile->phone }}
+                                            @endif
+                                        </p>
                                     </div>
                                 </div>
 
                                 <!-- Messages -->
                                 <div id="messages-container" class="flex-1 p-4 space-y-4 overflow-y-auto">
-                                    @forelse ($messages as $message)
-                                        <div
-                                            class="flex {{ $message->sender_id == Auth::id() ? 'justify-end' : 'justify-start' }}">
+                                    @if (!isset($hasExistingConversation) || !$hasExistingConversation)
+                                        <!-- Show welcome message for new conversation -->
+                                        <div class="flex flex-col items-center justify-center h-48">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3 text-gray-400"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                            </svg>
+                                            <p class="text-gray-500">Start a conversation with
+                                                {{ $currentRetailer->first_name }}</p>
+                                        </div>
+                                    @else
+                                        @forelse ($messages as $message)
                                             <div
-                                                class="{{ $message->sender_id == Auth::id() ? 'bg-green-100' : 'bg-white' }} rounded-lg p-3 shadow max-w-xs lg:max-w-md">
-                                                <p class="text-sm">{{ $message->message }}</p>
-                                                <p class="mt-1 text-xs text-gray-500">
-                                                    {{ $message->created_at->format('M d, h:i A') }}
-                                                </p>
+                                                class="flex {{ $message->sender_id == Auth::id() ? 'justify-end' : 'justify-start' }}">
+                                                <div
+                                                    class="{{ $message->sender_id == Auth::id() ? 'bg-green-100' : 'bg-white' }} rounded-lg p-3 shadow max-w-xs lg:max-w-md">
+                                                    <p class="text-sm">{{ $message->message }}</p>
+                                                    <p class="mt-1 text-xs text-gray-500">
+                                                        {{ $message->created_at->format('M d, h:i A') }}
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    @empty
-                                        <div class="py-8 text-center text-gray-500">
-                                            Start a conversation with {{ $currentRetailer->first_name }}
-                                        </div>
-                                    @endforelse
+                                        @empty
+                                            <div class="flex flex-col items-center justify-center h-48">
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                    class="w-12 h-12 mb-3 text-gray-400" fill="none"
+                                                    viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="1.5"
+                                                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                                </svg>
+                                                <p class="text-gray-500">Start a conversation with
+                                                    {{ $currentRetailer->first_name }}</p>
+                                            </div>
+                                        @endforelse
+                                    @endif
                                 </div>
 
                                 <!-- Message Input -->
@@ -96,8 +144,16 @@
                                     </form>
                                 </div>
                             @else
-                                <div class="flex items-center justify-center h-full">
-                                    <p class="text-gray-500">Select a retailer to start messaging</p>
+                                <!-- No selected retailer -->
+                                <div class="flex flex-col items-center justify-center h-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mb-4 text-gray-300"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                    </svg>
+                                    <h3 class="mb-1 text-lg font-medium text-gray-900">No conversation selected</h3>
+                                    <p class="text-gray-500">Select a retailer from the list or search for new retailers
+                                    </p>
                                 </div>
                             @endif
                         </div>
@@ -252,12 +308,21 @@
                             if (retailerElement) {
                                 retailerElement.classList.add('bg-yellow-100', 'font-bold');
                                 // Add a notification dot if not already there
-                                if (!retailerElement.querySelector('.notification-dot')) {
-                                    const nameElement = retailerElement.querySelector('.flex-1');
-                                    if (nameElement) {
-                                        const dot = document.createElement('span');
-                                        dot.className = 'notification-dot w-3 h-3 bg-red-500 rounded-full ml-2';
-                                        nameElement.appendChild(dot);
+                                const avatarContainer = retailerElement.querySelector('.relative');
+                                if (avatarContainer) {
+                                    let badge = avatarContainer.querySelector('span.absolute');
+
+                                    if (badge) {
+                                        // Increment existing badge
+                                        let count = parseInt(badge.textContent) || 0;
+                                        badge.textContent = count + 1;
+                                    } else {
+                                        // Create new badge
+                                        const badge = document.createElement('span');
+                                        badge.className =
+                                            'absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full';
+                                        badge.textContent = '1';
+                                        avatarContainer.appendChild(badge);
                                     }
                                 }
                             }

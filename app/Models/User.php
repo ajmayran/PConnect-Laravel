@@ -68,6 +68,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
     public function credential()
     {
         return $this->hasMany(Credential::class);
@@ -96,4 +101,16 @@ class User extends Authenticatable
     {
         return $this->hasMany(Review::class);
     }
+
+    public function sentMessages()
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function receivedMessages()
+    {
+        return $this->hasMany(Message::class, 'receiver_id');
+    }
+
+    
 }

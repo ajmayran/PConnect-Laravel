@@ -45,6 +45,7 @@
                         <p class="text-sm text-gray-700">Click image to change</p>
                         <!-- Left Side: Form Fields -->
                         <div class="self-start w-full md:w-1/2">
+
                             <div class="mb-4">
                                 <label for="business_name" class="block text-sm font-medium text-gray-700">
                                     Business Name
@@ -53,24 +54,30 @@
                                     autocomplete="business_name"
                                     value="{{ old('business_name', $user->retailerProfile->business_name ?? '') }}"
                                     class="block w-full mt-1 border-gray-300 rounded-md shadow-sm dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600">
+                                @error('business_name')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div class="mb-4">
                                 <label for="phone" class="block text-sm font-medium text-gray-700">
                                     Phone
                                 </label>
-                                <input id="phone" name="phone" type="number" required autofocus
+                                <input id="phone" name="phone" type="text" required autofocus
                                     autocomplete="phone" value="{{ old('phone', $user->retailerProfile->phone ?? '') }}"
                                     class="block w-full mt-1 border-gray-300 rounded-md shadow-sm dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600">
+                                @error('phone')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div class="mb-4">
-                                <label for="address" class="block mb-2 texgit pt-sm font-medium text-gray-700">
+                                <label for="address" class="block mb-2 font-medium text-gray-700 texgit pt-sm">
                                     Address
                                 </label>
-                                {{-- <input type="hidden" id="region" name="region" value="09">
+                                <input type="hidden" id="region" name="region" value="09">
                                 <input type="hidden" id="province" name="province" value="097300">
-                                <input type="hidden" id="city" name="city" value="093170"> --}}
+                                <input type="hidden" id="city" name="city" value="093170">
 
                                 <div class="mb-4">
                                     <label for="barangay"

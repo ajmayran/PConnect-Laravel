@@ -372,21 +372,27 @@
             // Retailer Profile Card - Compact Design
             modalHtml += '<div class="p-4 bg-white rounded-lg shadow">';
             modalHtml += '<div class="flex items-start space-x-4">';
-            // Profile picture and name section
+            // Profile picture and name section with clickable elements
             modalHtml += '<div class="flex items-center">';
+            modalHtml += '<a href="' + '{{ route('distributors.retailers.show', ':id') }}'.replace(':id', retailer.id) +
+                '" class="block">';
             if (retailer.retailer_profile && retailer.retailer_profile.profile_picture) {
                 modalHtml += '<img src="' + storageBaseUrl + '/' + retailer.retailer_profile.profile_picture +
-                    '" alt="Profile" class="object-cover w-12 h-12 rounded-full shadow" />';
+                    '" alt="Profile" class="object-cover w-12 h-12 rounded-full shadow hover:ring-2 hover:ring-green-500" />';
             } else {
-                modalHtml += '<div class="flex items-center justify-center w-12 h-12 bg-gray-200 rounded-full">' +
+                modalHtml +=
+                    '<div class="flex items-center justify-center w-12 h-12 bg-gray-200 rounded-full hover:ring-2 hover:ring-green-500">' +
                     '<span class="text-xl font-medium text-gray-600">' + retailer.first_name.charAt(0) + '</span></div>';
             }
+            modalHtml += '</a>';
             modalHtml += '</div>';
             // Retailer information container
             modalHtml += '<div class="flex-1">';
             modalHtml += '<div class="flex items-center mb-2">';
+            modalHtml += '<a href="/retailers/' + retailer.id + '" class="hover:text-green-600">';
             modalHtml += '<h4 class="text-lg font-medium text-gray-800">' + retailer.first_name + ' ' + retailer.last_name +
                 '</h4>';
+            modalHtml += '</a>';
             modalHtml += '</div>';
             modalHtml += '<div class="grid grid-cols-1 gap-2 text-sm">';
             if (retailer.email) {

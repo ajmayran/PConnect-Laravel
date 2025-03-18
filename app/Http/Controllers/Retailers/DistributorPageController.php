@@ -7,46 +7,76 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Distributors;
 use Illuminate\Http\Request;
+use App\Models\BlockedRetailer;
+use App\Models\DistributorReport;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 
 class DistributorPageController extends Controller
 {
     public function show($id, Request $request)
     {
-        // Get distributor directly from Distributors model
-        $distributor = Distributors::where('id', $id)
-            ->firstOrFail();
+        $retailerId = Auth::id();
+        $distributor = Distributors::findOrFail($id);
 
-        if ($distributor->barangay) {
-            $barangay = DB::table('barangays')->where('code', $distributor->barangay)->first();
-            if ($barangay) {
-                $distributor->barangay_name = $barangay->name;
-            } else {
-                $distributor->barangay_name = $distributor->barangay; // Use code as fallback
+        // Check if this distributor has blocked the retailer
+        $isBlocked = BlockedRetailer::where('distributor_id', $distributor->user_id)
+            ->where('retailer_id', $retailerId)
+            ->exists();
+
+        // Get categories for the distributor
+        $categories = Category::whereHas('products', function ($query) use ($id) {
+            $query->where('distributor_id', $id);
+        })->get();
+
+        // Selected category
+        $selectedCategory = $request->category ?? 'all';
+
+        // Only get products if not blocked
+        if (!$isBlocked) {
+            $productsQuery = Product::where('distributor_id', $id)
+                ->where('status', 'active')
+                ->where('stock_quantity', '>', 0);
+
+            if ($selectedCategory !== 'all') {
+                $productsQuery->where('category_id', $selectedCategory);
             }
+
+            $products = $productsQuery->get();
+        } else {
+            $products = collect(); // Empty collection if blocked
         }
 
-        $selectedCategory = $request->get('category', 'all');
-        $categories = Category::all();
+        return view('retailers.distributor-page', [
+            'distributor' => $distributor,
+            'products' => $products,
+            'categories' => $categories,
+            'selectedCategory' => $selectedCategory,
+            'isBlocked' => $isBlocked
+        ]);
+    }
 
-        // Use distributor's user_id for product query
-        $productsQuery = Product::where('distributor_id', $distributor->id)
-            ->where('status', 'pending')
-            ->where('stock_quantity', '>', 0);
+    public function reportDistributor(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string',
+            'details' => 'nullable|string',
+        ]);
 
-        if ($selectedCategory !== 'all') {
-            $productsQuery->where('category_id', $selectedCategory);
-        }
+        $user = Auth::user();
+        $distributor = Distributors::findOrFail($id);
 
-        $products = $productsQuery->paginate(12);
+        // Create report record
+        DistributorReport::create([
+            'retailer_id' => $user->id,
+            'distributor_id' => $id,
+            'reason' => $request->reason,
+            'details' => $request->details,
+            'status' => 'pending',
+        ]);
 
-        return view('retailers.distributor-page', compact(
-            'distributor',
-            'products',
-            'categories',
-            'selectedCategory'
-        ));
+        return redirect()->back()->with('success', 'Report submitted successfully. Our team will review it shortly.');
     }
 }

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
+use view;
 
 class DistributorProfileController extends Controller
 {
@@ -38,7 +39,7 @@ class DistributorProfileController extends Controller
             'city' => 'nullable|string|max:10',
             'barangay' => 'required|string|max:20',
             'street' => 'required|string|max:255',
-            'company_phone_number' => 'required|string|max:15',
+            'company_phone_number' => 'required|numeric|digits:11',
         ]);
 
         $user = Auth::user();

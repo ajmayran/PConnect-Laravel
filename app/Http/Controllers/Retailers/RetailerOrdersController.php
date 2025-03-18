@@ -9,6 +9,9 @@ use App\Models\CartDetail;
 use App\Models\Distributors;
 use App\Models\OrderDetails;
 use Illuminate\Http\Request;
+use App\Models\ReturnRequest;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\ReturnRequestItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -105,50 +108,102 @@ class RetailerOrdersController extends Controller
         return view('retailers.orders.returned', compact('orders'));
     }
 
-    // public function returnOrder(Request $request, Order $order)
-    // {
-    //     // Check if the order belongs to the authenticated user
-    //     if ($order->user_id !== Auth::user()->id) {
-    //         return redirect()->back()->with('error', 'You are not authorized to return this order.');
-    //     }
+    public function requestReturn(Request $request, Order $order)
+    {
+        // Check if the order belongs to the authenticated user
+        if ($order->user_id !== Auth::user()->id) {
+            return redirect()->back()->with('error', 'You are not authorized to return this order.');
+        }
 
-    //     // Check if the order status allows return (usually only delivered/completed orders can be returned)
-    //     if (!in_array($order->status, ['completed', 'delivered'])) {
-    //         return redirect()->back()->with('error', 'This order cannot be returned.');
-    //     }
+        // Check if the order status allows return (only completed orders can be returned)
+        if ($order->status !== 'completed') {
+            return redirect()->back()->with('error', 'Only completed orders can be returned.');
+        }
 
-    //     // Validate return reason
-    //     $data = $request->validate([
-    //         'return_reason' => 'required|string|max:255',
-    //     ]);
+        // Validate the request data
+        $validated = $request->validate([
+            'reason' => 'required|string',
+            'receipt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120', // 5MB max
+            'products' => 'required|array',
+            'products.*.selected' => 'sometimes|accepted',
+            'products.*.quantity' => 'required_with:products.*.selected|integer|min:1',
+        ]);
 
-    //     // Start a transaction to ensure data consistency
-    //     DB::beginTransaction();
+        // Check if at least one product is selected
+        $hasSelectedProducts = false;
+        foreach ($request->products as $detailId => $product) {
+            if (isset($product['selected'])) {
+                $hasSelectedProducts = true;
+                break;
+            }
+        }
 
-    //     try {
-    //         $order->update([
-    //             'status' => 'returned',
-    //             'return_reason' => $data['return_reason'],
-    //             'status_updated_at' => now()
-    //         ]);
+        if (!$hasSelectedProducts) {
+            return redirect()->back()->with('error', 'Please select at least one product to return.');
+        }
 
-    //         // Send notification to both retailer and distributor
-    //         $this->notificationService->orderStatusChanged(
-    //             $order->id,
-    //             'returned',
-    //             $order->user_id,
-    //             $order->distributor_id,
-    //             $data['return_reason']
-    //         );
+        // Start a transaction to ensure data consistency
+        DB::beginTransaction();
 
-    //         DB::commit();
-    //         return redirect()->back()->with('success', 'Return request submitted successfully.');
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         Log::error('Order return failed: ' . $e->getMessage());
-    //         return redirect()->back()->with('error', 'Failed to submit return request: ' . $e->getMessage());
-    //     }
-    // }
+        try {
+            // Store the receipt file
+            $receiptPath = $request->file('receipt')->store('receipts', 'public');
+
+            // Create the return request
+            $returnRequest = ReturnRequest::create([
+                'order_id' => $order->id,
+                'retailer_id' => Auth::id(),
+                'reason' => $validated['reason'],
+                'receipt_path' => $receiptPath,
+                'status' => 'pending'
+            ]);
+
+            // Process selected products
+            foreach ($request->products as $detailId => $product) {
+                if (isset($product['selected'])) {
+                    // Get the order detail to validate the quantity
+                    $orderDetail = OrderDetails::find($detailId);
+
+                    if (!$orderDetail || $orderDetail->order_id !== $order->id) {
+                        throw new \Exception('Invalid product selected for return.');
+                    }
+
+                    // Validate that the return quantity doesn't exceed the ordered quantity
+                    $returnQuantity = (int)$product['quantity'];
+                    if ($returnQuantity > $orderDetail->quantity) {
+                        throw new \Exception('Return quantity cannot exceed the ordered quantity.');
+                    }
+
+                    // Create return request item
+                    ReturnRequestItem::create([
+                        'return_request_id' => $returnRequest->id,
+                        'order_detail_id' => $detailId,
+                        'quantity' => $returnQuantity
+                    ]);
+                }
+            }
+
+            // Send notification to distributor about the return request
+            $this->notificationService->create(
+                $order->distributor_id,
+                'return_request',
+                [
+                    'title' => 'New Return Request',
+                    'message' => "A return request has been submitted for order #{$order->formatted_order_id}.",
+                    'order_id' => $order->id,
+                    'return_request_id' => $returnRequest->id
+                ],
+                $order->id
+            );
+
+            DB::commit();
+            return redirect()->route('retailers.orders.completed')->with('success', 'Return request submitted successfully. We will review your request shortly.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Return request failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to submit return request: ' . $e->getMessage());
+        }
+    }
 
     public function cancelOrder(Request $request, Order $order)
     {
@@ -178,19 +233,6 @@ class RetailerOrdersController extends Controller
                 $order->user_id,
                 $order->distributor_id
             );
-
-            // Add additional retailer-specific notification with better context
-                // $this->notificationService->create(
-                //     $order->user_id,
-                //     'order_cancelled',
-                //     [
-                //         'title' => 'Order Cancelled',
-                //         'message' => "You have successfully cancelled your order {$order->formatted_order_id}.",
-                //         'order_id' => $order->id,
-                //         'recipient_type' => 'retailer'
-                //     ],
-                //     $order->id
-                // );
 
             DB::commit();
             return redirect()->back()->with('success', 'Order cancelled successfully.');
@@ -497,5 +539,45 @@ class RetailerOrdersController extends Controller
         }
 
         return view('retailers.orders.track', compact('delivery'));
+    }
+
+    public function viewReceipt(Order $order)
+    {
+        // Check if the order belongs to the current user
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Ensure the order is complete
+        if ($order->status !== 'completed') {
+            return redirect()->back()->with('error', 'Receipt is only available for completed orders.');
+        }
+
+        // Load necessary relationships
+        $order->load(['user', 'distributor', 'orderDetails.product', 'payment', 'delivery']);
+
+        return view('retailers.orders.view-receipt', compact('order'));
+    }
+
+    public function downloadReceipt(Order $order)
+    {
+        // Check if the order belongs to the current user
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Ensure the order is complete
+        if ($order->status !== 'completed') {
+            return redirect()->back()->with('error', 'Receipt is only available for completed orders.');
+        }
+
+        // Load necessary relationships
+        $order->load(['user', 'distributor', 'orderDetails.product', 'payment', 'delivery']);
+
+        // Generate PDF
+        $pdf = PDF::loadView('retailers.orders.view-receipt', compact('order'));
+
+        // Download the file
+        return $pdf->download('receipt-' . $order->formatted_order_id . '.pdf');
     }
 }

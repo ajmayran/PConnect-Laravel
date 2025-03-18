@@ -71,8 +71,8 @@
                             @endif
                         </div>
                     </div>
-                    <div class="flex-shrink-0">
-                        <a href="{{ route('distributors.messages.index', ['retailer' => $retailer->id]) }}"
+                    <div class="flex flex-shrink-0 space-x-2">
+                        <a href="{{ route('distributors.messages.show', $retailer->id) }}"
                             class="flex items-center px-4 py-2 text-sm font-medium text-white transition-colors bg-green-600 rounded-md hover:bg-green-700">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none"
                                 viewBox="0 0 24 24" stroke="currentColor">
@@ -81,6 +81,61 @@
                             </svg>
                             Message
                         </a>
+
+                        <!-- More Actions Dropdown -->
+                        <div x-data="{ open: false, top: 0, left: 0 }" @click.away="open = false" class="relative">
+                            <button
+                                @click="
+                                open = !open; 
+                                if (open) {
+                                    $nextTick(() => {
+                                        const rect = $el.getBoundingClientRect();
+                                        top = rect.bottom + window.scrollY;
+                                        left = rect.left + window.scrollX - 120;
+                                    });
+                                }
+                            "
+                                type="button"
+                                class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                </svg>
+                            </button>
+
+                            <template x-if="open">
+                                <div class="fixed z-50 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                                    :style="`top: ${top}px; left: ${left}px; min-width: 12rem; max-width: 16rem;`">
+                                    <div class="py-1">
+                                        <button @click="$dispatch('open-modal', 'report-retailer-modal'); open = false"
+                                            class="flex w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2 text-red-500"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                            Report Retailer
+                                        </button>
+                                        <form action="{{ route('distributors.retailers.block', $retailer->id) }}"
+                                            id="blockRetailerForm" method="POST" class="w-full">
+                                            @csrf
+                                            <button type="button" onclick="confirmBlock()"
+                                                class="flex w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100">
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                    class="w-5 h-5 mr-2 text-gray-500" fill="none"
+                                                    viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                </svg>
+                                                {{ $retailer->is_blocked ? 'Unblock Retailer' : 'Block Retailer' }}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -113,7 +168,8 @@
                     <div class="p-3 text-white bg-green-500 rounded-full">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
                 </div>
@@ -157,7 +213,7 @@
         <div class="mb-6 overflow-hidden bg-white rounded-lg shadow-sm">
             <div class="flex items-center justify-between p-6 border-b">
                 <h2 class="text-xl font-semibold text-gray-800">Recent Orders</h2>
-                <a href="{{ ('distributors.orders.index', ['search' => $retailer->first_name . ' ' . $retailer->last_name]) }}"
+                <a href="#" onclick="openOrdersModal()"
                     class="text-sm font-medium text-blue-600 hover:text-blue-800">View All Orders</a>
             </div>
             @if ($recentOrders->isEmpty())
@@ -180,10 +236,7 @@
                                     Total</th>
                                 <th
                                     class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                                    Status</th>
-                                <th
-                                    class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                                    Actions</th>
+                                    Distributor</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -202,32 +255,8 @@
                                             ₱{{ number_format($order->orderDetails->sum('subtotal'), 2) }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        @php
-                                            $statusColor = match ($order->status) {
-                                                'pending' => 'bg-yellow-100 text-yellow-800',
-                                                'processing' => 'bg-blue-100 text-blue-800',
-                                                'completed' => 'bg-green-100 text-green-800',
-                                                'cancelled', 'rejected' => 'bg-red-100 text-red-800',
-                                                'returned' => 'bg-gray-100 text-gray-800',
-                                                default => 'bg-gray-100 text-gray-800',
-                                            };
-                                        @endphp
-                                        <span
-                                            class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusColor }}">
-                                            {{ ucfirst($order->status) }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                        <a href="#" onclick="openOrderModal(this)"
-                                            data-order-id="{{ $order->id }}" data-status="{{ $order->status }}"
-                                            data-retailer='@json($order->user)'
-                                            data-details='@json($order->orderDetails)'
-                                            data-delivery-address="{{ $order->orderDetails->first()->delivery_address ?? '' }}"
-                                            data-created-at="{{ $order->created_at->format('F d, Y h:i A') }}"
-                                            class="text-blue-600 hover:text-blue-900">
-                                            View Details
-                                        </a>
-                                    </td>
+                                        <div class="text-sm text-gray-500">{{ $order->distributor->company_name }}
+                                        </div>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -237,31 +266,50 @@
         </div>
     </div>
 
-    <!-- filepath: c:\xampp\htdocs\PConnect-Laravel\resources\views\distributors\orders\_order_detail_modal.blade.php -->
-    <!-- Order Details Modal -->
-    <div id="orderModal"
+    <!-- All Orders Modal -->
+    <div id="allOrdersModal"
         class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
-        <div class="w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl md:w-3/4 sm:w-3/4">
+        <div class="w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl">
             <!-- Modal Header -->
             <div class="sticky top-0 z-10 flex items-center justify-between p-4 bg-white border-b">
-                <h2 class="text-xl font-bold text-gray-800" id="modalTitle">Order Details</h2>
-                <button onclick="closeModal()"
+                <h2 class="text-xl font-bold text-gray-800">All Orders for {{ $retailer->first_name }}
+                    {{ $retailer->last_name }}</h2>
+                <button onclick="closeOrdersModal()"
                     class="p-2 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12">
-                        </path>
+                            d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
 
-            <div id="modalContent" class="p-6">
-                <!-- Modal Content (Products and retailer profile) is generated dynamically -->
+            <!-- Modal Content -->
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                    Date</th>
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                    Total</th>
+                                <th
+                                    class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                    Distributor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allOrdersTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Table body will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Modal Footer -->
-            <div class="sticky bottom-0 flex justify-end p-4 bg-white border-t">
-                <button onclick="closeModal()"
+            <div class="flex justify-end p-4 border-t">
+                <button onclick="closeOrdersModal()"
                     class="px-4 py-2 font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">
                     Close
                 </button>
@@ -269,112 +317,204 @@
         </div>
     </div>
 
+    <!-- Report Retailer Modal -->
+    <div id="report-retailer-modal" x-data="{ show: false }"
+        x-on:open-modal.window="$event.detail == 'report-retailer-modal' ? show = true : null"
+        x-on:keydown.escape.window="show = false" x-show="show"
+        class="fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-black bg-opacity-50" x-cloak>
+        <div class="w-11/12 max-w-md bg-white rounded-lg shadow-xl md:w-1/2 sm:w-2/3" @click.away="show = false">
+            <div class="flex items-center justify-between p-4 border-b">
+                <h2 class="text-lg font-semibold text-gray-800">Report Retailer</h2>
+                <button @click="show = false"
+                    class="p-1 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form action="{{ route('distributors.retailers.report', $retailer->id) }}" method="POST"
+                id="reportRetailerForm">
+                @csrf
+                <div class="p-4 space-y-4">
+                    <div>
+                        <label for="report_reason" class="block mb-2 text-sm font-medium text-gray-700">Reason for
+                            reporting</label>
+                        <select id="report_reason" name="reason"
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select a reason</option>
+                            <option value="inappropriate_behavior">Inappropriate Behavior</option>
+                            <option value="fraud">Fraud or Scam</option>
+                            <option value="fake_profile">Fake Profile</option>
+                            <option value="payment_issues">Payment Issues</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="report_details" class="block mb-2 text-sm font-medium text-gray-700">Additional
+                            Details</label>
+                        <textarea id="report_details" name="details" rows="4"
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Please provide more details about your report"></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 p-4 border-t rounded-b-lg bg-gray-50">
+                    <button type="button" @click="show = false"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="confirmReport()"
+                        class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700">
+                        Submit Report
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
     <script>
-        var storageBaseUrl = "{{ asset('storage') }}";
-        var currentOrderId = null;
+        // Orders data from controller
+        const retailerId = {{ $retailer->id }};
+        const allOrders = @json($recentOrders);
 
-        function openModal(row) {
-            var orderId = row.getAttribute('data-order-id');
-            var formattedOrderId = row.closest('tr').querySelector('td:first-child').textContent.trim();
-            var orderStatus = row.getAttribute('data-status');
-            currentOrderId = orderId;
-            var retailer = JSON.parse(row.getAttribute('data-retailer'));
-            var details = JSON.parse(row.getAttribute('data-details'));
-            var dateTime = row.getAttribute('data-created-at');
-            var deliveryAddress = row.getAttribute('data-delivery-address');
+        function openOrdersModal() {
+            // Fetch all orders for this retailer from the server
+            fetch(`/retailers/${retailerId}/orders`)
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('allOrdersTableBody');
+                    tableBody.innerHTML = '';
 
-            document.getElementById('modalTitle').innerText = 'Order ' + formattedOrderId;
+                    if (data.orders && data.orders.length > 0) {
+                        data.orders.forEach(order => {
 
-            var modalHtml = '<div class="space-y-6">';
+                            const row = `
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-500">${formatDate(order.created_at)}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-blue-600">₱${formatNumber(order.total_amount || calculateTotal(order))}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-500">${order.distributor.company_name}</div>
+                                    </tr>
+                                `;
+                            tableBody.innerHTML += row;
+                        });
+                    } else {
+                        tableBody.innerHTML = `
+                                <tr>
+                                    <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                                        No orders found for this retailer.
+                                    </td>
+                                </tr>
+                            `;
+                    }
 
-            // Products Section
-            modalHtml += '<div class="overflow-hidden bg-white rounded-lg shadow">';
-            modalHtml +=
-                '<div class="p-4 border-b bg-gray-50"><h3 class="text-lg font-semibold text-gray-800">Products Ordered</h3></div>';
-            modalHtml += '<div class="overflow-x-auto">';
-            modalHtml += '<table class="min-w-full divide-y divide-gray-200">';
-            modalHtml += '<thead class="bg-gray-50"><tr>';
-            modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Product</th>';
-            modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Price</th>';
-            modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Quantity</th>';
-            modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Subtotal</th>';
-            modalHtml += '</tr></thead><tbody class="divide-y divide-gray-200">';
+                    // Show the modal
+                    document.getElementById('allOrdersModal').classList.remove('hidden');
+                })
+                .catch(error => {
+                    console.error('Error fetching orders:', error);
 
-            let totalAmount = 0;
-            details.forEach(function(detail) {
-                modalHtml += '<tr class="hover:bg-gray-50">';
-                modalHtml += '<td class="px-4 py-3">';
-                modalHtml += '<div class="flex items-center gap-3">';
-                if (detail.product && detail.product.image) {
-                    modalHtml += '<img src="' + storageBaseUrl + '/' + detail.product.image + '" alt="' + detail
-                        .product.product_name + '" class="object-cover w-16 h-16 rounded-lg" />';
-                } else {
-                    modalHtml += '<img src="/img/default-product.jpg" class="object-cover w-16 h-16 rounded-lg" />';
-                }
-                modalHtml += '<span class="font-medium text-gray-800">' + (detail.product ? detail.product
-                    .product_name : 'Unknown Product') + '</span>';
-                modalHtml += '</div></td>';
-                modalHtml += '<td class="px-4 py-3">₱' + parseFloat(detail.price).toFixed(2) + '</td>';
-                modalHtml += '<td class="px-4 py-3">' + detail.quantity + '</td>';
-                modalHtml += '<td class="px-4 py-3 font-medium text-blue-600">₱' + parseFloat(detail.subtotal)
-                    .toFixed(2) + '</td>';
-                modalHtml += '</tr>';
-                totalAmount += parseFloat(detail.subtotal);
-            });
+                    // Show modal with error message
+                    const tableBody = document.getElementById('allOrdersTableBody');
+                    tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="4" class="px-6 py-4 text-center text-red-500">
+                                    Failed to load orders. Please try again.
+                                </td>
+                            </tr>
+                        `;
 
-            modalHtml += '</tbody>';
-            modalHtml += '<tfoot class="bg-gray-50"><tr>';
-            modalHtml += '<td colspan="3" class="px-4 py-3 font-medium text-right text-gray-700">Total Amount:</td>';
-            modalHtml += '<td class="px-4 py-3 font-bold text-blue-600">₱' + totalAmount.toFixed(2) + '</td>';
-            modalHtml += '</tr></tfoot>';
-            modalHtml += '</table></div></div>';
-
-            // Order Info Section
-            modalHtml += '<div class="p-4 bg-white rounded-lg shadow">';
-            modalHtml += '<h3 class="mb-3 text-lg font-semibold text-gray-800">Order Information</h3>';
-            modalHtml += '<div class="grid grid-cols-1 gap-3 md:grid-cols-2">';
-
-            // Order Date & Status
-            modalHtml += '<div class="p-3 rounded-lg bg-gray-50">';
-            modalHtml += '<p class="text-sm font-medium text-gray-500">Order Date</p>';
-            modalHtml += '<p class="text-gray-800">' + dateTime + '</p>';
-            modalHtml += '</div>';
-
-            modalHtml += '<div class="p-3 rounded-lg bg-gray-50">';
-            modalHtml += '<p class="text-sm font-medium text-gray-500">Status</p>';
-
-            let statusClass = '';
-            if (orderStatus === 'completed') statusClass = 'bg-green-100 text-green-800';
-            else if (orderStatus === 'processing') statusClass = 'bg-blue-100 text-blue-800';
-            else if (orderStatus === 'pending') statusClass = 'bg-yellow-100 text-yellow-800';
-            else if (orderStatus === 'rejected' || orderStatus === 'cancelled') statusClass = 'bg-red-100 text-red-800';
-            else if (orderStatus === 'returned') statusClass = 'bg-gray-100 text-gray-800';
-            else statusClass = 'bg-gray-100 text-gray-800';
-
-            modalHtml += '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ' + statusClass + '">';
-            modalHtml += orderStatus.charAt(0).toUpperCase() + orderStatus.slice(1);
-            modalHtml += '</span>';
-            modalHtml += '</div>';
-
-            // Delivery Address
-            if (deliveryAddress) {
-                modalHtml += '<div class="col-span-1 p-3 rounded-lg bg-gray-50 md:col-span-2">';
-                modalHtml += '<p class="text-sm font-medium text-gray-500">Delivery Address</p>';
-                modalHtml += '<p class="text-gray-800">' + deliveryAddress + '</p>';
-                modalHtml += '</div>';
-            }
-
-            modalHtml += '</div>';
-            modalHtml += '</div>';
-
-            modalHtml += '</div>';
-
-            document.getElementById('modalContent').innerHTML = modalHtml;
-            document.getElementById('orderModal').classList.remove('hidden');
+                    document.getElementById('allOrdersModal').classList.remove('hidden');
+                });
         }
 
-        function closeModal() {
-            document.getElementById('orderModal').classList.add('hidden');
+        function closeOrdersModal() {
+            document.getElementById('allOrdersModal').classList.add('hidden');
+        }
+
+        // Helper functions
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: true
+            });
+        }
+
+        function formatNumber(number) {
+            return parseFloat(number).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+
+        function calculateTotal(order) {
+            if (order.order_details) {
+                return order.order_details.reduce((total, detail) => total + parseFloat(detail.subtotal), 0);
+            }
+            return 0;
+        }
+
+        function capitalizeFirst(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1).replace(/_/g, ' ');
+        }
+
+        function confirmBlock() {
+            const actionText = "{{ $retailer->is_blocked ? 'unblock' : 'block' }}";
+            const retailerName = "{{ $retailer->first_name }} {{ $retailer->last_name }}";
+
+            Swal.fire({
+                title: `Confirm ${actionText}`,
+                html: `Are you sure you want to ${actionText} <strong>${retailerName}</strong>?<br><br>
+               ${actionText === 'block' ? 'This retailer will no longer be able to place orders with you.' : 
+               'This will allow the retailer to place orders with you again.'}`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: actionText === 'block' ? '#d33' : '#3085d6',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: `Yes, ${actionText} retailer`,
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('blockRetailerForm').submit();
+                }
+            });
+        }
+
+        function confirmReport() {
+            const reason = document.getElementById('report_reason').value;
+            const details = document.getElementById('report_details').value;
+
+            if (!reason) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Required Field Missing',
+                    text: 'Please select a reason for reporting this retailer',
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Report Retailer',
+                html: `Are you sure you want to report <strong>{{ $retailer->first_name }} {{ $retailer->last_name }}</strong>?<br><br>
+               This report will be reviewed by our team.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, submit report',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('reportRetailerForm').submit();
+                }
+            });
         }
     </script>
 </x-distributor-layout>

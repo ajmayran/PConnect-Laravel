@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\Notification;
+use App\Models\ReturnRequest;
 use App\Events\NewNotification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -125,10 +126,10 @@ class NotificationService
                 'message' => "Your order {$formattedOrderId} has been cancelled."
             ],
             'returned' => [
-                'title' => 'Order Returned',    
+                'title' => 'Order Returned',
                 'message' => "Your order {$formattedOrderId} return has been processed."
             ],
-        ];
+        ];  
 
         // Define status-specific messages and titles for distributors
         $distributorMessages = [
@@ -426,5 +427,28 @@ class NotificationService
             ]);
             return null;
         }
+    }
+
+    public function returnRequestNotification($returnRequestId, $retailerId, $distributorId)
+    {
+        $returnRequest = ReturnRequest::with('order')->find($returnRequestId);
+        if (!$returnRequest) return null;
+
+        $order = $returnRequest->order;
+        $formattedOrderId = $order ? $order->formatted_order_id : 'Unknown Order';
+
+        // Get retailer details
+        $retailer = \App\Models\User::find($retailerId);
+        $retailerName = $retailer ? $retailer->first_name . ' ' . $retailer->last_name : 'A retailer';
+
+        // Notify distributor about the return request
+        $distributorData = [
+            'title' => 'New Return Request',
+            'message' => "New return request for order {$formattedOrderId} received from {$retailerName}",
+            'order_id' => $order->id,
+            'return_request_id' => $returnRequestId
+        ];
+
+        return $this->create($distributorId, 'return_request', $distributorData, $order->id);
     }
 }

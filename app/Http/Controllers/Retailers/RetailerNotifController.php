@@ -56,7 +56,7 @@ class RetailerNotifController extends Controller
             return response()->json(['success' => true]);
         }
         
-        return response()->json(['success' => false, 'message' => 'Notification not found'], 404);
+        return back()->with('success', ' notifications marked as read');
     }
     
     public function markAllAsRead(Request $request)
@@ -65,6 +65,6 @@ class RetailerNotifController extends Controller
             ->where('is_read', false)
             ->update(['is_read' => true]);
             
-        return response()->json(['success' => true, 'count' => $count]);
+        return back()->with('success', $count . ' notifications marked as read');
     }
 }

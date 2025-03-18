@@ -44,4 +44,6 @@ class RetailerProfile extends Model
 
         return $barangays[$this->barangay];
     }
+
+    
 }

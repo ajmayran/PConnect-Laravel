@@ -140,8 +140,8 @@
                                 {{ __('Profile') }}
                             </x-dropdown-link>
 
-                            <x-dropdown-link :href="route('retailers.tickets.create')">
-                                {{ __('Create Ticket') }}
+                            <x-dropdown-link :href="route('retailers.profile.my-purchase')">
+                                {{ __('My Purchase') }}
                             </x-dropdown-link>
 
                             <!-- Authentication -->

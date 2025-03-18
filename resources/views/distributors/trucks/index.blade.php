@@ -72,7 +72,7 @@
                                             <!-- Street Address -->
                                             <div>
                                                 <label class="block mb-1 text-sm text-gray-700">Street Address</label>
-                                                <textarea name="locations[0][street]" required
+                                                <textarea name="locations[0][street]" 
                                                     class="w-full px-3 py-2 text-sm border border-gray-300 rounded shadow appearance-none focus:outline-none focus:shadow-outline location-street"
                                                     rows="2"></textarea>
                                             </div>
@@ -318,7 +318,7 @@
                     menu.classList.add('hidden');
                 });
             }
-        });t
+        });
 
         // Function to handle row clicks (view truck details)
         function viewTruckDetails(truckId, event) {
@@ -528,7 +528,7 @@
             
             <div>
                 <label class="block mb-1 text-sm text-gray-700">Street Address</label>
-                <textarea name="locations[${locationCounter}][street]" required
+                <textarea name="locations[${locationCounter}][street]"
                     class="w-full px-3 py-2 text-sm border border-gray-300 rounded shadow appearance-none focus:outline-none focus:shadow-outline location-street"
                     rows="2"></textarea>
             </div>
@@ -582,7 +582,7 @@
             
             <div>
                 <label class="block mb-1 text-sm text-gray-700">Street Address</label>
-                <textarea name="locations[${editLocationCounter}][street]" required
+                <textarea name="locations[${editLocationCounter}][street]" 
                     class="w-full px-3 py-2 text-sm border border-gray-300 rounded shadow appearance-none focus:outline-none focus:shadow-outline location-street"
                     rows="2"></textarea>
             </div>
@@ -729,7 +729,7 @@
             
             <div>
                 <label class="block mb-1 text-sm text-gray-700">Street Address</label>
-                <textarea name="locations[${index}][street]" required
+                <textarea name="locations[${index}][street]" 
                     class="w-full px-3 py-2 text-sm border border-gray-300 rounded shadow appearance-none focus:outline-none focus:shadow-outline"
                     rows="2">${location ? location.street || '' : ''}</textarea>
             </div>

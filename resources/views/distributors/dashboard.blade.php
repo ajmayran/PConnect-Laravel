@@ -132,6 +132,12 @@
                     <iconify-icon icon="mdi:cart" class="pb-1 mr-1 text-xl text-green-500 align-middle"></iconify-icon>
                     Customer Engagement
                 </h3>
+
+                <!-- New stats container -->
+                <div id="engagement-stats" class="mb-4">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+
                 <div class="relative" style="height: 200px;">
                     <canvas id="addToCartChart"></canvas>
                 </div>
@@ -155,7 +161,6 @@
                                 <th class="pb-3">Name</th>
                                 <th class="pb-3">Category</th>
                                 <th class="pb-3">Sold</th>
-                                <th class="pb-3 pr-3 text-right">Revenue</th>
                             </tr>
                         </thead>
                         <tbody id="top-products-table">
@@ -172,9 +177,6 @@
                                 <td class="py-3">
                                     <div class="w-12 h-5 bg-gray-200 rounded animate-pulse"></div>
                                 </td>
-                                <td class="py-3 pr-3 text-right">
-                                    <div class="w-16 h-5 ml-auto bg-gray-200 rounded animate-pulse"></div>
-                                </td>
                             </tr>
                             <tr class="border-b hover:bg-gray-50">
                                 <td class="py-3 pl-3">
@@ -188,9 +190,6 @@
                                 </td>
                                 <td class="py-3">
                                     <div class="w-12 h-5 bg-gray-200 rounded animate-pulse"></div>
-                                </td>
-                                <td class="py-3 pr-3 text-right">
-                                    <div class="w-16 h-5 ml-auto bg-gray-200 rounded animate-pulse"></div>
                                 </td>
                             </tr>
                         </tbody>

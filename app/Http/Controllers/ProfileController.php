@@ -56,7 +56,7 @@ class ProfileController extends Controller
     {
         $request->validate([
             'business_name' => ['nullable', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:15'],
+            'phone' => ['nullable', 'numeric', 'digits:11'],
             'city' => ['nullable', 'string', 'max:10'],
             'province' => ['nullable', 'string', 'max:10'],
             'region' => ['nullable', 'string', 'max:10'],

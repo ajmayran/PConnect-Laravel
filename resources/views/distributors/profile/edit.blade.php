@@ -17,7 +17,7 @@
                     </p>
                 </header>
 
-                <form method="POST" action="{{ route('profile.updateSetup') }}" enctype="multipart/form-data" class="mt-6">
+                <form method="POST" action="{{ route('distributors.profile.update.distributor') }}" enctype="multipart/form-data" class="mt-6">
                     @csrf
                     @method('PUT')
                     <div class="flex flex-col items-center gap-4 p-4 sm:p-8 md:flex-col">
@@ -65,9 +65,9 @@
                                 <label for="address" class="block mb-2 text-sm font-medium text-gray-700">
                                     Address
                                 </label>
-                                {{-- <input type="hidden" id="region" name="region" value="09">
+                                <input type="hidden" id="region" name="region" value="09">
                                 <input type="hidden" id="province" name="province" value="097300">
-                                <input type="hidden" id="city" name="city" value="093170"> --}}
+                                <input type="hidden" id="city" name="city" value="093170">
 
                                 <div class="mb-4">
                                     <label for="barangay"

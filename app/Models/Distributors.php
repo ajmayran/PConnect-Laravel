@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,8 +15,6 @@ class Distributors extends Model
         'company_name',
         'company_email',
         'company_phone_number',
-        'bir_form',
-        'sec_document',
         'profile_completed',
         'region',
         'province',
@@ -25,6 +24,23 @@ class Distributors extends Model
         'company_profile_image'
     ];
 
+
+    public function getBarangayNameAttribute()
+    {
+        if (!$this->barangay) {
+            return 'N/A';
+        }
+
+        static $barangays = [];
+
+        if (!isset($barangays[$this->barangay])) {
+            $barangay = DB::table('barangays')->where('code', $this->barangay)->first();
+            $barangays[$this->barangay] = $barangay ? $barangay->name : 'Unknown';
+        }
+
+        return $barangays[$this->barangay];
+    }
+    
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

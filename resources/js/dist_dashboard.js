@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Apply dashboard data to DOM elements
     updateDashboardSummary();
 
@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     populateTopProductsTable();
 
     // Add event listener for sales period selector
-    document.getElementById('sales-period-selector')?.addEventListener('change', function() {
+    document.getElementById('sales-period-selector')?.addEventListener('change', function () {
         // In a real implementation, this would fetch new data or filter existing data
         // For now, we'll just simulate a loading state and reuse the same data
         simulateChartLoading('productSalesChart');
@@ -111,7 +111,7 @@ function initializeSalesChart() {
                     padding: 10,
                     displayColors: false,
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             return '₱' + context.raw.toLocaleString('en-PH', {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2
@@ -128,7 +128,7 @@ function initializeSalesChart() {
                     ticks: {
                         maxRotation: 0,
                         maxTicksLimit: 7,
-                        callback: function(value, index) {
+                        callback: function (value, index) {
                             // Show fewer labels on mobile
                             const isMobile = window.innerWidth < 768;
                             if (isMobile) {
@@ -141,7 +141,7 @@ function initializeSalesChart() {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        callback: function(value) {
+                        callback: function (value) {
                             return '₱' + value.toLocaleString('en-PH');
                         }
                     }
@@ -198,32 +198,32 @@ function initializeOrdersChart() {
         data: {
             labels: labels,
             datasets: [{
-                    label: 'Completed',
-                    data: completedData,
-                    backgroundColor: 'rgba(39, 174, 96, 0.7)',
-                    borderColor: '#27AE60',
-                    borderWidth: 1,
-                    borderRadius: 4,
-                    borderSkipped: false
-                },
-                {
-                    label: 'Pending',
-                    data: pendingData,
-                    backgroundColor: 'rgba(241, 196, 15, 0.7)',
-                    borderColor: '#F1C40F',
-                    borderWidth: 1,
-                    borderRadius: 4,
-                    borderSkipped: false
-                },
-                {
-                    label: 'Cancelled',
-                    data: cancelledData,
-                    backgroundColor: 'rgba(231, 76, 60, 0.7)',
-                    borderColor: '#E74C3C',
-                    borderWidth: 1,
-                    borderRadius: 4,
-                    borderSkipped: false
-                }
+                label: 'Completed',
+                data: completedData,
+                backgroundColor: 'rgba(39, 174, 96, 0.7)',
+                borderColor: '#27AE60',
+                borderWidth: 1,
+                borderRadius: 4,
+                borderSkipped: false
+            },
+            {
+                label: 'Pending',
+                data: pendingData,
+                backgroundColor: 'rgba(241, 196, 15, 0.7)',
+                borderColor: '#F1C40F',
+                borderWidth: 1,
+                borderRadius: 4,
+                borderSkipped: false
+            },
+            {
+                label: 'Cancelled',
+                data: cancelledData,
+                backgroundColor: 'rgba(231, 76, 60, 0.7)',
+                borderColor: '#E74C3C',
+                borderWidth: 1,
+                borderRadius: 4,
+                borderSkipped: false
+            }
             ]
         },
         options: {
@@ -349,6 +349,7 @@ function initializeCartChart() {
             }
         }
     });
+    updateEngagementStats();
 }
 
 // Populate top products table
@@ -377,11 +378,22 @@ function populateTopProductsTable() {
         imgCell.className = 'py-3 pl-3';
 
         const img = document.createElement('img');
-        img.src = product.image || '/storage/products/placeholder.png'; // Fallback image
+
+        if (product.image) {
+            // Handle both cases: full path or just filename
+            if (product.image.startsWith('http') || product.image.startsWith('/')) {
+                img.src = product.image;
+            } else {
+                // For cases where only filename is returned, construct proper path
+                img.src = '/storage/products/' + product.image.split('/').pop();
+            }
+        } else {
+            img.src = '/storage/products/placeholder.png'; // Fallback image
+        }
         img.className = 'object-cover w-12 h-12 rounded-md';
         img.alt = product.name;
-        img.onerror = function() {
-            this.src = '/storage/products/placeholder.png';
+        img.onerror = function () {
+            this.src = '/img/default-product.jpg'; // Change to a path you know exists
         };
         imgCell.appendChild(img);
 
@@ -395,7 +407,9 @@ function populateTopProductsTable() {
         catCell.className = 'py-3';
         const catSpan = document.createElement('span');
         catSpan.className = 'px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full';
-        catSpan.textContent = product.category || 'Uncategorized';
+
+        const categoryName = product.category || 'Uncategorized';
+        catSpan.textContent = categoryName;
         catCell.appendChild(catSpan);
 
         // Quantity sold
@@ -403,16 +417,10 @@ function populateTopProductsTable() {
         soldCell.className = 'py-3';
         soldCell.textContent = product.total_sold;
 
-        // Revenue
-        const revenueCell = document.createElement('td');
-        revenueCell.className = 'py-3 pr-3 font-medium text-right text-green-600';
-        revenueCell.textContent = formatCurrency(product.total_revenue);
-
         row.appendChild(imgCell);
         row.appendChild(nameCell);
         row.appendChild(catCell);
         row.appendChild(soldCell);
-        row.appendChild(revenueCell);
 
         tableBody.appendChild(row);
     });
@@ -421,7 +429,7 @@ function populateTopProductsTable() {
     if (dashboardData.topProducts.length === 0) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
-        cell.colSpan = 5;
+        cell.colSpan = 4; // Reduced from 5 to 4 since we removed the revenue column
         cell.className = 'py-8 text-center text-gray-500';
         cell.textContent = 'No products sold in the selected period';
         row.appendChild(cell);
@@ -479,7 +487,7 @@ function updateChartsForTheme(isDark) {
 }
 
 // Responsive behavior for charts
-window.addEventListener('resize', function() {
+window.addEventListener('resize', function () {
     // Update charts if needed for better mobile display
     if (window.salesChart) {
         const isMobile = window.innerWidth < 768;
@@ -487,3 +495,61 @@ window.addEventListener('resize', function() {
         window.salesChart.update();
     }
 });
+
+function updateEngagementStats() {
+    const statsContainer = document.getElementById('engagement-stats');
+    if (!statsContainer || !dashboardData) return;
+
+    // Clear existing content
+    statsContainer.innerHTML = '';
+
+    // Create metrics container
+    const metricsDiv = document.createElement('div');
+    metricsDiv.className = 'grid grid-cols-3 gap-4 mb-4 text-center';
+
+    // Add metrics if available in dashboardData
+    const metrics = [
+        {
+            label: 'Cart Additions',
+            value: dashboardData.cartAdditions || 0,
+            icon: 'mdi:cart-plus',
+            color: 'purple-500'
+        },
+        {
+            label: 'Cart Conversion',
+            value: (dashboardData.cartConversionRate || 0) + '%',
+            icon: 'mdi:swap-horizontal',
+            color: 'blue-500'
+        },
+        {
+            label: 'Repeat Customers',
+            value: dashboardData.repeatCustomers || 0,
+            icon: 'mdi:account-multiple',
+            color: 'green-500'
+        }
+    ];
+
+    metrics.forEach(metric => {
+        // Add trend indicator if available in data
+        const trendHtml = metric.trend ? `
+            <span class="flex items-center justify-center text-xs ${metric.trend > 0 ? 'text-green-500' : 'text-red-500'}">
+                ${metric.trend > 0 ? '↑' : '↓'} ${Math.abs(metric.trend)}%
+            </span>
+        ` : '';
+
+        const div = document.createElement('div');
+        div.className = 'p-2 rounded-lg bg-gray-50';
+        div.innerHTML = `
+            <div class="flex items-center justify-center mb-1">
+                <iconify-icon icon="${metric.icon}" class="text-xl text-${metric.color}"></iconify-icon>
+            </div>
+            <div class="flex items-center justify-center gap-1">
+                <div class="text-lg font-semibold">${metric.value}</div>
+                ${trendHtml}
+            </div>
+            <div class="text-xs text-gray-500">${metric.label}</div>
+        `;
+        metricsDiv.appendChild(div);
+    });
+    statsContainer.appendChild(metricsDiv);
+}

@@ -54,4 +54,9 @@ class Order extends Model
     {
         return $this->hasOne(Payment::class);
     }
+    
+    public function returnRequests()
+    {
+        return $this->hasMany(\App\Models\ReturnRequest::class);
+    }
 }
