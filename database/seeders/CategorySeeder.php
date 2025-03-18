@@ -17,9 +17,13 @@ class CategorySeeder extends Seeder
             ['name' => 'Ready To Cook'],
             ['name' => 'Beverages'],
             ['name' => 'Snacks'],
+            ['name' => 'Instant Products'],
             ['name' => 'Personal Care'],
             ['name' => 'Dairy Products'],
-            ['name' => 'Health & Hygiene'],
+            ['name' => 'Frozen Products'],
+            ['name' => 'Powered Products'],
+            ['name' => 'Sauces & Condiments'],
+            ['name' => 'Juices & Concentrates'],
         ];
         DB::table('categories')->insert($categories);
     }

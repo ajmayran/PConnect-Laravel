@@ -23,7 +23,7 @@
     "alpinejs": "^3.4.2",
     
         
-    "autoprefixer": "^10.4.20",
+    "autoprefixer": "^10.4.21",
     
         
     "axios": "^1.7.4",
@@ -38,7 +38,7 @@
     "laravel-vite-plugin": "^1.0",
     
         
-    "postcss": "^8.5.2",
+    "postcss": "^8.5.3",
     
         
     "tailwindcss": "^3.4.17",
@@ -51,7 +51,13 @@
     "dependencies": {
     
         
-    "@tailwindcss/line-clamp": "^0.4.4"
+    "@tailwindcss/line-clamp": "^0.4.4",
+    
+        
+    "laravel-echo": "^2.0.2",
+    
+        
+    "pusher-js": "^8.4.0"
     
     }
 }

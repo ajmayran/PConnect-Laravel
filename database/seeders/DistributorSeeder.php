@@ -27,9 +27,12 @@ class DistributorSeeder extends Seeder
             'company_name' => 'Test Company',
             'company_email' => 'testcompany@example.com',
             'company_profile_image' => '', // Set to empty string for testing
-            'company_address' => '123456 Test St',
-            'company_phone_number' => '1234567890',
-            'profile_completed' => false, // Initially set to false for testing
+            'region' => '',
+            'province' => '',
+            'city' => '',
+            'barangay' => 'Test Barangay',
+            'street' => 'Test Street',
+            'company_phone_number' => '1234567890'
         ]);
     }
 }

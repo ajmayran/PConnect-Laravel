@@ -1,7 +1,9 @@
 <x-distributor-layout>
     <div class="container max-w-6xl p-4 mx-auto overflow-y-auto">
         <h1 class="mb-6 text-2xl font-bold">Add New Product</h1>
-
+        
+        <a href="{{ route('distributors.products.index') }}" class="inline-block px-4 py-2 mb-4 text-sm font-medium text-gray-700 hover:text-green-400">← Back to Products</a>
+        
         <form id="productForm" action="{{ route('distributors.products.store') }}" method="POST"
             enctype="multipart/form-data">
             @csrf

@@ -14,6 +14,7 @@ class Order extends Model
         'payment_status',
         'status_updated_at',
         'reject_reason',
+        'cancel_reason',
     ];
 
     protected $casts = [
@@ -47,5 +48,15 @@ class Order extends Model
     public function delivery()
     {
         return $this->hasOne(Delivery::class);
+    }
+
+    public function payment()
+    {
+        return $this->hasOne(Payment::class);
+    }
+    
+    public function returnRequests()
+    {
+        return $this->hasMany(\App\Models\ReturnRequest::class);
     }
 }

@@ -38,6 +38,6 @@ class DistributorTicketController extends Controller
             'image' => $imagePath,
         ]);
 
-        return redirect()->route('distributors.dashboard')->with('success', 'Ticket created successfully.');
+        return redirect()->route('distributors.dashboard')->with('success', 'Ticket created successfully, we will get back to you soon.');
     }
 }

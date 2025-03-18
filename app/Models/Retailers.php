@@ -20,4 +20,11 @@ class Retailers extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function isBlockedBy($distributorId)
+    {
+        return BlockedRetailer::where('distributor_id', $distributorId)
+            ->where('retailer_id', $this->id)
+            ->exists();
+    }
 }

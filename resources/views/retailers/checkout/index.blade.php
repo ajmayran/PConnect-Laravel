@@ -26,10 +26,15 @@
                                     </div>
                                 </div>
                             @endforeach
+
+                            <!-- Pagination links -->
+                            <div class="flex justify-end mt-6">
+                                {{ $checkoutProducts->links() }}
+                            </div>
                         </div>
                         <div class="mt-6 text-right">
                             <p class="text-2xl font-bold">
-                                Total: ₱ {{ number_format($checkoutProducts->sum('subtotal'), 2) }}
+                                Total: ₱ {{ number_format($grandTotal, 2) }}
                             </p>
                         </div>
                     @endif
@@ -55,7 +60,14 @@
                     <div class="mt-4">
                         <p><strong>Business Name:</strong> {{ $user->retailerProfile->business_name ?? 'N/A' }}</p>
                         <p><strong>Phone:</strong> {{ $user->retailerProfile->phone ?? 'N/A' }}</p>
-                        <p><strong>Address:</strong> {{ $user->retailerProfile->address ?? 'N/A' }}</p>
+                        <p><strong>Address:</strong>
+                            @if ($user->retailerProfile && $user->retailerProfile->barangay_name)
+                                {{ $user->retailerProfile->barangay_name }},
+                                {{ $user->retailerProfile->street ?? '' }}
+                            @else
+                                N/A
+                            @endif
+                        </p>
                     </div>
 
                     <div class="pt-4 mt-6 border-t">
@@ -70,10 +82,13 @@
                     <h2 class="mb-4 text-xl font-semibold">Delivery Address</h2>
                     @if (isset($checkoutProducts->first()->product->distributor_id))
                         <form id="orderForm"
-                            action="{{ route('retailers.checkout.placeOrder', ['distributorId' => $checkoutProducts->first()->product->distributor_id]) }}"
+                            action="{{ route('retailers.checkout.placeOrder', ['distributorId' => $cart->distributor_id]) }}"
                             method="POST">
                             @csrf
-                            <input type="hidden" name="total_amount" value="{{ $checkoutProducts->sum('subtotal') }}">
+                            @if (isset($cart))
+                                <input type="hidden" name="cart_id" value="{{ $cart->id }}">
+                            @endif
+                            <input type="hidden" name="total_amount" value="{{ $grandTotal }}">
 
                             <div class="flex flex-col space-y-4">
                                 <div class="flex items-center">
@@ -81,7 +96,8 @@
                                         checked class="form-radio">
                                     <label for="default_address" class="ml-2">
                                         Use my default address:
-                                        <span class="font-medium">{{ $user->retailerProfile->address ?? 'N/A' }}</span>
+                                        <span
+                                            class="font-medium">{{ $user->retailerProfile->barangay_name }},{{ $user->retailerProfile->street ?? '' }}</span>
                                     </label>
                                 </div>
                                 <div class="flex items-center">

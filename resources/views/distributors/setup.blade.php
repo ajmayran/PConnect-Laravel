@@ -20,9 +20,10 @@
                 @endif
 
                 <!-- Form -->
-                <form action="{{ route('profile.updateSetup') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+                <form action="{{ route('profile.updateSetup') }}" method="POST" enctype="multipart/form-data"
+                    class="space-y-6">
                     @csrf
-                    
+
                     <!-- Company Profile Image -->
                     <div>
                         <label for="company_profile_image" class="block mb-2 text-sm font-medium text-gray-700">
@@ -55,8 +56,33 @@
                         <label for="company_address" class="block mb-2 text-sm font-medium text-gray-700">
                             Company Address
                         </label>
-                        <input type="text" id="company_address" name="company_address" required
-                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        <input type="hidden" id="region" name="region" value="09">
+                        <input type="hidden" id="province" name="province" value="097300">
+                        <input type="hidden" id="city" name="city" value="093170">
+
+                        <!-- Barangay Selection -->
+                        <div class="mb-4">
+                            <label for="barangay" class="block text-sm font-medium text-gray-700">Barangay</label>
+                            <select id="barangay" name="barangay" required
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                <option value="">Select Barangay</option>
+                                <!-- Options will be loaded via JavaScript -->
+                            </select>
+                            <div id="barangayLoadingIndicator" class="mt-2 text-sm text-gray-500">
+                                <span
+                                    class="inline-block w-4 h-4 mr-2 border-2 border-gray-300 rounded-full border-t-green-500 animate-spin"></span>
+                                Loading barangays...
+                            </div>
+                            <div id="barangayError" class="hidden mt-2 text-sm text-red-500"></div>
+                        </div>
+
+                        <!-- Street Address -->
+                        <div class="mb-4">
+                            <label for="street" class="block text-sm font-medium text-gray-700">Street Address</label>
+                            <textarea id="street" name="street" required
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                rows="3"></textarea>
+                        </div>
                     </div>
 
                     <!-- Company Phone Number -->
@@ -70,7 +96,7 @@
 
                     <!-- Submit Button -->
                     <div class="pt-4">
-                        <button type="submit" 
+                        <button type="submit"
                             class="w-full px-4 py-2 text-sm font-medium text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                             Complete Setup
                         </button>
@@ -79,4 +105,76 @@
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const barangaySelect = document.getElementById('barangay');
+            const barangayLoadingIndicator = document.getElementById('barangayLoadingIndicator');
+            const barangayError = document.getElementById('barangayError');
+
+            // Load barangays for Zamboanga City automatically
+            const cityCode = '093170';
+            fetchBarangays(cityCode);
+
+            // Fetch barangays function
+            function fetchBarangays(cityCode) {
+                barangayLoadingIndicator.classList.remove('hidden');
+                barangayError.classList.add('hidden');
+
+                const url = `/barangays/${cityCode}`;
+
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        barangayLoadingIndicator.classList.add('hidden');
+
+                        if (data.error) {
+                            showBarangayError(data.message);
+                            return;
+                        }
+
+                        // Clear existing options except the default one
+                        while (barangaySelect.options.length > 1) {
+                            barangaySelect.remove(1);
+                        }
+
+                        if (data.length === 0) {
+                            // Try alternative code format as fallback
+                            if (cityCode === '093170') {
+                                fetchBarangays('09317');
+                                return;
+                            }
+
+                            showBarangayError('No barangays found for this city');
+                            return;
+                        }
+
+                        // Sort barangays alphabetically
+                        data.sort((a, b) => a.name.localeCompare(b.name));
+
+                        // Add barangay options
+                        data.forEach(barangay => {
+                            const option = document.createElement('option');
+                            option.value = barangay.code;
+                            option.textContent = barangay.name;
+                            barangaySelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => {
+                        barangayLoadingIndicator.classList.add('hidden');
+                        showBarangayError('Failed to load barangays. Please try again later.');
+                        console.error('Error fetching barangays:', error);
+                    });
+            }
+
+            function showBarangayError(message) {
+                barangayError.textContent = message;
+                barangayError.classList.remove('hidden');
+            }
+        });
+    </script>
 </x-app-layout>

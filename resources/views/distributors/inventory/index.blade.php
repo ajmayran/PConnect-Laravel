@@ -2,6 +2,41 @@
     <div class="container p-4 mx-auto">
         <h1 class="mb-6 text-2xl font-bold">Inventory Management</h1>
 
+        <!-- Search Bar -->
+        <div class="flex items-center justify-between mb-6">
+            <div class="w-full md:w-1/2 lg:w-1/3">
+                <form action="{{ route('distributors.inventory.index') }}" method="GET">
+                    <div class="relative flex">
+                        <input type="text" name="search" value="{{ request('search') }}"
+                            placeholder="Search products..."
+                            class="w-full py-2 pl-4 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <button type="submit"
+                            class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-blue-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Search Results Info -->
+        @if (request('search'))
+            <div class="mb-4">
+                <div class="flex items-center">
+                    <p class="text-gray-600">Search results for: <span
+                            class="font-bold">"{{ request('search') }}"</span></p>
+                    <a href="{{ route('distributors.inventory.index') }}"
+                        class="ml-3 text-sm text-blue-500 hover:underline">
+                        Clear search
+                    </a>
+                </div>
+            </div>
+        @endif
+
         <div class="overflow-x-auto bg-white rounded-lg shadow">
             <table class="min-w-full">
                 <thead class="bg-gray-50">
@@ -14,7 +49,8 @@
                             Current Stock</th>
                         <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Last
                             Updated</th>
-                        <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Action
+                        <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                            Action
                         </th>
                     </tr>
                 </thead>
@@ -56,6 +92,11 @@
                     @endforeach
                 </tbody>
             </table>
+
+            <!-- Pagination Links -->
+            <div class="flex justify-end px-6 py-4">
+                {{ $products->links() }}
+            </div>
         </div>
     </div>
 

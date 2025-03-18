@@ -23,7 +23,7 @@
     <!-- Styles / Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/admin_dash.js'])
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/iconify-icon/dist/iconify-icon.min.js"></script>
+
     <style>
         .circle-button {
             width: 12px;
@@ -564,7 +564,7 @@
                             <div class="flex items-center mb-0.5">
                                 <div class="text-xl font-semibold">50</div>
                                 <span
-                                    class="p-1 rounded text-[12px] font-semibold bg-emerald-500/10 text-emerald-500 leading-none ml-1">+$469</span>
+                                    class="p-1 rounded text-[12px] font-semibold bg-emerald-500/10 stext-emerald-500 leading-none ml-1">+$469</span>
                             </div>
                             <span class="text-sm text-gray-400">Completed</span>
                         </div>
