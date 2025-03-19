@@ -317,6 +317,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     // Ticket Routes
     Route::get('/tickets/create', [DistributorTicketController::class, 'create'])->name('distributors.tickets.create');
     Route::post('/tickets', [DistributorTicketController::class, 'store'])->name('distributors.tickets.store');
+
 });
 
 // Social Authentication Routes
@@ -335,3 +336,7 @@ Route::get('barangays/{cityCode}', [AddressController::class, 'getBarangays']);
 
 Route::get('/api/debug/zamboanga', [AddressController::class, 'debugZamboangaData']);
 require __DIR__ . '/auth.php';
+
+
+//Distributor Subscription Route
+Route::get('/subscription', function () {return view('distributors.subscription');});

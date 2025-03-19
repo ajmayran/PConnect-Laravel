@@ -1,7 +1,6 @@
 <x-app-layout>
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -146,54 +145,23 @@
     <section>
         <div class="relative">
             <!-- Design 1 -->
-            <div class="flex flex-col items-center justify-between w-full text-white md:flex-row section active"
-                style="background-color: #D8F1E5;">
-                <!-- Left Column - Content -->
-                <div class="relative flex flex-col items-center justify-center w-full p-4 md:w-1/2">
-                    <div class="py-6 text-center md:py-0 md:text-left">
-                        <h1 class="text-3xl font-bold text-black md:mt-2 md:ml-2 md:text-4xl">Welcome to Our Store</h1>
-                        <p class="mb-4 text-sm text-black md:mb-10">Discover amazing products just for you!</p>
-                        <a href="./auth/login.php"
-                            class="inline-block px-4 py-2 text-black bg-white rounded-lg md:px-6 md:py-3 hover:bg-gray-200">
-                            Shop Now &rarr;
-                        </a>
-                    </div>
-                </div>
-                
-                <!-- Right Column - Image -->
-                <div class="w-full p-4 md:w-1/2">
-                    <img src="{{ asset('img/sec1-des2.png') }}" class="object-contain w-full h-auto mx-auto max-h-60 md:max-h-none md:w-3/4" alt="Promotional Image">
-                </div>
+            <div class="relative flex items-center justify-center w-full h-[60vh] section active">
+                <img src="{{ asset('img/hero1.png') }}" class="absolute inset-0 object-cover w-full h-full" alt="Promotional Image">
             </div>
 
             <!-- Design 2 -->
-            <div class="flex flex-col items-center justify-center hidden w-full min-h-[200px] md:min-h-[400px] text-white bg-green-500 section">
-                <h1 class="text-3xl font-bold md:text-5xl">Exclusive Offers</h1>
-                <p class="text-base md:text-lg">Don't miss out on our limited-time deals!</p>
-                <a href="{{ route('login') }}"
-                    class="px-4 py-2 mt-2 text-black bg-white rounded-lg hover:bg-gray-200 md:px-6 md:py-3">
-                    Shop Now &rarr;
-                </a>
+            <div class="relative flex items-center justify-center w-full h-[60vh] section hidden bg-green-500">
+                <img src="{{ asset('img/hero3.png') }}" class="absolute inset-0 object-cover w-full h-full" alt="Promotional Image">
             </div>
 
             <!-- Design 3 -->
-            <div class="flex flex-col items-center justify-center hidden w-full min-h-[200px] md:min-h-[400px] text-white bg-red-500 section">
-                <h1 class="text-3xl font-bold md:text-5xl">New Arrivals</h1>
-                <p class="text-base md:text-lg">Check out the latest products in our collection!</p>
-                <a href="{{ route('login') }}"
-                    class="px-4 py-2 mt-2 text-black bg-white rounded-lg hover:bg-gray-200 md:px-6 md:py-3">
-                    Shop Now &rarr;
-                </a>
+            <div class="relative flex items-center justify-center w-full h-[60vh] section hidden bg-red-500">
+                <img src="{{ asset('img/hero2.png') }}" class="absolute inset-0 object-cover w-full h-full" alt="Promotional Image">
             </div>
 
             <!-- Design 4 -->
-            <div class="flex flex-col items-center justify-center hidden w-full min-h-[200px] md:min-h-[400px] text-white bg-purple-500 section">
-                <h1 class="text-3xl font-bold md:text-5xl">Customer Favorites</h1>
-                <p class="text-base md:text-lg">See what our customers love the most!</p>
-                <a href="{{ route('login') }}"
-                    class="px-4 py-2 mt-2 text-black bg-white rounded-lg hover:bg-gray-200 md:px-6 md:py-3">
-                    Shop Now &rarr;
-                </a>
+            <div class="relative flex items-center justify-center w-full h-[60vh] section hidden bg-red-500">
+                <img src="{{ asset('img/hero4.png') }}" class="absolute inset-0 object-cover w-full h-full" alt="Promotional Image">
             </div>
 
             <!-- Navigation Circles -->
