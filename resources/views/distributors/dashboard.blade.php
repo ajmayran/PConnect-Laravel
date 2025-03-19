@@ -1,5 +1,6 @@
 <x-distributor-layout>
     @vite(['resources/js/dist_dashboard.js'])
+    
     <div class="container px-4 mx-auto">
         <span class="absolute text-4xl text-white cursor-pointer top-5 left-4 lg:hidden" onclick="toggleSidebar()">
             <i class="px-2 bg-gray-900 rounded-md bi bi-filter-left"></i>
