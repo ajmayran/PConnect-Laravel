@@ -190,10 +190,10 @@
                         const tempMessageDiv = document.createElement('div');
                         tempMessageDiv.className = 'flex justify-end';
                         tempMessageDiv.innerHTML = `
-                        <div class="max-w-xs p-3 bg-green-100 rounded-lg shadow lg:max-w-md">
-                            <p class="text-sm">${message}</p>
-                            <p class="mt-1 text-xs text-gray-500">${new Date().toLocaleString()}</p>
-                        </div>
+                    <div class="max-w-xs p-3 bg-green-100 rounded-lg shadow lg:max-w-md">
+                        <p class="text-sm">${message}</p>
+                        <p class="mt-1 text-xs text-gray-500">${new Date().toLocaleString()}</p>
+                    </div>
                     `;
 
                         messagesContainer.appendChild(tempMessageDiv);
@@ -228,108 +228,107 @@
                                 tempMessageDiv.remove();
                                 alert(
                                     'Failed to send message. Please check your connection and try again.'
-                                );
+                                    );
                             });
                     });
                 }
 
-                // Set up Pusher
-                const pusher = new Pusher("{{ env('PUSHER_APP_KEY') }}", {
-                    cluster: "{{ env('PUSHER_APP_CLUSTER') }}",
-                    encrypted: true,
-                    authEndpoint: '/broadcasting/auth', // This should match the Laravel route
-                    auth: {
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                'content')
-                        }
-                    }
-                });
+                // Setup Echo listener for real-time messages
+                if (window.Echo) {
 
-                // Debug connection
-                pusher.connection.bind('connected', function() {
-                    console.log('Connected to Pusher successfully');
-                });
+                    console.log('Setting up Echo listener in distributor messages view');
 
-                pusher.connection.bind('error', function(error) {
-                    console.error('Pusher connection error:', error);
-                });
+                    window.Echo.private(`chat.{{ Auth::id() }}`)
+                        .listen('MessageSent', function(data) {
+                            console.log('Received message event via Echo:', data);
 
-                // Subscribe to the private channel
-                const channel = pusher.subscribe('private-chat.{{ Auth::id() }}');
+                            if (messagesContainer) {
+                                const currentRetailerId = {{ $currentRetailer->id ?? 0 }};
 
-                // Debug channel subscription
-                channel.bind('pusher:subscription_succeeded', function() {
-                    console.log('Successfully subscribed to channel private-chat.{{ Auth::id() }}');
-                });
+                                console.log('Current retailer ID:', currentRetailerId);
+                                console.log('Message sender ID:', data.senderId);
 
-                // Listen for new messages
-                channel.bind('message.sent', function(data) {
-                    console.log('Received message event:', data);
+                                // Check if the message is from the current retailer
+                                if (data.senderId == currentRetailerId) {
+                                    // Add the message to the current chat
+                                    const messageDiv = document.createElement('div');
+                                    messageDiv.className = 'flex justify-start';
+                                    messageDiv.innerHTML = `
+                                <div class="max-w-xs p-3 bg-white rounded-lg shadow lg:max-w-md">
+                                    <p class="text-sm">${data.message}</p>
+                                    <p class="mt-1 text-xs text-gray-500">${data.time || new Date().toLocaleString()}</p>
+                                </div>
+                                `;
 
-                    if (messagesContainer) {
-                        const currentRetailerId = {{ $currentRetailer->id ?? 0 }};
+                                    messagesContainer.appendChild(messageDiv);
+                                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-                        console.log('Current retailer ID:', currentRetailerId);
-                        console.log('Message sender ID:', data.senderId);
+                                    // Mark as read
+                                    fetch("{{ route('distributors.messages.mark-read') }}", {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                        },
+                                        body: JSON.stringify({
+                                            sender_id: data.senderId
+                                        })
+                                    }).catch(error => {
+                                        console.error('Error marking message as read:', error);
+                                    });
+                                } else {
+                                    // Highlight the retailer in the sidebar to indicate new message
+                                    const retailerElement = document.querySelector(
+                                        `a[href*="retailer=${data.senderId}"]`);
+                                    if (retailerElement) {
+                                        // Add unread badge or highlight retailer
+                                        const avatarContainer = retailerElement.querySelector('.relative');
+                                        if (avatarContainer) {
+                                            let unreadBadge = avatarContainer.querySelector('.absolute');
+                                            if (!unreadBadge) {
+                                                // Create new badge
+                                                unreadBadge = document.createElement('span');
+                                                unreadBadge.className =
+                                                    'absolute flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full -top-1 -right-1';
+                                                unreadBadge.textContent = '1';
+                                                avatarContainer.appendChild(unreadBadge);
+                                            } else {
+                                                // Increment badge count
+                                                const count = parseInt(unreadBadge.textContent || '0');
+                                                unreadBadge.textContent = count + 1;
+                                            }
+                                        }
 
-                        // Check if the message is from the current retailer
-                        if (data.senderId == currentRetailerId) {
-                            // Add the message to the current chat
-                            const messageDiv = document.createElement('div');
-                            messageDiv.className = 'flex justify-start';
-                            messageDiv.innerHTML = `
-                            <div class="max-w-xs p-3 bg-white rounded-lg shadow lg:max-w-md">
-                                <p class="text-sm">${data.message}</p>
-                                <p class="mt-1 text-xs text-gray-500">${data.time || new Date().toLocaleString()}</p>
-                            </div>
-                        `;
-
-                            messagesContainer.appendChild(messageDiv);
-                            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-                            // Mark as read
-                            fetch("{{ route('distributors.messages.mark-read') }}", {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
-                                body: JSON.stringify({
-                                    sender_id: data.senderId
-                                })
-                            }).catch(error => {
-                                console.error('Error marking message as read:', error);
-                            });
-                        } else {
-                            // Highlight the retailer in the sidebar to indicate new message
-                            const retailerElement = document.querySelector(
-                                `a[href*="retailer=${data.senderId}"]`);
-                            if (retailerElement) {
-                                retailerElement.classList.add('bg-yellow-100', 'font-bold');
-                                // Add a notification dot if not already there
-                                const avatarContainer = retailerElement.querySelector('.relative');
-                                if (avatarContainer) {
-                                    let badge = avatarContainer.querySelector('span.absolute');
-
-                                    if (badge) {
-                                        // Increment existing badge
-                                        let count = parseInt(badge.textContent) || 0;
-                                        badge.textContent = count + 1;
-                                    } else {
-                                        // Create new badge
-                                        const badge = document.createElement('span');
-                                        badge.className =
-                                            'absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full';
-                                        badge.textContent = '1';
-                                        avatarContainer.appendChild(badge);
+                                        // Move to top of list for new message
+                                        const parentList = retailerElement.parentNode;
+                                        if (parentList && parentList.firstChild !== retailerElement) {
+                                            parentList.insertBefore(retailerElement, parentList.firstChild);
+                                        }
                                     }
                                 }
                             }
-                        }
-                    }
-                });
+                        });
+                    console.log('✅ Echo listener setup complete');
+                } else {
+                    console.error('❌ Laravel Echo is NOT initialized - check your app.js');
+                }
             });
+
+            // Add Echo status check outside DOMContentLoaded to run immediately
+            setTimeout(function checkEcho() {
+                if (window.Echo) {
+                    console.log('✅ Laravel Echo is initialized');
+
+                    // Check connection state if possible
+                    if (window.Echo.connector && window.Echo.connector.pusher) {
+                        console.log('Echo connection state:', window.Echo.connector.pusher.connection.state);
+                    }
+                } else {
+                    console.error('❌ Laravel Echo is NOT initialized');
+                    // Try again in another second (in case of delayed initialization)
+                    setTimeout(checkEcho, 1000);
+                }
+            }, 500);
         </script>
     @endpush
 </x-distributor-layout>
