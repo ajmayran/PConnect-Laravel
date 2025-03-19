@@ -125,4 +125,6 @@
             document.getElementById('reasonModal-' + productId).classList.add('hidden');
         }
     </script>
+            <!-- Include Admin Dashboard Scripts -->
+            @vite(['resources/js/admin_dash.js'])
 </x-app-layout>
