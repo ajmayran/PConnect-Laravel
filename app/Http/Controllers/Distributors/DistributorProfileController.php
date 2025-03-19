@@ -50,7 +50,8 @@ class DistributorProfileController extends Controller
         $imagePath = null;
         if ($request->hasFile('company_profile_image')) {
             // Store image in distributors folder
-            $imagePath = $request->file('company_profile_image')->store('distributors', 'public');
+            $fileName = time() . $user->id . '.' . $request->file('company_profile_image')->getClientOriginalExtension();
+            $imagePath = $request->file('company_profile_image')->storeAs('distributors_profile', $fileName, 'public');
 
             // If updating and old image exists, delete it
             if ($user->distributor && $user->distributor->company_profile_image) {
@@ -174,10 +175,10 @@ class DistributorProfileController extends Controller
             if ($distributorProfile->company_profile_image) {
                 Storage::disk('public')->delete($distributorProfile->company_profile_image);
             }
-            // Create a custom file name
-            $fileName = time() . '_' . $request->user()->id . '.' . $request->file('company_profile_image')->getClientOriginalExtension();
+         
+            $fileName = time() . $request->user()->id . '.' . $request->file('company_profile_image')->getClientOriginalExtension();
             // Store the file in the "distributors" folder in the "public" disk
-            $path = $request->file('company_profile_image')->storeAs('distributors', $fileName, 'public');
+            $path = Storage::disk('public')->putFileAs('distributors_profile', $request->file('company_profile_image'), $fileName);
             $distributorProfile->company_profile_image = $path;
         }
 

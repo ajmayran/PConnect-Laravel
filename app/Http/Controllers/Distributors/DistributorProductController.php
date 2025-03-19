@@ -149,7 +149,7 @@ class DistributorProductController extends Controller
                     Storage::disk('public')->delete($product->image);
                 }
                 $file = $request->file('image');
-                $filename = time() . '_' . $file->getClientOriginalName();
+                $filename = time() . $file->getClientOriginalName();
                 $path = Storage::disk('public')->putFileAs('products', $file, $filename);
                 $validatedData['image'] = $path;
             }

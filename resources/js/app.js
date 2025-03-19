@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             unreadBadge.classList.add('hidden');
                         }
                     });
-            }, 1000); // Check every 30 seconds
+            }, 1000); // 
         }
     }
 });
