@@ -102,7 +102,7 @@ class DistributorProductController extends Controller
 
             // Create product
             $validatedData['distributor_id'] = $distributor->id;
-            $validatedData['status'] = 'pending';
+            $validatedData['status'] = 'Accepted';
 
             $product = Product::create($validatedData);
 

@@ -87,9 +87,6 @@ Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function (
     Route::get('/distributors/pending', [Distributor::class, 'pendingDistributors'])->name('pendingDistributors');
     Route::post('/admin/accept-distributor/{id}', [Distributor::class, 'acceptDistributor'])->name('acceptDistributor');
     Route::post('/admin/decline-distributor/{id}', [Distributor::class, 'declineDistributor'])->name('declineDistributor');
-    Route::get('/admin/products/pending', [AdminProductController::class, 'pendingProducts'])->name('pendingProducts');
-    Route::post('/admin/approve-product/{id}', [AdminProductController::class, 'approveProduct'])->name('approveProduct');
-    Route::post('/admin/reject-product/{id}', [AdminProductController::class, 'rejectProduct'])->name('rejectProduct');
     Route::get('/admin/distributors/approved', [Distributor::class, 'approvedDistributors'])->name('approvedDistributors');
 
     Route::get('/admin/download-credential/{id}', [AdminDashboardController::class, 'downloadCredential'])->name('downloadCredential');

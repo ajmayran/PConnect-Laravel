@@ -35,9 +35,8 @@
                         Products</a>
                 </li>
                 <li class="mb-4">
-                    <a href="{{ route('admin.pendingProducts') }}"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Pending
-                        Products</a>
+                    <a href="#"
+                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Add Category</a>
                 </li>
             </ul>
         </li>
@@ -51,14 +50,9 @@
             </a>
             <ul class="pl-7 mt-2 hidden group-[.selected]:block">
                 <li class="mb-4">
-                    <a href="./transactions/completedOrders.php"
+                    <a href="#"
                         class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Transaction
-                        History</a>
-                </li>
-                <li class="mb-4">
-                    <a href="./transactions/CancelledOrders.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Cancelled
-                        order</a>
+                        Subscription</a>
                 </li>
             </ul>
         </li>
@@ -71,21 +65,6 @@
                     class="ml-auto group-[.selected]:rotate-90"></iconify-icon>
             </a>
             <ul class="pl-7 mt-2 hidden group-[.selected]:block">
-                <li class="mb-4">
-                    <a href="./retailers/activeRetailers.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Active
-                        Retailers</a>
-                </li>
-                <li class="mb-4">
-                    <a href="./retailers/restricted.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Restricted
-                        Retailers</a>
-                </li>
-                <li class="mb-4">
-                    <a href="./retailers/banned.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Banned
-                        Retailers</a>
-                </li>
                 <li class="mb-4">
                     <a href="{{ route('admin.allRetailers') }}"
                         class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">All Retailers</a>
@@ -108,7 +87,7 @@
                 </li>
                 <li class="mb-4">
                     <a href="{{ route('admin.approvedDistributors') }}"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Manage</a>
+                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Manage Distributors</a>
                 </li>
             </ul>
         </li>
