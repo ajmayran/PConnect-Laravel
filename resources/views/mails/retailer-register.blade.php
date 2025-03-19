@@ -1,7 +1,7 @@
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0;">
     <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; border-collapse: collapse; background-color: #ffffff; border: 1px solid #e1e1e1;">
         <tr>
-            <td style="padding: 20px; text-align: center; background-color: #4a69bd;">
+            <td style="padding: 20px; text-align: center; background-color: #2ecc71;">
                 <h1 style="color: #ffffff; margin: 0;">Welcome to PConnect!</h1>
             </td>
         </tr>
