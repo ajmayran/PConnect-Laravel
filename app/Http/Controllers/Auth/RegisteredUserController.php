@@ -55,13 +55,23 @@ class RegisteredUserController extends Controller
         ]);
 
         if ($request->hasFile('credentials')) {
-            $filePath = $request->file('credentials')->store('credentials/bir', 'public');
-
-            // Store file path in the credentials table
-            Credential::create([
-                'user_id' => $user->id,
-                'file_path' => $filePath,
-            ]);
+            if ($validated['user_type'] === 'distributor') {
+                $filePath = $request->file('credentials')->store('credentials/bir', 'public');
+        
+                // Store file path in the credentials table
+                Credential::create([
+                    'user_id' => $user->id,
+                    'file_path' => $filePath,
+                ]);
+            } else if ($validated['user_type'] === 'retailer') {
+                $filePath = $request->file('credentials')->store('credentials/permit', 'public');
+        
+                // Store file path in the credentials table
+                Credential::create([
+                    'user_id' => $user->id,
+                    'file_path' => $filePath,
+                ]);
+            }
         }
 
         if ($request->hasFile('credentials2')) {
