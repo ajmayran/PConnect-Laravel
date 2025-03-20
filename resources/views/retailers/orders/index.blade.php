@@ -171,7 +171,8 @@
                     </div>
                 @endforeach
             </div>
-            <div class="flex justify-end mt-6">
+            <!-- Pagination -->
+            <div class="container flex justify-end px-2 pb-8 mx-auto sm:px-4">
                 {{ $orders->links() }}
             </div>
         @endif

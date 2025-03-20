@@ -91,7 +91,7 @@ class RetailerOrdersController extends Controller
             ->whereIn('status', ['cancelled', 'rejected'])
             ->with(['distributor', 'orderDetails.product'])
             ->latest()
-            ->paginate(10);
+            ->paginate(3);
 
         // Calculate total amount for each order
         foreach ($orders as $order) {

@@ -39,12 +39,13 @@
 
                         // Check if return request was rejected
                         $rejectedReturnRequest = $order->returnRequests()->where('status', 'rejected')->exists();
-                        
+
                         // Check if order has any other return request
-                        $pendingOrApprovedReturnRequest = $order->returnRequests()
+                        $pendingOrApprovedReturnRequest = $order
+                            ->returnRequests()
                             ->whereIn('status', ['pending', 'approved'])
                             ->exists();
-                            
+
                         // General check for any return request
                         $hasReturnRequest = $rejectedReturnRequest || $pendingOrApprovedReturnRequest;
                     @endphp
@@ -207,6 +208,10 @@
                     </div>
                 @endforeach
             </div>
+            <!-- Pagination -->
+            <div class="container flex justify-end px-2 pb-8 mx-auto sm:px-4">
+                {{ $orders->links() }}
+            </div>
         @endif
     </div>
 
@@ -215,10 +220,10 @@
             // Check if order was completed within the last 7 days
             $orderDate = new \Carbon\Carbon($order->status_updated_at ?? $order->updated_at);
             $isWithinReturnPeriod = $orderDate->diffInDays(now()) <= 7;
-            
+
             // Check if return request was rejected
             $rejectedReturnRequest = $order->returnRequests()->where('status', 'rejected')->exists();
-            
+
             // Check if order has any other return request
             $hasReturnRequest = $order->returnRequests()->exists();
         @endphp

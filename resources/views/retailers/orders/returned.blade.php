@@ -27,7 +27,8 @@
                                     </p>
                                     <p class="text-gray-600">
                                         <span class="font-medium">Status:</span>
-                                        <span class="px-3 py-1 text-sm font-medium text-indigo-800 bg-indigo-100 rounded-full">
+                                        <span
+                                            class="px-3 py-1 text-sm font-medium text-indigo-800 bg-indigo-100 rounded-full">
                                             Returned
                                         </span>
                                     </p>
@@ -42,13 +43,16 @@
                                 <table class="w-full">
                                     <thead class="bg-gray-50">
                                         <tr>
-                                            <th class="px-6 py-3 text-sm font-medium tracking-wider text-left text-gray-500">
+                                            <th
+                                                class="px-6 py-3 text-sm font-medium tracking-wider text-left text-gray-500">
                                                 Product
                                             </th>
-                                            <th class="px-6 py-3 text-sm font-medium tracking-wider text-center text-gray-500">
+                                            <th
+                                                class="px-6 py-3 text-sm font-medium tracking-wider text-center text-gray-500">
                                                 Quantity
                                             </th>
-                                            <th class="px-6 py-3 text-sm font-medium tracking-wider text-right text-gray-500">
+                                            <th
+                                                class="px-6 py-3 text-sm font-medium tracking-wider text-right text-gray-500">
                                                 Total
                                             </th>
                                         </tr>
@@ -70,7 +74,8 @@
                                     </tbody>
                                     <tfoot class="bg-gray-50">
                                         <tr>
-                                            <td colspan="2" class="px-6 py-4 text-sm font-bold text-right text-gray-900">
+                                            <td colspan="2"
+                                                class="px-6 py-4 text-sm font-bold text-right text-gray-900">
                                                 Total Amount:
                                             </td>
                                             <td class="px-6 py-4 text-sm font-bold text-right text-gray-900">
@@ -96,6 +101,10 @@
                         </div>
                     </div>
                 @endforeach
+            </div>
+            <!-- Pagination -->
+            <div class="container flex justify-end px-2 pb-8 mx-auto sm:px-4">
+                {{ $orders->links() }}
             </div>
         @endif
     </div>

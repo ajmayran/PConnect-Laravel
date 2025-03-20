@@ -27,24 +27,32 @@
                                     </p>
                                     <p class="text-gray-600">
                                         <span class="font-medium">Status:</span>
-                                        @if($order->status == 'cancelled')
-                                            <span class="inline-flex items-center px-3 py-1 text-sm font-medium text-red-800 bg-red-100 rounded-full">
-                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        @if ($order->status == 'cancelled')
+                                            <span
+                                                class="inline-flex items-center px-3 py-1 text-sm font-medium text-red-800 bg-red-100 rounded-full">
+                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                                 </svg>
                                                 Cancelled by you
                                             </span>
                                         @elseif($order->status == 'rejected')
-                                            <span class="inline-flex items-center px-3 py-1 text-sm font-medium text-orange-800 bg-orange-100 rounded-full">
-                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            <span
+                                                class="inline-flex items-center px-3 py-1 text-sm font-medium text-orange-800 bg-orange-100 rounded-full">
+                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z">
+                                                    </path>
                                                 </svg>
                                                 Rejected by distributor
                                             </span>
                                         @endif
                                     </p>
-                                    
-                                    @if($order->status == 'cancelled' && $order->cancel_reason)
+
+                                    @if ($order->status == 'cancelled' && $order->cancel_reason)
                                         <p class="mt-1 text-gray-600">
                                             <span class="font-medium">Cancellation Reason:</span>
                                             {{ $order->cancel_reason }}
@@ -59,8 +67,8 @@
                                 <div class="text-right">
                                     <p class="text-sm font-medium text-gray-500">Order Date</p>
                                     <p class="text-gray-900">{{ $order->created_at->format('M d, Y') }}</p>
-                                    
-                                    @if($order->status_updated_at)
+
+                                    @if ($order->status_updated_at)
                                         <p class="mt-2 text-sm font-medium text-gray-500">
                                             {{ $order->status == 'cancelled' ? 'Cancelled' : 'Rejected' }} on
                                         </p>
@@ -73,13 +81,16 @@
                                 <table class="w-full">
                                     <thead class="bg-gray-50">
                                         <tr>
-                                            <th class="px-6 py-3 text-sm font-medium tracking-wider text-left text-gray-500">
+                                            <th
+                                                class="px-6 py-3 text-sm font-medium tracking-wider text-left text-gray-500">
                                                 Product
                                             </th>
-                                            <th class="px-6 py-3 text-sm font-medium tracking-wider text-center text-gray-500">
+                                            <th
+                                                class="px-6 py-3 text-sm font-medium tracking-wider text-center text-gray-500">
                                                 Quantity
                                             </th>
-                                            <th class="px-6 py-3 text-sm font-medium tracking-wider text-right text-gray-500">
+                                            <th
+                                                class="px-6 py-3 text-sm font-medium tracking-wider text-right text-gray-500">
                                                 Total
                                             </th>
                                         </tr>
@@ -101,7 +112,8 @@
                                     </tbody>
                                     <tfoot class="bg-gray-50">
                                         <tr>
-                                            <td colspan="2" class="px-6 py-4 text-sm font-bold text-right text-gray-900">
+                                            <td colspan="2"
+                                                class="px-6 py-4 text-sm font-bold text-right text-gray-900">
                                                 Total Amount:
                                             </td>
                                             <td class="px-6 py-4 text-sm font-bold text-right text-gray-900">
@@ -127,10 +139,10 @@
                         </div>
                     </div>
                 @endforeach
-                
-                <div class="mt-4">
-                    {{ $orders->links() }}
-                </div>
+            </div>
+            <!-- Pagination -->
+            <div class="container flex justify-end px-2 pb-8 mx-auto sm:px-4">
+                {{ $orders->links() }}
             </div>
         @endif
     </div>

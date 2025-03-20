@@ -41,7 +41,12 @@
                                 <input id="company_name" name="company_name" type="text" required autofocus
                                     autocomplete="company_name"
                                     value="{{ old('company_name', Auth::user()->distributor->company_name ?? '') }}"
+                                    pattern="^[a-zA-Z0-9 ,.'\-]+$"
+                                    oninput="this.value = this.value.replace(/[^a-zA-Z0-9 ,.'\-]/g, '')"
+                                    title="Only letters, numbers, spaces, commas, periods, apostrophes, and hyphens are allowed"
                                     class="block w-full mt-1 border-gray-300 rounded-md shadow-sm dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600">
+                                <p class="mt-1 text-xs text-gray-500">Only letters, numbers, spaces and basic
+                                    punctuation allowed</p>
                             </div>
 
                             <div class="mb-4">
@@ -59,7 +64,8 @@
                                     Company Phone
                                 </label>
                                 <input id="company_phone_number" name="company_phone_number" type="tel" required
-                                    autofocus autocomplete="company_phone_number" pattern="[0-9]+" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                    autofocus autocomplete="company_phone_number" pattern="[0-9]+"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                     value="{{ old('company_phone_number', Auth::user()->distributor->company_phone_number ?? '') }}"
                                     class="block w-full mt-1 border-gray-300 rounded-md shadow-sm dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600">
                                 <p class="mt-1 text-xs text-gray-500">Please enter 11 digit numbers</p>

@@ -21,7 +21,7 @@ class ProductFactory extends Factory
     {
 
         return [
-            'distributor_id' => 2, // Make sure this distributor exists
+            'distributor_id' => 3, // Make sure this distributor exists
             'product_name' => $this->faker->words(3, true),
             'description' => $this->faker->sentence(),
             'price' => $this->faker->randomFloat(2, 10, 1000),
