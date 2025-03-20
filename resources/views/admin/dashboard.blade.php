@@ -9,14 +9,13 @@
             <div class="grid grid-cols-1 gap-6 mb-6 md:grid-cols-2 lg:grid-cols-3">
                 {{-- Active Retailers --}}
                 <div class="p-6 bg-white border border-gray-100 rounded-md shadow-md shadow-black/5">
-                    <div class="flex justify-between mb-6">
+                    <div class="flex justif y-between mb-6">
                         <div>
                             <div class="mb-1 text-2xl font-semibold">{{ $activeRetailersCount }}</div>
                             <div class="text-sm font-medium text-gray-400">Active Retailers</div>
                         </div>
                     </div>
                 </div>
-
 
                 {{-- Active Orders --}}
                 <div class="p-6 bg-white border border-gray-100 rounded-md shadow-md shadow-black/5">
@@ -72,7 +71,7 @@
         </div>
     </main>
 </Body>
-<script src="https://unpkg.com/@popperjs/core@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </html>
+        <!-- Include Admin Dashboard Scripts -->
+        @vite(['resources/js/admin_dash.js'])
 </x-app-layout>

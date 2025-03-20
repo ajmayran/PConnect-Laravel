@@ -1,4 +1,3 @@
-{{-- filepath: c:\Users\nunez\Documents\PConnect-Laravel\resources\views\admin\distributors\pending.blade.php --}}
 <x-app-layout>
     <div class="flex">
         {{-- Include the admin sidebar --}}
@@ -7,12 +6,12 @@
         {{-- Main content area --}}
         <div class="flex-1 ml-64 p-4">
             @if (session('success'))
-                <div class="relative px-4 py-3 text-green-700 bg-green-100 border border-green-400 rounded" role="alert">
+                <div class="relative px-4 py-3 text-green-700 bg-green-100 border border-green-400 rounded mb-4" role="alert">
                     <span class="block sm:inline">{{ session('success') }}</span>
                 </div>
             @endif
             @if (session('error'))
-                <div class="relative px-4 py-3 text-red-700 bg-red-100 border border-red-400 rounded" role="alert">
+                <div class="relative px-4 py-3 text-red-700 bg-red-100 border border-red-400 rounded mb-4" role="alert">
                     <span class="block sm:inline">{{ session('error') }}</span>
                 </div>
             @endif
@@ -72,9 +71,36 @@
                                                     @csrf
                                                     <button type="submit" class="px-4 py-2 font-medium text-white bg-green-500 rounded hover:bg-green-700">Accept</button>
                                                 </form>
+                                            
+                                                {{-- Reject Button --}}
                                                 <button type="button" onclick="openReasonModal('{{ $distributor->id }}')" class="px-4 py-2 font-medium text-white bg-red-500 rounded hover:bg-red-700">Decline</button>
                                             </td>
                                         </tr>
+
+                                        {{-- Rejection Reason Modal --}}
+                                        <div id="reasonModal-{{ $distributor->id }}" class="fixed inset-0 z-50 hidden overflow-y-auto">
+                                            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                                <div class="fixed inset-0 transition-opacity">
+                                                    <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                                                </div>
+                                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen"></span>​
+                                                <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                                                    <form action="{{ route('admin.declineDistributor', $distributor->id) }}" method="POST">
+                                                        @csrf
+                                                        <div class="px-4 pt-5 pb-4 bg-white sm:p-6 sm:pb-4">
+                                                            <h3 class="text-lg font-medium leading-6 text-gray-900">Reason for Rejection</h3>
+                                                            <div class="mt-2">
+                                                                <textarea name="reason" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="px-4 py-3 bg-gray-50 sm:px-6 sm:flex sm:flex-row-reverse">
+                                                            <button type="submit" class="inline-flex justify-center w-full px-4 py-2 text-base font-medium text-white bg-red-500 border border-transparent rounded-md shadow-sm hover:bg-red-700 sm:ml-3 sm:w-auto sm:text-sm">Submit</button>
+                                                            <button type="button" onclick="closeReasonModal('{{ $distributor->id }}')" class="inline-flex justify-center w-full px-4 py-2 mt-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
                                     @endforeach
                                 </tbody>
                             </table>
@@ -104,6 +130,12 @@
     </div>
 
     <script>
+        // Refresh the page after a successful decline
+        @if (session('success'))
+            alert("{{ session('success') }}");
+            window.location.href = "{{ route('admin.pendingDistributors') }}";
+        @endif
+
         function openModal(imageSrc) {
             document.getElementById('modalImage').src = imageSrc;
             document.getElementById('imageModal').classList.remove('hidden');
@@ -112,8 +144,7 @@
         function closeModal() {
             document.getElementById('imageModal').classList.add('hidden');
         }
-    </script>
-    <script>
+
         function openReasonModal(distributorId) {
             document.getElementById('reasonModal-' + distributorId).classList.remove('hidden');
         }
