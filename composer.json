@@ -16,7 +16,6 @@
         "laravel/socialite": "^5.16",
         "laravel/tinker": "^2.9",
         "laravel/ui": "^4.6",
-        "mailgun/mailgun-php": "^4.3",
         "pusher/pusher-php-server": "^7.2",
         "simplesoftwareio/simple-qrcode": "^4.2",
         "symfony/filesystem": "^7.2",
