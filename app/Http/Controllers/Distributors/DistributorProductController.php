@@ -79,13 +79,13 @@ class DistributorProductController extends Controller
                 // Set default values for required fields
                 $validatedData['price'] = 0;
                 $validatedData['stock_quantity'] = 0;
-                $validatedData['minimum_purchase_qty'] = 1;
+                $validatedData['minimum_purchase_qty'] = min(1, 9999);
                 $alertMessage = 'Product saved successfully (partial save).';
             } else {
                 // Validate sales information
                 $validatedSales = $request->validate([
                     'price' => 'required|numeric|min:0',
-                    'stock_quantity' => 'required|integer|min:0',
+                    'stock_quantity' => 'required|integer|min:0|digits:4',
                     'minimum_purchase_qty' => 'required|integer|min:1',
                 ]);
                 $validatedData = array_merge($validatedData, $validatedSales);
