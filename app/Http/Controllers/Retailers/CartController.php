@@ -23,7 +23,7 @@ class CartController extends Controller
         // Group cart items by cart (which is already separated by distributor)
         $groupedItems = collect();
 
-        foreach ($carts as $cart) { 
+        foreach ($carts as $cart) {
             if ($cart->details->isNotEmpty()) {
                 $groupedItems[$cart->distributor_id] = $cart->details;
             }
@@ -42,18 +42,28 @@ class CartController extends Controller
             $validated = $request->validate([
                 'product_id' => 'required|exists:products,id',
                 'price' => 'required|exists:products,price',
-                'quantity'   => 'required|integer|min:1',
-                'buy_now' => 'sometimes|boolean'
+                'quantity' => 'required|integer|min:1',
+                'buy_now' => 'sometimes|boolean',
+                'minimum_purchase_qty' => 'sometimes|integer|min:1'  // Add this line
             ]);
 
             $product = Product::findOrFail($validated['product_id']);
 
-            // Validate minimum purchase quantity
-            if ($validated['quantity'] < $product->minimum_purchase_qty) {
+            // Log the product and its minimum purchase quantity for debugging
+            Log::info('Product minimum purchase quantity', [
+                'product_id' => $product->id,
+                'minimum_purchase_qty' => $product->minimum_purchase_qty,
+                'passed_minimum_qty' => $validated['minimum_purchase_qty'] ?? 'not passed'
+            ]);
+
+            // Validate minimum purchase quantity - Use the passed value OR fall back to database value
+            $minQty = isset($validated['minimum_purchase_qty']) ? $validated['minimum_purchase_qty'] : $product->minimum_purchase_qty;
+
+            if ($validated['quantity'] < $minQty) {
                 DB::rollBack();
                 return response()->json([
                     'success' => false,
-                    'message' => "Minimum purchase quantity is {$product->minimum_purchase_qty}"
+                    'message' => "Minimum purchase quantity is {$minQty}"
                 ], 422);
             }
 
