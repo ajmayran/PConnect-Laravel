@@ -85,7 +85,7 @@ class DistributorProductController extends Controller
                 // Validate sales information
                 $validatedSales = $request->validate([
                     'price' => 'required|numeric|min:0',
-                    'stock_quantity' => 'required|integer|min:0|digits:4',
+                    'stock_quantity' => 'required|integer|min:0|max:9999',
                     'minimum_purchase_qty' => 'required|integer|min:1',
                 ]);
                 $validatedData = array_merge($validatedData, $validatedSales);
