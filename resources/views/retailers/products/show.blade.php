@@ -30,7 +30,12 @@
 
                         <!-- Product Info -->
                         <div class="w-full p-4 sm:p-6 md:p-8 md:w-1/2">
-                            <!-- Product Title and Distributor -->
+                            <!-- Hidden Inputs for JavaScript -->
+                            <input type="hidden" id="product-id" value="{{ $product->id }}">
+                            <input type="hidden" id="product-price" value="{{ $product->price }}">
+                            <input type="hidden" id="min-purchase-qty" value="{{ $product->minimum_purchase_qty }}">
+                            <input type="hidden" id="max-stock" value="{{ $product->stock_quantity }}">
+
                             <div class="mb-3 sm:mb-4">
                                 <h1 class="mb-1 text-xl font-bold text-gray-900 sm:text-2xl md:text-3xl sm:mb-2">
                                     {{ $product->product_name }}</h1>
@@ -145,11 +150,11 @@
             const addToCartBtn = document.getElementById('addToCartBtn');
             const buyNowBtn = document.getElementById('buyNowBtn');
 
-            // Get values from Blade (ensuring they are correct)
-            const minPurchaseQty = parseInt(quantityInput.getAttribute('data-min-qty')) || 1;
-            const maxStock = parseInt('{{ $product->stock_quantity }}');
-            const productId = parseInt('{{ $product->id }}');
-            const productPrice = parseFloat('{{ $product->price }}');
+            // Get values from hidden inputs
+            const productId = parseInt(document.getElementById('product-id').value);
+            const productPrice = parseFloat(document.getElementById('product-price').value);
+            const minPurchaseQty = parseInt(document.getElementById('min-purchase-qty').value) || 1;
+            const maxStock = parseInt(document.getElementById('max-stock').value);
 
             console.log("Initial Values: ", {
                 minPurchaseQty,
@@ -206,14 +211,22 @@
                 event.preventDefault();
                 if (!validateQuantity()) return;
 
+                const quantity = parseInt(quantityInput.value);
+
+                // Log the request data
+                console.log("🛒 Sending Add to Cart Request:", {
+                    productId,
+                    productPrice,
+                    quantity,
+                    minPurchaseQty
+                });
+
                 const formData = {
                     product_id: productId,
                     price: productPrice,
-                    quantity: parseInt(quantityInput.value),
+                    quantity: quantity,
                     minimum_purchase_qty: minPurchaseQty
                 };
-
-                console.log("Adding to cart:", formData);
 
                 fetch('{{ route('retailers.cart.add') }}', {
                         method: 'POST',
@@ -342,7 +355,6 @@
                 increaseQuantity));
             document.querySelectorAll('[onclick="decreaseQuantity()"]').forEach(btn => btn.addEventListener('click',
                 decreaseQuantity));
-
         });
     </script>
 

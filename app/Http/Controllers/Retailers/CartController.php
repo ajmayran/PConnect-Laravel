@@ -41,24 +41,23 @@ class CartController extends Controller
         try {
             $validated = $request->validate([
                 'product_id' => 'required|exists:products,id',
-                'price' => 'required|exists:products,price',
+                'price' => 'required|numeric',
                 'quantity' => 'required|integer|min:1',
                 'buy_now' => 'sometimes|boolean',
-                'minimum_purchase_qty' => 'sometimes|integer|min:1'  // Add this line
+                'minimum_purchase_qty' => 'sometimes|integer|min:1'
             ]);
 
             $product = Product::findOrFail($validated['product_id']);
 
-            // Log the product and its minimum purchase quantity for debugging
-            Log::info('Product minimum purchase quantity', [
-                'product_id' => $product->id,
-                'minimum_purchase_qty' => $product->minimum_purchase_qty,
-                'passed_minimum_qty' => $validated['minimum_purchase_qty'] ?? 'not passed'
+            Log::info("🛒 Adding Product to Cart:", [
+                'Request Product ID' => $validated['product_id'],
+                'Product Name' => $product->product_name,
+                'Stock Available' => $product->stock_quantity,
+                'Min Purchase Qty' => $product->minimum_purchase_qty,
             ]);
 
-            // Validate minimum purchase quantity - Use the passed value OR fall back to database value
-            $minQty = isset($validated['minimum_purchase_qty']) ? $validated['minimum_purchase_qty'] : $product->minimum_purchase_qty;
-
+            // Validate quantity rules
+            $minQty = $validated['minimum_purchase_qty'] ?? $product->minimum_purchase_qty;
             if ($validated['quantity'] < $minQty) {
                 DB::rollBack();
                 return response()->json([
@@ -67,7 +66,6 @@ class CartController extends Controller
                 ], 422);
             }
 
-            // Validate stock availability
             if ($validated['quantity'] > $product->stock_quantity) {
                 DB::rollBack();
                 return response()->json([
@@ -76,70 +74,62 @@ class CartController extends Controller
                 ], 422);
             }
 
-            // Find or create a cart specific to the product's distributor
-            $cart = Cart::firstOrCreate([
-                'user_id'        => Auth::id(),
-                'distributor_id' => $product->distributor_id,
-            ]);
+            // Ensure the cart exists for this distributor
+            $cart = Cart::where('user_id', Auth::id())
+                ->where('distributor_id', $product->distributor_id)
+                ->first();
 
-            // Check if the product already exists in the cart (cart detail)
+            if (!$cart) {
+                Log::info("🛒 Creating new cart for distributor: {$product->distributor_id}");
+                $cart = Cart::create([
+                    'user_id' => Auth::id(),
+                    'distributor_id' => $product->distributor_id,
+                ]);
+            }
+
+            Log::info("🛒 Using Cart ID: {$cart->id}");
+
+            // Check if the exact product exists in the cart
             $cartDetail = CartDetail::where('cart_id', $cart->id)
                 ->where('product_id', $product->id)
                 ->first();
 
             if ($cartDetail) {
-                // For "Buy Now", replace the quantity instead of adding to it
-                if ($request->has('buy_now') && $request->buy_now) {
-                    $cartDetail->update([
-                        'quantity' => $validated['quantity'],
-                        'subtotal' => $validated['quantity'] * $product->price
-                    ]);
-                } else {
-                    // Update the quantity for an existing product in the cart
-                    $newQuantity = $cartDetail->quantity + $validated['quantity'];
+                Log::info("🔄 Updating existing cart detail for Product ID {$product->id}");
+                $newQuantity = $cartDetail->quantity + $validated['quantity'];
 
-                    // Make sure the new quantity is still meeting the minimum and stock requirements
-                    if ($newQuantity < $product->minimum_purchase_qty) {
-                        DB::rollBack();
-                        return response()->json([
-                            'success' => false,
-                            'message' => "Minimum purchase quantity is {$product->minimum_purchase_qty}"
-                        ], 422);
-                    }
-
-                    if ($newQuantity > $product->stock_quantity) {
-                        DB::rollBack();
-                        return response()->json([
-                            'success' => false,
-                            'message' => "Only {$product->stock_quantity} items available in stock"
-                        ], 422);
-                    }
-
-                    $cartDetail->update([
-                        'quantity' => $newQuantity,
-                        'subtotal' => $newQuantity * $product->price
-                    ]);
+                if ($newQuantity < $product->minimum_purchase_qty) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Minimum purchase quantity is {$product->minimum_purchase_qty}"
+                    ], 422);
                 }
+
+                if ($newQuantity > $product->stock_quantity) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Only {$product->stock_quantity} items available in stock"
+                    ], 422);
+                }
+
+                $cartDetail->update([
+                    'quantity' => $newQuantity,
+                    'subtotal' => $newQuantity * $product->price
+                ]);
             } else {
-                // Otherwise, create a new record in cart details for this product
+                Log::info("🆕 Creating new cart detail for Product ID {$product->id}");
                 CartDetail::create([
-                    'cart_id'    => $cart->id,
+                    'cart_id' => $cart->id,
                     'product_id' => $product->id,
-                    'price'   => $product->price,
-                    'quantity'   => $validated['quantity'],
-                    'subtotal'   => $product->price * $validated['quantity']
+                    'price' => $product->price,
+                    'quantity' => $validated['quantity'],
+                    'subtotal' => $product->price * $validated['quantity']
                 ]);
             }
 
             DB::commit();
-
-            if ($request->has('buy_now') && $request->buy_now) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Processing your order...',
-                    'distributor_id' => $product->distributor_id
-                ]);
-            }
 
             return response()->json([
                 'success' => true,
@@ -147,13 +137,15 @@ class CartController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Add to cart error: ' . $e->getMessage());
+            Log::error('❌ Add to cart error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to add product to cart: ' . $e->getMessage()
             ], 500);
         }
     }
+
+
 
     public function removeProduct($itemId)
     {

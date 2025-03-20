@@ -27,98 +27,102 @@
 
                 <!-- Products Table - Hidden on mobile -->
                 <div class="hidden md:block">
-                    <table class="w-full">
-                        <thead class="border-b border-gray-200">
-                            <tr>
-                                <th class="px-4 py-2 text-left">Product</th>
-                                <th class="px-4 py-2 text-center">Price</th>
-                                <th class="px-4 py-2 text-center">Quantity</th>
-                                <th class="px-4 py-2 text-center">Subtotal</th>
-                                <th class="px-4 py-2 text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($items as $item)
-                                <tr class="border-b border-gray-100" data-item-id="{{ $item->id }}"
-                                    data-distributor-id="{{ $distributorId }}">
-                                    <td class="px-4 py-4">
-                                        <div class="flex items-center">
-                                            <img src="{{ $item->product->image ? asset('storage/products/' . basename($item->product->image)) : asset('img/default-product.jpg') }}"
-                                                class="object-cover w-16 h-16 mr-4 rounded"
-                                                onerror="this.src='{{ asset('img/default-product.jpg') }}'"
-                                                alt="{{ $item->product->product_name }}">
-                                            <div>
-                                                <h4 class="font-medium text-gray-800">
-                                                    {{ $item->product->product_name }}
-                                                </h4>
-                                                <p class="text-sm text-gray-500">SKU: {{ $item->product->sku }}</p>
+                    <div class="max-h-[400px] overflow-y-auto">
+                        <table class="w-full">
+                            <thead class="sticky top-0 z-10 bg-white border-b border-gray-200">
+                                <tr>
+                                    <th class="px-4 py-2 text-left">Product</th>
+                                    <th class="px-4 py-2 text-center">Price</th>
+                                    <th class="px-4 py-2 text-center">Quantity</th>
+                                    <th class="px-4 py-2 text-center">Subtotal</th>
+                                    <th class="px-4 py-2 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($items as $item)
+                                    <tr class="border-b border-gray-100" data-item-id="{{ $item->id }}"
+                                        data-distributor-id="{{ $distributorId }}">
+                                        <td class="px-4 py-2">
+                                            <div class="flex items-center">
+                                                <img src="{{ $item->product->image ? asset('storage/products/' . basename($item->product->image)) : asset('img/default-product.jpg') }}"
+                                                    class="object-cover w-16 h-16 mr-4 rounded"
+                                                    onerror="this.src='{{ asset('img/default-product.jpg') }}'"
+                                                    alt="{{ $item->product->product_name }}">
+                                                <div>
+                                                    <h4 class="font-medium text-gray-800">
+                                                        {{ $item->product->product_name }}
+                                                    </h4>
+                                                    <p class="text-sm text-gray-500">SKU: {{ $item->product->sku }}</p>
+                                                </div>
                                             </div>
-                                        </div>
+                                        </td>
+                                        <td class="px-4 py-2 text-center" data-price="{{ $item->product->price }}">
+                                            ₱{{ number_format($item->product->price, 2) }}
+                                        </td>
+                                        <td class="px-4 py-4">
+                                            <div class="flex items-center justify-center">
+                                                <button type="button" onclick="updateQuantity(this, 'decrease')"
+                                                    class="px-2 py-1 text-gray-600 bg-gray-100 rounded-l hover:bg-green-100">
+                                                    -
+                                                </button>
+                                                <input type="number" value="{{ $item->quantity }}"
+                                                    min="{{ $item->product->minimum_purchase_qty }}"
+                                                    class="w-16 px-2 py-1 text-center border-gray-200"
+                                                    data-item-id="{{ $item->id }}"
+                                                    data-minimum="{{ $item->product->minimum_purchase_qty }}"
+                                                    onchange="validateQuantity(this)">
+                                                <button type="button" onclick="updateQuantity(this, 'increase')"
+                                                    class="px-2 py-1 text-gray-600 bg-gray-100 rounded-r hover:bg-green-100">
+                                                    +
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-2 text-center item-subtotal">
+                                            ₱{{ number_format($item->product->price * $item->quantity, 2) }}
+                                        </td>
+                                        <td class="px-4 py-4 text-center">
+                                            <button onclick="removeItem('{{ $item->id }}')"
+                                                class="p-2 text-red-500 rounded-full hover:bg-red-50">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="px-4 py-2 font-semibold text-right">
+                                        Total Amount:
                                     </td>
-                                    <td class="px-4 py-4 text-center" data-price="{{ $item->product->price }}">
-                                        ₱{{ number_format($item->product->price, 2) }}
+                                    <td class="px-4 py-4 font-semibold text-center distributor-subtotal">
+                                        ₱{{ number_format(
+                                            $items->sum(function ($item) {
+                                                return $item->product->price * $item->quantity;
+                                            }),
+                                            2,
+                                        ) }}
                                     </td>
                                     <td class="px-4 py-4">
-                                        <div class="flex items-center justify-center">
-                                            <button type="button" onclick="updateQuantity(this, 'decrease')"
-                                                class="px-2 py-1 text-gray-600 bg-gray-100 rounded-l hover:bg-green-100">
-                                                -
-                                            </button>
-                                            <input type="number" value="{{ $item->quantity }}"
-                                                min="{{ $item->product->minimum_purchase_qty }}"
-                                                class="w-16 px-2 py-1 text-center border-gray-200"
-                                                data-item-id="{{ $item->id }}"
-                                                data-minimum="{{ $item->product->minimum_purchase_qty }}"
-                                                onchange="validateQuantity(this)">
-                                            <button type="button" onclick="updateQuantity(this, 'increase')"
-                                                class="px-2 py-1 text-gray-600 bg-gray-100 rounded-r hover:bg-green-100">
-                                                +
-                                            </button>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-4 text-center item-subtotal">
-                                        ₱{{ number_format($item->product->price * $item->quantity, 2) }}
-                                    </td>
-                                    <td class="px-4 py-4 text-center">
-                                        <button onclick="removeItem('{{ $item->id }}')"
-                                            class="p-2 text-red-500 rounded-full hover:bg-red-50">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                        <button onclick="proceedToCheckout('{{ $distributorId }}')"
+                                            class="flex items-center justify-center w-full gap-2 px-4 py-2 text-sm text-white bg-green-600 rounded hover:bg-green-700 lg:w-auto">
+                                            <span>Checkout</span>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                </path>
+                                                    d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                             </svg>
                                         </button>
                                     </td>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="3" class="px-4 py-4 font-semibold text-right">
-                                    Total Amount:
-                                </td>
-                                <td class="px-4 py-4 font-semibold text-center distributor-subtotal">
-                                    ₱{{ number_format(
-                                        $items->sum(function ($item) {
-                                            return $item->product->price * $item->quantity;
-                                        }),
-                                        2,
-                                    ) }}
-                                </td>
-                                <td class="px-4 py-4">
-                                    <button onclick="proceedToCheckout('{{ $distributorId }}')"
-                                        class="flex items-center justify-center w-full gap-2 px-4 py-2 text-sm text-white bg-green-600 rounded hover:bg-green-700 lg:w-auto">
-                                        <span>Checkout</span>
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                        </svg>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- Mobile Card View - Visible only on mobile -->
