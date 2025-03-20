@@ -17,15 +17,6 @@
                     </div>
                 </div>
 
-                {{-- Visitors --}}
-                <div class="p-6 bg-white border border-gray-100 rounded-md shadow-md shadow-black/5">
-                    <div class="flex justify-between mb-4">
-                        <div>
-                            <div class="text-2xl font-semibold">{{ $visitorsCount }}</div>
-                            <div class="text-sm font-medium text-gray-400">Visitors</div>
-                        </div>
-                    </div>
-                </div>
 
                 {{-- Active Orders --}}
                 <div class="p-6 bg-white border border-gray-100 rounded-md shadow-md shadow-black/5">
