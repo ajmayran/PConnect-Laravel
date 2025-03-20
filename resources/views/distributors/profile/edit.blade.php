@@ -17,7 +17,8 @@
                     </p>
                 </header>
 
-                <form method="POST" action="{{ route('distributors.profile.update.distributor') }}" enctype="multipart/form-data" class="mt-6">
+                <form method="POST" action="{{ route('distributors.profile.update.distributor') }}"
+                    enctype="multipart/form-data" class="mt-6">
                     @csrf
                     @method('PUT')
                     <div class="flex flex-col items-center gap-4 p-4 sm:p-8 md:flex-col">
@@ -27,8 +28,8 @@
                             <img id="image_preview"
                                 src="{{ Auth::user()->distributor->company_profile_image ? asset('storage/' . Auth::user()->distributor->company_profile_image) : asset('images/default-placeholder.png') }}"
                                 alt="Image Preview" class="h-auto max-w-full">
-                            <input id="company_profile_image" name="company_profile_image" type="file" accept="image/*"
-                                class="hidden">
+                            <input id="company_profile_image" name="company_profile_image" type="file"
+                                accept="image/*" class="hidden">
                         </div>
                         <p class="text-sm text-gray-700">Click image to change</p>
                         <!-- Left Side: Form Fields -->
@@ -48,7 +49,8 @@
                                     Company Email
                                 </label>
                                 <input id="company_email" name="company_email" type="email" required autofocus
-                                    autocomplete="company_email" value="{{ old('company_email', Auth::user()->distributor->company_email ?? '') }}"
+                                    autocomplete="company_email"
+                                    value="{{ old('company_email', Auth::user()->distributor->company_email ?? '') }}"
                                     class="block w-full mt-1 border-gray-300 rounded-md shadow-sm dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600">
                             </div>
 
@@ -56,9 +58,11 @@
                                 <label for="company_phone_number" class="block text-sm font-medium text-gray-700">
                                     Company Phone
                                 </label>
-                                <input id="company_phone_number" name="company_phone_number" type="text" required autofocus
-                                    autocomplete="company_phone_number" value="{{ old('company_phone_number', Auth::user()->distributor->company_phone_number ?? '') }}"
+                                <input id="company_phone_number" name="company_phone_number" type="tel" required
+                                    autofocus autocomplete="company_phone_number" pattern="[0-9]+" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                    value="{{ old('company_phone_number', Auth::user()->distributor->company_phone_number ?? '') }}"
                                     class="block w-full mt-1 border-gray-300 rounded-md shadow-sm dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600">
+                                <p class="mt-1 text-xs text-gray-500">Please enter 11 digit numbers</p>
                             </div>
 
                             <div class="mb-4">
@@ -137,25 +141,30 @@
 
                         <div>
                             <x-input-label for="first_name" :value="__('First Name')" />
-                            <x-text-input id="first_name" name="first_name" type="text" class="block w-full mt-1" :value="old('first_name', Auth::user()->first_name)" required autofocus autocomplete="first_name" />
+                            <x-text-input id="first_name" name="first_name" type="text" class="block w-full mt-1"
+                                :value="old('first_name', Auth::user()->first_name)" required autofocus autocomplete="first_name" />
                             <x-input-error class="mt-2" :messages="$errors->get('first_name')" />
                         </div>
 
                         <div>
                             <x-input-label for="last_name" :value="__('Last Name')" />
-                            <x-text-input id="last_name" name="last_name" type="text" class="block w-full mt-1" :value="old('last_name', Auth::user()->last_name)" required autofocus autocomplete="last_name" />
+                            <x-text-input id="last_name" name="last_name" type="text" class="block w-full mt-1"
+                                :value="old('last_name', Auth::user()->last_name)" required autofocus autocomplete="last_name" />
                             <x-input-error class="mt-2" :messages="$errors->get('last_name')" />
                         </div>
 
                         <div>
                             <x-input-label for="middle_name" :value="__('Middle Name')" />
-                            <x-text-input id="middle_name" name="middle_name" type="text" class="block w-full mt-1" :value="old('middle_name', Auth::user()->middle_name)" required autofocus autocomplete="middle_name" />
+                            <x-text-input id="middle_name" name="middle_name" type="text"
+                                class="block w-full mt-1" :value="old('middle_name', Auth::user()->middle_name)" required autofocus
+                                autocomplete="middle_name" />
                             <x-input-error class="mt-2" :messages="$errors->get('middle_name')" />
                         </div>
 
                         <div>
                             <x-input-label for="email" :value="__('Email')" />
-                            <x-text-input id="email" name="email" type="email" class="block w-full mt-1" :value="old('email', Auth::user()->email)" required autocomplete="username" />
+                            <x-text-input id="email" name="email" type="email" class="block w-full mt-1"
+                                :value="old('email', Auth::user()->email)" required autocomplete="username" />
                             <x-input-error class="mt-2" :messages="$errors->get('email')" />
                         </div>
 
@@ -163,13 +172,8 @@
                             <x-primary-button>{{ __('Save') }}</x-primary-button>
 
                             @if (session('status') === 'profile-updated')
-                                <p
-                                    x-data="{ show: true }"
-                                    x-show="show"
-                                    x-transition
-                                    x-init="setTimeout(() => show = false, 2000)"
-                                    class="text-sm text-gray-600 dark:text-gray-400"
-                                >{{ __('Saved.') }}</p>
+                                <p x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 2000)"
+                                    class="text-sm text-gray-600 dark:text-gray-400">{{ __('Saved.') }}</p>
                             @endif
                         </div>
                     </form>
@@ -324,9 +328,10 @@
                         console.log(`Added ${data.length} barangay options to dropdown`);
 
                         // If there's a previously saved value, select it
-                        const savedBarangay = '{{ old('barangay', Auth::user()->distributor->barangay ?? '') }}';
+                        const savedBarangay =
+                            '{{ old('barangay', Auth::user()->distributor->barangay ?? '') }}';
                         console.log('Saved barangay code:', savedBarangay);
-                        
+
                         if (savedBarangay) {
                             // Find the matching barangay name for the saved code
                             const selectedOption = Array.from(barangaySelect.options).find(opt => opt.value ===

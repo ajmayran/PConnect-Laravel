@@ -121,5 +121,16 @@ return [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
+    'reply_to' => [
+        'address' => env('MAIL_REPLY_TO_ADDRESS', 'support@pconnect.com'),
+        'name' => env('MAIL_REPLY_TO_NAME', 'PConnect Support'),
+    ],
+    'logo' => env('MAIL_LOGO', 'https://pc.pconnect.shop/public_html/img/Pconnect Logo.png'),
+
+    'distributor_approval' => [
+        'subject' => 'Your PConnect Distributor Account Has Been Approved',
+        'track_opens' => true,
+        'track_clicks' => true,
+    ],
 
 ];

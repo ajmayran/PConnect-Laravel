@@ -122,61 +122,121 @@
         </div>
     </div>
 
-    <div id="deliveryModal" class="fixed inset-0 z-50 hidden overflow-auto bg-gray-600 bg-opacity-50">
-        <div class="relative max-w-2xl p-8 mx-auto mt-20 bg-white rounded-lg shadow-xl">
-            <!-- Changed width and padding -->
-            <div id="deliveryModalContent" class="overflow-x-auto"></div> <!-- Added overflow-x-auto -->
+
+    <!-- Delivery Details Modal -->
+    <div id="deliveryModal"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl md:w-3/4 sm:w-2/3">
+            <!-- Modal Header -->
+            <div class="sticky top-0 z-10 flex items-center justify-between p-4 bg-white border-b">
+                <h2 class="text-xl font-bold text-gray-800" id="deliveryModalTitle">Delivery Details</h2>
+                <button onclick="closeDeliveryModal()"
+                    class="p-2 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div id="deliveryModalContent" class="p-6">
+                <!-- Content will be dynamically inserted -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div id="deliveryModalFooter" class="sticky bottom-0 flex justify-end gap-3 p-4 bg-white border-t">
+                <!-- Buttons will be dynamically inserted -->
+            </div>
         </div>
     </div>
 
-    <div id="assignTruckModal" class="fixed inset-0 hidden w-full h-full overflow-y-auto bg-gray-600 bg-opacity-50">
-        <div class="relative max-w-md p-8 mx-auto mt-20 bg-white rounded-lg shadow-xl">
-            <!-- Changed width and padding -->
-            <div class="mt-3 text-center">
-                <h3 class="text-lg font-medium leading-6 text-gray-900">Assign Truck to Delivery</h3>
-                <form id="assignTruckForm" method="POST" class="mt-2">
-                    @csrf
-                    <select name="truck_id" class="block w-full mt-2 border-gray-300 rounded-md shadow-sm">
+    <!-- Update the assign truck modal with matching style -->
+    <div id="assignTruckModal"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="w-11/12 max-w-md bg-white rounded-lg shadow-xl md:w-1/3 sm:w-2/3">
+            <div class="flex items-center justify-between p-4 border-b">
+                <h2 class="text-lg font-semibold text-gray-800">Assign Truck to Delivery</h2>
+                <button onclick="closeAssignTruckModal()"
+                    class="p-1 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="assignTruckForm" method="POST" class="p-6">
+                @csrf
+                <div class="mb-4">
+                    <label for="truck_id" class="block mb-2 text-sm font-medium text-gray-700">Select Truck</label>
+                    <select id="truck_id" name="truck_id"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         @foreach ($availableTrucks as $truck)
                             <option value="{{ $truck->id }}">{{ $truck->plate_number }}</option>
                         @endforeach
                     </select>
-                    <div class="items-center px-4 py-3">
-                        <button type="submit" class="px-4 py-2 text-white bg-blue-500 rounded-md">Assign</button>
-                        <button type="button" onclick="closeAssignTruckModal()"
-                            class="px-4 py-2 text-white bg-gray-500 rounded-md">Cancel</button>
-                    </div>
-                </form>
-            </div>
+                    <p class="mt-1 text-sm text-gray-500">Only available trucks are shown</p>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" onclick="closeAssignTruckModal()"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Assign Truck
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <div id="changeStatusModal" class="fixed inset-0 hidden w-full h-full overflow-y-auto bg-gray-600 bg-opacity-50">
-        <div class="relative max-w-md p-8 mx-auto mt-20 bg-white rounded-lg shadow-xl">
-            <div class="mt-3 text-center">
-                <h3 class="text-lg font-medium leading-6 text-gray-900">Change Delivery Status</h3>
-                <form id="changeStatusForm" method="POST" class="mt-2">
-                    @csrf
-                    <label class="block mb-2 font-medium">Update Status:</label>
-                    <select name="status" class="block w-full mt-2 border-gray-300 rounded-md shadow-sm">
+    <!-- Update the change status modal with matching style -->
+    <div id="changeStatusModal"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="w-11/12 max-w-md bg-white rounded-lg shadow-xl md:w-1/3 sm:w-2/3">
+            <div class="flex items-center justify-between p-4 border-b">
+                <h2 class="text-lg font-semibold text-gray-800">Change Delivery Status</h2>
+                <button onclick="closeChangeStatusModal()"
+                    class="p-1 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="changeStatusForm" method="POST" class="p-6">
+                @csrf
+                <div class="mb-4">
+                    <label for="status" class="block mb-2 text-sm font-medium text-gray-700">Update Status</label>
+                    <select id="status" name="status"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         <option value="in_transit">In Transit</option>
                         <option value="out_for_delivery">Out for Delivery</option>
                         <option value="delivered">Delivered</option>
                     </select>
-                    <div class="items-center px-4 py-3 mt-4">
-                        <button type="submit" class="px-4 py-2 text-white bg-green-500 rounded-md">Update</button>
-                        <button type="button" onclick="closeChangeStatusModal()"
-                            class="px-4 py-2 ml-2 text-white bg-gray-500 rounded-md">Cancel</button>
-                    </div>
-                </form>
-            </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" onclick="closeChangeStatusModal()"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Update Status
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
 
 
     <script>
-        // Order Details Modal
         function openDeliveryModal(row) {
             let orderDetails;
             let orderId;
@@ -191,75 +251,207 @@
                 return;
             }
 
-            let modalContent = '<div class="p-4">';
-            modalContent += '<h2 class="mb-4 text-xl font-bold">Order Details</h2>';
-            modalContent += '<p class="mb-4">Order ID: ' + orderId + '</p>';
-            modalContent += '<table class="min-w-full text-sm">';
-            modalContent += '<thead><tr>';
-            modalContent += '<th class="px-4 py-2 text-left">Product</th>';
-            modalContent += '<th class="px-4 py-2 text-left">Quantity</th>';
-            modalContent += '<th class="px-4 py-2 text-left">Subtotal</th>';
-            modalContent += '</tr></thead><tbody>';
+            // Set the modal title
+            document.getElementById('deliveryModalTitle').innerText = 'Order' + orderId;
+
+            // Build the main content
+            let modalContent = '<div class="space-y-6">';
+
+            // Order Status Card
+            modalContent += `<div class="p-3 rounded-lg ${getStatusCardClass(deliveryStatus)}">
+        <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold ${getStatusTextClass(deliveryStatus)}">Delivery Status</h3>
+            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(deliveryStatus)}">
+                ${formatStatus(deliveryStatus)}
+            </span>
+        </div>
+    </div>`;
+
+            // Products Section
+            modalContent += '<div class="overflow-hidden bg-white rounded-lg shadow">';
+            modalContent +=
+                '<div class="p-4 border-b bg-gray-50"><h3 class="text-lg font-semibold text-gray-800">Products Ordered</h3></div>';
+            modalContent += '<div class="overflow-x-auto">';
+            modalContent += '<table class="min-w-full divide-y divide-gray-200">';
+            modalContent += '<thead class="bg-gray-50"><tr>';
+            modalContent += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Product</th>';
+            modalContent += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Quantity</th>';
+            modalContent += '<th class="px-4 py-3 text-sm font-medium text-right text-gray-700">Subtotal</th>';
+            modalContent += '</tr></thead><tbody class="divide-y divide-gray-200">';
 
             let total = 0;
             orderDetails.forEach(function(detail) {
-                modalContent += '<tr>';
-                modalContent += '<td class="px-4 py-2">' + detail.product.product_name + '</td>';
-                modalContent += '<td class="px-4 py-2">' + detail.quantity + '</td>';
-                modalContent += '<td class="px-4 py-2">₱' + parseFloat(detail.subtotal).toFixed(2) + '</td>';
+                modalContent += '<tr class="hover:bg-gray-50">';
+                modalContent += '<td class="px-4 py-3">';
+                modalContent += '<div class="flex items-center gap-3">';
+
+                if (detail.product && detail.product.image) {
+                    // Extract just the filename without any path components
+                    const filename = detail.product.image.split('/').pop();
+
+                    modalContent += `<img src="/storage/products/${filename}" 
+        alt="${detail.product.product_name}" 
+        class="object-cover w-12 h-12 rounded-lg" 
+        onerror="this.src='/img/default-product.jpg'"/>`;
+                } else {
+                    modalContent +=
+                        '<div class="flex items-center justify-center w-12 h-12 text-gray-400 bg-gray-100 rounded-lg">' +
+                        '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>' +
+                        '</svg></div>';
+                }
+
+                modalContent += `<span class="font-medium text-gray-800">${detail.product.product_name}</span>`;
+                modalContent += '</div></td>';
+                modalContent += `<td class="px-4 py-3">${detail.quantity}</td>`;
+                modalContent +=
+                    `<td class="px-4 py-3 font-medium text-right text-gray-900">₱${parseFloat(detail.subtotal).toFixed(2)}</td>`;
                 modalContent += '</tr>';
                 total += parseFloat(detail.subtotal);
             });
 
-            modalContent += '</tbody></table>';
-            modalContent += '<div class="mt-4 font-bold text-right">Total Amount: ₱' + total.toFixed(2) + '</div>';
+            modalContent += '</tbody>';
+            modalContent += '<tfoot class="bg-gray-50"><tr>';
+            modalContent += '<td colspan="2" class="px-4 py-3 font-medium text-right text-gray-700">Total Amount:</td>';
+            modalContent += `<td class="px-4 py-3 font-bold text-right text-blue-600">₱${total.toFixed(2)}</td>`;
+            modalContent += '</tr></tfoot>';
+            modalContent += '</table></div></div>';
+
+            // Delivery address could be added here if available
+            if (orderDetails.length > 0 && orderDetails[0].delivery_address) {
+                modalContent += '<div class="p-4 mt-4 bg-white rounded-lg shadow">';
+                modalContent += '<div class="flex items-center text-sm text-gray-600">';
+                modalContent +=
+                    '<svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">';
+                modalContent +=
+                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />';
+                modalContent +=
+                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />';
+                modalContent += '</svg>';
+                modalContent += `Delivery Address: ${orderDetails[0].delivery_address}`;
+                modalContent += '</div></div>';
+            }
+
+            modalContent += '</div>'; // Close the space-y-6 div
+
+            // Update the modal content
+            document.getElementById('deliveryModalContent').innerHTML = modalContent;
+
+            // Setup the footer buttons
+            let footerContent = '';
 
             // Add Assign Truck button for pending deliveries
             if (deliveryStatus === 'pending') {
-                modalContent += '<div class="flex justify-end pt-4 mt-6 border-t">';
-                modalContent += '<button onclick="openAssignTruckModal(' + deliveryId +
-                    ')" class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-700">Assign Truck</button>';
-                modalContent += '</div>';
+                footerContent += `<button onclick="openAssignTruckModal(${deliveryId})" 
+            class="px-4 py-2 text-sm font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">
+            Assign Truck
+        </button>`;
+            } else if (deliveryStatus === 'in_transit' || deliveryStatus === 'out_for_delivery') {
+                footerContent += `<button onclick="openChangeStatusModal(${deliveryId}, '${deliveryStatus}')" 
+            class="px-4 py-2 text-sm font-medium text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700">
+            Update Status
+        </button>`;
             }
 
-            modalContent += '<div class="mt-4 text-right">';
-            modalContent +=
-                '<button onclick="closeDeliveryModal()" class="px-4 py-2 text-white bg-gray-500 rounded hover:bg-gray-700">Close</button>';
-            modalContent += '</div></div>';
+            // Always add a close button
+            footerContent += `<button onclick="closeDeliveryModal()" 
+        class="px-4 py-2 text-sm font-medium text-white transition-colors bg-gray-600 rounded-lg hover:bg-gray-700">
+        Close
+    </button>`;
 
-            document.getElementById('deliveryModalContent').innerHTML = modalContent;
+            document.getElementById('deliveryModalFooter').innerHTML = footerContent;
+
+            // Show the modal
             document.getElementById('deliveryModal').classList.remove('hidden');
         }
 
+        // Helper functions for styling based on status
+        function getStatusCardClass(status) {
+            switch (status) {
+                case 'delivered':
+                    return 'bg-green-50 border border-green-200';
+                case 'out_for_delivery':
+                    return 'bg-purple-50 border border-purple-200';
+                case 'in_transit':
+                    return 'bg-blue-50 border border-blue-200';
+                default:
+                    return 'bg-yellow-50 border border-yellow-200';
+            }
+        }
+
+        function getStatusTextClass(status) {
+            switch (status) {
+                case 'delivered':
+                    return 'text-green-700';
+                case 'out_for_delivery':
+                    return 'text-purple-700';
+                case 'in_transit':
+                    return 'text-blue-700';
+                default:
+                    return 'text-yellow-700';
+            }
+        }
+
+        function getStatusBadgeClass(status) {
+            switch (status) {
+                case 'delivered':
+                    return 'bg-green-100 text-green-800';
+                case 'out_for_delivery':
+                    return 'bg-purple-100 text-purple-800';
+                case 'in_transit':
+                    return 'bg-blue-100 text-blue-800';
+                default:
+                    return 'bg-yellow-100 text-yellow-800';
+            }
+        }
+
+        function formatStatus(status) {
+            return status.replace(/_/g, ' ')
+                .replace(/\b\w/g, letter => letter.toUpperCase());
+        }
 
         function closeDeliveryModal() {
             document.getElementById('deliveryModal').classList.add('hidden');
         }
 
         function openAssignTruckModal(deliveryId) {
-            closeDeliveryModal(); // Close the delivery modal first
+            // Close the delivery modal
+            document.getElementById('deliveryModal').classList.add('hidden');
+
+            // Set the form action URL
             const form = document.getElementById('assignTruckForm');
             form.action = `/delivery/${deliveryId}/assign-truck`;
+
+            // Show the assign truck modal
             document.getElementById('assignTruckModal').classList.remove('hidden');
         }
 
         function closeAssignTruckModal() {
             document.getElementById('assignTruckModal').classList.add('hidden');
-            document.getElementById('deliveryModal').classList.remove('hidden'); // Show delivery modal again
         }
 
         function openChangeStatusModal(deliveryId, currentStatus) {
-            closeDeliveryModal(); // Close the delivery modal first
+            // Close the delivery modal
+            document.getElementById('deliveryModal').classList.add('hidden');
+
+            // Set the form action URL
             const form = document.getElementById('changeStatusForm');
             form.action = `/delivery/${deliveryId}/update-status`;
-            // Set current status as default selection
-            form.querySelector('select[name="status"]').value = currentStatus;
+
+            // Pre-select the next logical status
+            const statusSelect = document.getElementById('status');
+            if (currentStatus === 'in_transit') {
+                statusSelect.value = 'out_for_delivery';
+            } else if (currentStatus === 'out_for_delivery') {
+                statusSelect.value = 'delivered';
+            }
+
+            // Show the status change modal
             document.getElementById('changeStatusModal').classList.remove('hidden');
         }
 
         function closeChangeStatusModal() {
             document.getElementById('changeStatusModal').classList.add('hidden');
-            document.getElementById('deliveryModal').classList.remove('hidden'); // Optionally show delivery modal again
         }
     </script>
 </x-distributor-layout>

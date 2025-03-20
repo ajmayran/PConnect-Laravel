@@ -14,6 +14,7 @@ use App\Http\Controllers\BroadcastAuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Retailers\CartController;
 use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Retailers\BuynowController;
 use App\Http\Controllers\Retailers\ReviewController;
 use App\Http\Controllers\Admin\AdminTicketController;
@@ -45,6 +46,7 @@ use App\Http\Controllers\Retailers\RetailerMessageController;
 use App\Http\Controllers\Retailers\RetailerProductController;
 use App\Http\Controllers\Distributors\ReturnRequestController;
 use App\Http\Controllers\Retailers\RetailerDashboardController;
+use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Distributors\RetailerActionsController;
 use App\Http\Controllers\Distributors\RetailerProfileController;
 use App\Http\Controllers\Distributors\DistributorNotifController;
@@ -53,11 +55,28 @@ use App\Http\Controllers\Distributors\DistributorMessageController;
 use App\Http\Controllers\Distributors\DistributorProductController;
 use App\Http\Controllers\Distributors\DistributorProfileController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
+use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 
-Route::get('register/distributor', [RegisteredUserController::class, 'createDistributorStep1'])->name('register.distributor');
-Route::post('register/distributor/step1', [RegisteredUserController::class, 'storeStep1'])->name('register.distributor.step1');
-Route::get('register/distributor/step2', [RegisteredUserController::class, 'createDistributorStep2'])->name('register.distributor.step2');
-Route::post('register/distributor/step2', [RegisteredUserController::class, 'storeStep2'])->name('register.distributor.step2');
+
+Route::middleware('auth')->group(function () {
+    // Email verification routes - these are already in your file
+    Route::get('verify-email', EmailVerificationPromptController::class)
+        ->name('verification.notice');
+
+    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+
+    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
+
+    // Also add the approval-waiting route for authenticated users
+    Route::get('approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])
+        ->name('auth.approval-waiting');
+
+    
+});
 
 Route::post('/broadcasting/auth', [BroadcastAuthController::class, 'authenticate'])
     ->middleware(['web', 'auth'])
@@ -112,7 +131,7 @@ Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function (
 
 
 // Retailer Routes
-Route::middleware(['auth', 'checkRole:retailer','check.distributor.block'])->name('retailers.')->prefix('retailers')->group(function () {
+Route::middleware(['auth', 'verified','checkRole:retailer', 'check.distributor.block'])->name('retailers.')->prefix('retailers')->group(function () {
     Route::get('/dashboard', [RetailerDashboardController::class, 'index'])->name('dashboard');
 
     // Ticket Routes
@@ -248,12 +267,16 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
 
     Route::get('/retailers/{id}', [RetailerProfileController::class, 'show'])->name('distributors.retailers.show');
     Route::get('/retailers/{retailer}/orders', [RetailerProfileController::class, 'getRetailerOrders']);
-    
+
     Route::post('/retailers/{retailer}/report', [RetailerActionsController::class, 'reportRetailer'])->name('distributors.retailers.report');
     Route::post('/retailers/{retailer}/block', [RetailerActionsController::class, 'toggleBlockRetailer'])->name('distributors.retailers.block');
-
+  
     // Cancellation Routes
     Route::get('/cancellations', [CancellationController::class, 'index'])->name('distributors.cancellations.index');
+    Route::get('/cancellations/{orderId}/details', [CancellationController::class, 'getOrderDetails'])->name('distributors.cancellations.details');
+    Route::delete('/cancellations/batch-delete', [CancellationController::class, 'batchDelete'])->name('distributors.cancellations.batch-delete');
+    Route::delete('/cancellations/{id}',  [CancellationController::class, 'delete'])->name('distributors.cancellations.delete');
+
 
     // Delivery Routes
     Route::get('/delivery', [DeliveryController::class, 'index'])->name('distributors.delivery.index');
@@ -309,12 +332,11 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     // Route::get('/distributors/create', [DistributorController::class, 'create'])->name('distributors.create');
     // Route::post('/distributors', [DistributorController::class, 'store'])->name('distributors.store');
 
-    Route::get('/approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])->name('auth.approval-waiting');
+    // Route::get('/approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])->name('auth.approval-waiting');
 
     // Ticket Routes
     Route::get('/tickets/create', [DistributorTicketController::class, 'create'])->name('distributors.tickets.create');
     Route::post('/tickets', [DistributorTicketController::class, 'store'])->name('distributors.tickets.store');
-
 });
 
 // Social Authentication Routes
@@ -336,4 +358,6 @@ require __DIR__ . '/auth.php';
 
 
 //Distributor Subscription Route
-Route::get('/subscription', function () {return view('distributors.subscription');});
+Route::get('/subscription', function () {
+    return view('distributors.subscription');
+});

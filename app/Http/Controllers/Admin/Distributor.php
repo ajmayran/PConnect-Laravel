@@ -2,30 +2,34 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Product;
 use App\Models\Distributors;
+use Illuminate\Http\Request;
+use App\Events\DistributorApproved;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\DistributorApprovalMail;
 use Illuminate\Support\Facades\Storage;
 
 class Distributor extends Controller
 {
-    
+
     public function pendingDistributors()
-{
-    $pendingDistributors = User::where('user_type', 'distributor')
-        ->where('status', 'pending')
-        ->with('credentials') // Eager-load the credentials relationship
-        ->get();
+    {
+        $pendingDistributors = User::where('user_type', 'distributor')
+            ->where('status', 'pending')
+            ->with('credentials') // Eager-load the credentials relationship
+            ->get();
 
-    foreach ($pendingDistributors as $distributor) {
-        logger('Distributor ID: ' . $distributor->id);
-        logger('Credentials: ' . $distributor->credentials);
+        foreach ($pendingDistributors as $distributor) {
+            logger('Distributor ID: ' . $distributor->id);
+            logger('Credentials: ' . $distributor->credentials);
+        }
+
+        return view('admin.distributors.pending', compact('pendingDistributors'));
     }
-
-    return view('admin.distributors.pending', compact('pendingDistributors'));
-}
 
     public function acceptDistributor($id)
     {
@@ -34,7 +38,17 @@ class Distributor extends Controller
             'status' => 'approved'
         ]);
 
-        return redirect()->back()->with('success', 'Distributor approved successfully');
+        // Fire event
+        event(new DistributorApproved($distributor));
+
+        // Send acceptance email to distributor
+        try {
+            Mail::to($distributor->email)->send(new DistributorApprovalMail($distributor));
+            return redirect()->back()->with('success', 'Distributor approved successfully and notification email sent.');
+        } catch (\Exception $e) {
+            Log::error('Failed to send distributor approval email: ' . $e->getMessage());
+            return redirect()->back()->with('success', 'Distributor approved successfully but notification email could not be sent.');
+        }
     }
 
     public function declineDistributor(Request $request, $id)

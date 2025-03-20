@@ -7,7 +7,7 @@
         </tr>
         <tr>
             <td style="padding: 30px;">
-                <p style="margin-bottom: 15px;">Dear {{$user->name}},</p>
+                <p style="margin-bottom: 15px;">Dear {{$user->first_name}} {{$user->last}} </p>
                 <p style="margin-bottom: 15px;">Thank you for registering with PConnect! Your account has been successfully created and is ready to use.</p>
                 
                 <table width="100%" cellpadding="10" cellspacing="0" style="border-collapse: collapse; margin: 25px 0; border: 1px solid #e1e1e1;">
@@ -16,7 +16,7 @@
                         <th style="text-align: left; border-bottom: 1px solid #e1e1e1;">Details</th>
                     </tr>
                     <tr>
-                        <td style="border-bottom: 1px solid #e1e1e1;">Username</td>
+                        <td style="border-bottom: 1px solid #e1e1e1;">Email</td>
                         <td style="border-bottom: 1px solid #e1e1e1;">{{$user->email}}</td>
                     </tr>
                     <tr>

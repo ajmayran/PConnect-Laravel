@@ -242,13 +242,6 @@
                     if (validateBasicInfo()) {
                         basicInfo.classList.add('hidden');
                         specifications.classList.remove('hidden');
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Basic Information Saved',
-                            text: 'Please complete the specifications',
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
                     }
                 });
 

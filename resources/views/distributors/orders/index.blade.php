@@ -86,13 +86,6 @@
                       border-b-2">
                 Processing
             </a>
-            <a href="?status=rejected{{ request('search') ? '&search=' . request('search') : '' }}"
-                class="px-4 py-2 -mb-px font-semibold 
-                      @if (request('status') === 'rejected') text-green-500 border-green-500
-                      @else text-gray-600 border-transparent @endif  
-                      border-b-2">
-                Rejected
-            </a>
         </div>
 
         @if ($orders->isEmpty())

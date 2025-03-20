@@ -63,12 +63,14 @@
                                 <label for="phone" class="block text-sm font-medium text-gray-700">
                                     Phone
                                 </label>
-                                <input id="phone" name="phone" type="text" required autofocus
-                                    autocomplete="phone" value="{{ old('phone', $user->retailerProfile->phone ?? '') }}"
+                                <input id="phone" name="phone" type="text" required autofocus pattern="[0-9]+"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')" autocomplete="phone"
+                                    value="{{ old('phone', $user->retailerProfile->phone ?? '') }}"
                                     class="block w-full mt-1 border-gray-300 rounded-md shadow-sm dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600">
                                 @error('phone')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
+                                <p class="mt-1 text-xs text-gray-500">Please enter 11 digit numbers</p>
                             </div>
 
                             <div class="mb-4">
