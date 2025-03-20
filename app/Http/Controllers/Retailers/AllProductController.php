@@ -30,7 +30,6 @@ class AllProductController extends Controller
         
         // Only show products with stock
         $query->where('stock_quantity', '>', 0);
-        $query->where('status', 'accepted');
 
         // Exclude products from distributors who blocked this retailer
         $query->whereDoesntHave('distributor', function ($query) use ($blockingDistributorIds) {

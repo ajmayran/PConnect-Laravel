@@ -193,8 +193,8 @@
         </div>
     </div>
 
-    <!-- Update the change status modal with matching style -->
-    <div id="changeStatusModal"
+   
+    {{-- <div id="changeStatusModal"
         class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
         <div class="w-11/12 max-w-md bg-white rounded-lg shadow-xl md:w-1/3 sm:w-2/3">
             <div class="flex items-center justify-between p-4 border-b">
@@ -232,7 +232,7 @@
                 </div>
             </form>
         </div>
-    </div>
+    </div> --}}
 
 
 
@@ -346,12 +346,7 @@
             class="px-4 py-2 text-sm font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">
             Assign Truck
         </button>`;
-            } else if (deliveryStatus === 'in_transit' || deliveryStatus === 'out_for_delivery') {
-                footerContent += `<button onclick="openChangeStatusModal(${deliveryId}, '${deliveryStatus}')" 
-            class="px-4 py-2 text-sm font-medium text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700">
-            Update Status
-        </button>`;
-            }
+            } 
 
             // Always add a close button
             footerContent += `<button onclick="closeDeliveryModal()" 

@@ -321,7 +321,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
 
     // Insights Routes
     Route::get('/insights', [InsightsController::class, 'index'])->name('distributors.insights.index');
-
+    Route::get('/insights/data', [InsightsController::class, 'getInsightsData'])->name('distributors.insights.data');
 
     // Payment Routes
     Route::get('/payments', [PaymentController::class, 'index'])->name('distributors.payments.index');
