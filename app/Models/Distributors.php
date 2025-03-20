@@ -21,7 +21,7 @@ class Distributors extends Model
         'city',
         'barangay',
         'street',
-        'company_profile_image'
+        'company_profile_image',
     ];
 
 

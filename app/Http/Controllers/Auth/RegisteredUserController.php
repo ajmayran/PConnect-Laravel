@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
@@ -37,13 +38,22 @@ class RegisteredUserController extends Controller
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'email' => [
+                'required',
+                'string',
+                'lowercase',
+                'email',
+                'max:255',
+                Rule::unique('users')->where(function ($query) {
+                    $query->where('status', 'approved'); // Only check for approved users
+                }),
+            ],
             'user_type' => ['required', 'in:retailer,distributor'],
             'credentials' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
             'credentials2' => ['required_if:user_type,distributor', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
-
+    
         $user = User::create([
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
@@ -51,7 +61,7 @@ class RegisteredUserController extends Controller
             'user_type' => $validated['user_type'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'status' => $validated['user_type'] === 'retailer' ? 'approved' : 'pending'
+            'status' => $validated['user_type'] === 'retailer' ? 'approved' : 'pending',
         ]);
 
         if ($request->hasFile('credentials')) {
