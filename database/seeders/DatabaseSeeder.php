@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
-
+        // Create an admin user
         User::factory()->create([
             'first_name' => 'Admin',
             'last_name' => 'User',
@@ -31,21 +31,21 @@ class DatabaseSeeder extends Seeder
             'email_verified_at' => now()
         ]);
 
-        // Create a test user
-        User::factory()->create([
-            'first_name' => 'Sample',
-            'last_name' => 'Retailer',
-            'email' => 'sample@gmail.com',
-            'password' => bcrypt('password'),
-            'user_type' => 'Retailer',
-            'profile_completed' => false, // Set profile_completed to true
-            'status' => 'approved', // Set status to approved
-            'email_verified_at' => now()
-        ]);
+        // // Create a test user
+        // User::factory()->create([
+        //     'first_name' => 'Sample',
+        //     'last_name' => 'Retailer',
+        //     'email' => 'sample@gmail.com',
+        //     'password' => bcrypt('password'),
+        //     'user_type' => 'Retailer',
+        //     'profile_completed' => false, // Set profile_completed to true
+        //     'status' => 'approved', // Set status to approved
+        //     'email_verified_at' => now()
+        // ]);
 
         $this->call([
             CategorySeeder::class,
-            DistributorSeeder::class
+            // DistributorSeeder::class
         ]);
     }
 }
