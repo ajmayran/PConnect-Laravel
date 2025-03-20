@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'first_name' => 'Admin',
             'last_name' => 'User',
-            'email' => 'admin@example.com',
+            'email' => 'admin@sample.com',
             'password' => bcrypt('password'), // Use a secure password
             'is_admin' => true, // Set is_admin to true
             'user_type' => 'admin', // Set user type to distributor

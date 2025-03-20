@@ -4,7 +4,9 @@
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <x-retailer-sidebar />
             <!-- Main Content Area -->
+
             <div class="p-3 bg-white border-b border-gray-200 rounded-lg shadow-sm md:p-5">
+
                 <h2 class="mb-4 text-xl font-semibold text-gray-800">Messages</h2>
 
                 <div class="flex flex-col md:flex-row h-[calc(100vh-240px)]">
@@ -234,9 +236,9 @@
     </div>
 
     @push('scripts')
-        <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
+                // Get DOM elements
                 const messagesContainer = document.getElementById('messages-container');
                 const conversationsList = document.getElementById('conversations-list');
                 const chatArea = document.getElementById('chat-area');
@@ -296,18 +298,18 @@
                         const tempMessageDiv = document.createElement('div');
                         tempMessageDiv.className = 'flex justify-end new-message-animation';
                         tempMessageDiv.innerHTML = `
-                            <div class="message-bubble-sent bg-gradient-to-br from-green-50 to-green-100 text-green-900 rounded-lg p-3 shadow-sm max-w-xs lg:max-w-md transform transition-transform duration-200 hover:scale-[1.02]">
-                                <p class="text-sm">${message}</p>
-                                <p class="flex items-center mt-1 text-xs text-green-700/70">
-                                    ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                    <span class="ml-1 transition-opacity opacity-0 group-hover:opacity-100">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                        </svg>
-                                    </span>
-                                </p>
-                            </div>
-                        `;
+                        <div class="message-bubble-sent bg-gradient-to-br from-green-50 to-green-100 text-green-900 rounded-lg p-3 shadow-sm max-w-xs lg:max-w-md transform transition-transform duration-200 hover:scale-[1.02]">
+                            <p class="text-sm">${message}</p>
+                            <p class="flex items-center mt-1 text-xs text-green-700/70">
+                                ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                <span class="ml-1 transition-opacity opacity-0 group-hover:opacity-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </span>
+                            </p>
+                        </div>
+                    `;
 
                         messagesContainer.appendChild(tempMessageDiv);
                         messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -368,69 +370,63 @@
                     }
                 }
 
-                // Set up Pusher
-                const pusher = new Pusher("{{ env('PUSHER_APP_KEY') }}", {
-                    cluster: "{{ env('PUSHER_APP_CLUSTER') }}",
-                    encrypted: true,
-                    authEndpoint: '/broadcasting/auth',
-                    auth: {
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                'content')
-                        }
-                    }
-                });
+                // Setup Echo listener for real-time messages
+                if (window.Echo) {
+                    window.Echo.private(`chat.{{ Auth::id() }}`)
+                        .listen('MessageSent', function(data) {
+                            console.log('Received message event via Echo:', data);
+                            
+                            const currentDistributorId = {{ $currentDistributor->id ?? 0 }};
 
-                // Subscribe to the private channel
-                const channel = pusher.subscribe('private-chat.{{ Auth::id() }}');
+                            // Debug info
+                            console.log('Current distributor:', currentDistributorId);
+                            console.log('Message sender:', data.senderId);
+                            console.log('Message content:', data.message);
 
-                // Listen for new messages
-                channel.bind('message.sent', function(data) {
-                    console.log('Received message event:', data);
+                            // Check if the message is from the current distributor
+                            if (data.senderId == currentDistributorId) {
+                                // Add the message to the current chat
+                                const messageDiv = document.createElement('div');
+                                messageDiv.className = 'flex justify-start new-message-animation';
+                                messageDiv.innerHTML = `
+                                <div class="message-bubble-received bg-white text-gray-800 rounded-lg p-3 shadow-sm max-w-xs lg:max-w-md transform transition-transform duration-200 hover:scale-[1.02]">
+                                    <p class="text-sm">${data.message}</p>
+                                    <p class="mt-1 text-xs text-gray-500">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                                </div>
+                            `;
 
-                    const currentDistributorId = {{ $currentDistributor->id ?? 0 }};
+                                if (messagesContainer) {
+                                    messagesContainer.appendChild(messageDiv);
+                                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                                }
 
-                    // Check if the message is from the current distributor
-                    if (data.senderId == currentDistributorId) {
-                        // Add the message to the current chat
-                        const messageDiv = document.createElement('div');
-                        messageDiv.className = 'flex justify-start new-message-animation';
-                        messageDiv.innerHTML = `
-                            <div class="message-bubble-received bg-white text-gray-800 rounded-lg p-3 shadow-sm max-w-xs lg:max-w-md transform transition-transform duration-200 hover:scale-[1.02]">
-                                <p class="text-sm">${data.message}</p>
-                                <p class="mt-1 text-xs text-gray-500">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                            </div>
-                        `;
+                                // Mark as read
+                                fetch("{{ route('retailers.messages.mark-read') }}", {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify({
+                                        sender_id: data.senderId
+                                    })
+                                }).catch(error => {
+                                    console.error('Error marking message as read:', error);
+                                });
 
-                        if (messagesContainer) {
-                            messagesContainer.appendChild(messageDiv);
-                            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                        }
+                                // Update message preview
+                                updateIncomingMessagePreview(data.senderId, data.message, false);
+                            } else {
+                                // Update message preview with unread indicator
+                                updateIncomingMessagePreview(data.senderId, data.message, true);
+                            }
 
-                        // Mark as read
-                        fetch("{{ route('retailers.messages.mark-read') }}", {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: JSON.stringify({
-                                sender_id: data.senderId
-                            })
-                        }).catch(error => {
-                            console.error('Error marking message as read:', error);
+                            // Update unread count in the navbar
+                            updateUnreadCount();
                         });
-
-                        // Update message preview
-                        updateIncomingMessagePreview(data.senderId, data.message, false);
-                    } else {
-                        // Update message preview with unread indicator
-                        updateIncomingMessagePreview(data.senderId, data.message, true);
-                    }
-
-                    // Update unread count in the navbar
-                    updateUnreadCount();
-                });
+                } else {
+                    console.error('❌ Laravel Echo is NOT initialized - this may be a timing issue. Check your app.js');
+                }
 
                 // Function to update message preview when receiving a message
                 function updateIncomingMessagePreview(senderId, message, isUnread) {
@@ -439,7 +435,8 @@
                         // Update message preview text
                         const previewElement = distributorItem.querySelector('.text-xs.text-gray-600');
                         if (previewElement) {
-                            previewElement.textContent = message.length > 35 ? message.substring(0, 32) + '...' :
+                            previewElement.textContent = message.length > 35 ? message.substring(0, 32) +
+                                '...' :
                                 message;
 
                             if (isUnread) {
@@ -521,6 +518,22 @@
                 // Initial unread count
                 updateUnreadCount();
             });
+
+            // Add Echo status check outside DOMContentLoaded to run immediately
+            setTimeout(function checkEcho() {
+                if (window.Echo) {
+                    console.log('✅ Laravel Echo is initialized');
+
+                    // Check connection state if possible
+                    if (window.Echo.connector && window.Echo.connector.pusher) {
+                        console.log('Echo connection state:', window.Echo.connector.pusher.connection.state);
+                    }
+                } else {
+                    console.error('❌ Laravel Echo is NOT initialized');
+                    // Try again in another second (in case of delayed initialization)
+                    setTimeout(checkEcho, 1000);
+                }
+            }, 500);
         </script>
     @endpush
 
@@ -553,5 +566,89 @@
             position: relative;
             border-radius: 18px 18px 18px 4px;
         }
+
+        /* Fix message input position on mobile */
+        @media (max-width: 768px) {
+
+            /* Container height adjustments */
+            .flex.flex-col.md\:flex-row.h-\[calc\(100vh-240px\)\] {
+                height: calc(100vh - 180px);
+                display: flex;
+                flex-direction: column;
+            }
+
+            #chat-area {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                position: relative;
+            }
+
+            #messages-container {
+                flex: 1;
+                overflow-y: auto;
+                max-height: calc(100vh - 300px);
+                padding-bottom: 10px;
+            }
+
+            /* Keep the input naturally positioned but styled properly */
+            .p-3.bg-white.border-t.border-gray-200 {
+                background-color: white;
+                z-index: 10;
+                box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+                width: calc(100% + 2rem);
+                /* Expand beyond parent container */
+                margin-left: -1rem;
+                margin-right: -1rem;
+                padding-left: 1rem;
+                padding-right: 1rem;
+                position: relative;
+                /* Add this */
+                left: 0;
+                /* Position properly */
+            }
+
+            /* Make sure the parent container doesn't clip the input area */
+            .p-3.bg-white.border-b.border-gray-200.rounded-lg.shadow-sm.md\:p-5 {
+                overflow: visible !important;
+                /* Prevent clipping */
+                position: relative;
+            }
+
+            /* Fix input form to take full available width */
+            #message-form {
+                width: 100%;
+                display: flex;
+            }
+
+            /* Fix rounded corners of input for better mobile display */
+            #message-input {
+                width: 100%;
+                border-radius: 20px;
+            }
+
+            /* Make sure the page has proper spacing at the bottom for footer */
+            x-footer {
+                margin-top: 20px;
+            }
+        }
+
+        /* Animation for new messages */
+        .new-message-animation {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </x-app-layout>
+<x-footer />

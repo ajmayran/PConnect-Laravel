@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Message;
 use App\Events\MessageSent;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -100,7 +101,7 @@ class RetailerMessageController extends Controller
             ]);
 
             // Broadcast the message
-            event(new MessageSent($message->message, Auth::id(), $request->receiver_id));
+            broadcast(new MessageSent($message->message, Auth::id(), $request->receiver_id))->toOthers();
 
             return response()->json([
                 'status' => 'success',
@@ -115,13 +116,50 @@ class RetailerMessageController extends Controller
         }
     }
 
+
     public function getUnreadCount()
     {
-        $unreadCount = Message::where('receiver_id', Auth::id())
-            ->where('is_read', false)
-            ->count();
+        try {
+            // Get authenticated user ID
+            $userId = Auth::id();
 
-        return response()->json(['unread_count' => $unreadCount]);
+            // Get the distinct sender IDs for debugging
+            $distinctSenders = Message::where('receiver_id', $userId)
+                ->where('is_read', false)
+                ->select('sender_id')
+                ->distinct()
+                ->get()
+                ->pluck('sender_id');
+
+            // Count unique senders who have sent unread messages
+            $unreadSendersCount = $distinctSenders->count();
+
+            // For debugging: Get total unread messages too
+            $totalUnreadCount = Message::where('receiver_id', $userId)
+                ->where('is_read', false)
+                ->count();
+
+            // Log the values for debugging
+            Log::debug("Unread senders: " . $distinctSenders->join(', '));
+            Log::debug("Unread senders count: $unreadSendersCount, Total unread messages: $totalUnreadCount");
+
+            return response()->json([
+                'success' => true,
+                'unread_count' => $unreadSendersCount,
+                'count' => $unreadSendersCount,
+                'debug_total_messages' => $totalUnreadCount,
+                'debug_senders' => $distinctSenders->toArray()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching unread message count: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching unread messages: ' . $e->getMessage(),
+                'count' => 0,
+                'unread_count' => 0
+            ]);
+        }
     }
 
     public function markAsRead(Request $request)
@@ -140,5 +178,60 @@ class RetailerMessageController extends Controller
             ]);
 
         return response()->json(['status' => 'success']);
+    }
+
+
+    public function getMessagePreviews()
+    {
+        try {
+            // Get the latest message from each unique sender
+            $latestMessages = Message::where('receiver_id', Auth::id())
+                ->select('sender_id', DB::raw('MAX(id) as max_id'))
+                ->groupBy('sender_id')
+                ->orderBy('max_id', 'desc')
+                ->take(5)
+                ->get();
+
+            $messageIds = $latestMessages->pluck('max_id');
+
+            // Fetch the actual message details
+            $messages = Message::whereIn('id', $messageIds)
+                ->with('sender:id,first_name,last_name')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            $formattedMessages = $messages->map(function ($message) {
+                $senderImg = null;
+                if ($message->sender->distributorProfile && $message->sender->distributorProfile->profile_picture) {
+                    $senderImg = asset('storage/' . $message->sender->distributorProfile->profile_picture);
+                }
+
+                return [
+                    'id' => $message->id,
+                    'sender_id' => $message->sender_id,
+                    'sender_name' => $message->sender->first_name . ' ' . $message->sender->last_name,
+                    'sender_image' => $senderImg,
+                    'message' => \Illuminate\Support\Str::limit($message->message, 50),
+                    'created_at' => $message->created_at,
+                    'is_read' => $message->is_read,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'messages' => $formattedMessages
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching message previews: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching message previews',
+            ], 500);
+        }
+    }
+
+    public function show($userId)
+    {
+        return redirect()->route('retailers.messages.index', ['distributor' => $userId]);
     }
 }

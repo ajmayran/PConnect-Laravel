@@ -5,6 +5,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>
+        window.userId = {{ auth()->id() }};
+        window.pusherAppKey = "{{ env('PUSHER_APP_KEY') }}";
+        window.pusherAppCluster = "{{ env('PUSHER_APP_CLUSTER') }}";
+    </script>
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <title>PConnect</title>
@@ -67,7 +72,7 @@
     }
 </style>
 
-<body class="bg-gray-100" data-user-id="{{ Auth::id() ?? '' }}" data-user-type="distributor">
+<body class="bg-gray-200" data-user-id="{{ Auth::id() ?? '' }}" data-user-type="distributor">
 
 
 
@@ -85,7 +90,7 @@
         {{ $slot }}
     </div>
 
-    <x-footer />
+
 
     @stack('scripts')
 
@@ -101,6 +106,8 @@
         </script>
     @endif
 </body>
+
+<script src="{{ asset('js/distributornotif-utils.js') }}"></script>
 <script>
     function dropdown() {
         document.querySelector("#submenu").classList.toggle("hidden");

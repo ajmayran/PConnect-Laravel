@@ -13,8 +13,7 @@ use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
-    public function 
-    index()
+    public function index()
     {
         // Get all carts for the current user with their details
         $carts = Cart::with(['details.product.distributor'])

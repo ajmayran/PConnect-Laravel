@@ -1,5 +1,5 @@
 <div class="container flex gap-2 mx-auto">
-    <div class="w-1/4 pt-5 bg-white shadow-md sm:rounded-lg ">
+    <div class="hidden w-1/4 pt-5 bg-white shadow-md md:block sm:rounded-lg">
         <h2 class="p-4 mb-4 text-xl font-bold text-center">Account</h2>
 
         <ul class="text-center tab-list space-y">
@@ -8,10 +8,9 @@
                 <a href="{{ route('retailers.profile.edit') }}">Profile</a>
             </li>
             <li
-                class="p-2 m-2 cursor-pointer tab-item hover:bg-green-200 {{ request()->routeIs('retailers.profile.my-purchase') ? 'bg-gray-200 p-2 m-2 rounded-lg' : '' }}">
-                <a href="{{ route('retailers.profile.my-purchase') }}">My Purchase</a>
+                class="p-2 cursor-pointer tab-item hover:bg-green-200 {{ request()->routeIs('retailers.notifications.*') ? 'bg-gray-200 p-2 m-2 rounded-lg' : '' }}">
+                <a href="{{ route('retailers.notifications.index') }}">Notifications</a>
             </li>
-            <li class="p-2 m-2 cursor-pointer tab-item hover:bg-green-200">Notifications</li>
             <li
                 class="p-2 m-2 cursor-pointer tab-item hover:bg-green-200 {{ request()->routeIs('retailers.messages.*') ? 'bg-gray-200 p-2 m-2 rounded-lg' : '' }}">
                 <a href="{{ route('retailers.messages.index') }}" class="flex items-center justify-center">

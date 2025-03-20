@@ -7,10 +7,17 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="flex py-12 mx-auto max-w-7xl sm:px-6 lg:px-8">
         <x-retailer-sidebar :user="Auth::user()" /> <!-- Retailder Side bar -->
 
-        <div class="flex-1 space-y-6 lg:px-8 h-[760px] overflow-y-auto"> <!-- Retailder form edit -->
+        <div class="flex-1 space-y-6 lg:pl-8">
+            <div class="px-4 mb-6">
+                <h1 class="text-2xl font-semibold text-gray-800">Profile</h1>
+                <div>
+                    <span class="text-sm text-gray-500">Edit your profile</span>
+                </div>
+            </div>
+
             <div class="p-4 bg-white shadow sm:p-8 sm:rounded-lg">
                 <header>
                     <h2 class="text-lg font-medium text-gray-900 dark:text-gray-900">
@@ -38,6 +45,7 @@
                         <p class="text-sm text-gray-700">Click image to change</p>
                         <!-- Left Side: Form Fields -->
                         <div class="self-start w-full md:w-1/2">
+
                             <div class="mb-4">
                                 <label for="business_name" class="block text-sm font-medium text-gray-700">
                                     Business Name
@@ -46,19 +54,27 @@
                                     autocomplete="business_name"
                                     value="{{ old('business_name', $user->retailerProfile->business_name ?? '') }}"
                                     class="block w-full mt-1 border-gray-300 rounded-md shadow-sm dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600">
+                                @error('business_name')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div class="mb-4">
                                 <label for="phone" class="block text-sm font-medium text-gray-700">
                                     Phone
                                 </label>
-                                <input id="phone" name="phone" type="number" required autofocus
-                                    autocomplete="phone" value="{{ old('phone', $user->retailerProfile->phone ?? '') }}"
+                                <input id="phone" name="phone" type="text" required autofocus pattern="[0-9]+"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')" autocomplete="phone"
+                                    value="{{ old('phone', $user->retailerProfile->phone ?? '') }}"
                                     class="block w-full mt-1 border-gray-300 rounded-md shadow-sm dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600">
+                                @error('phone')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                                <p class="mt-1 text-xs text-gray-500">Please enter 11 digit numbers</p>
                             </div>
 
                             <div class="mb-4">
-                                <label for="address" class="block mb-2 text-sm font-medium text-gray-700">
+                                <label for="address" class="block mb-2 font-medium text-gray-700 texgit pt-sm">
                                     Address
                                 </label>
                                 <input type="hidden" id="region" name="region" value="09">
@@ -135,7 +151,8 @@
             const barangaySelectSection = document.getElementById('barangaySelectSection');
             const currentBarangayDisplay = document.getElementById('currentBarangayDisplay');
             const barangayCodeInput = document.getElementById('barangayCode');
-            const savedBarangay = '{{ isset($user->retailerProfile) && $user->retailerProfile ? ($user->retailerProfile->barangay ?? '') : '' }}';
+            const savedBarangay =
+                '{{ isset($user->retailerProfile) && $user->retailerProfile ? $user->retailerProfile->barangay ?? '' : '' }}';
 
             changeBarangayBtn.addEventListener('click', function() {
                 barangayDisplaySection.classList.add('hidden');
@@ -285,3 +302,4 @@
         });
     </script>
 </x-app-layout>
+<x-footer />

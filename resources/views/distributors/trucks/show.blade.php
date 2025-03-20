@@ -322,6 +322,67 @@
         </div>
     </div>
 
+    <!-- Payment Modal when marking as delivered -->
+    <div id="paymentModal"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="w-11/12 max-w-md bg-white rounded-lg shadow-xl md:w-1/3 sm:w-2/3">
+            <div class="flex items-center justify-between p-4 border-b">
+                <h2 class="text-lg font-semibold text-gray-800">Payment Information</h2>
+                <button onclick="closePaymentModal()"
+                    class="p-1 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="paymentForm" method="POST">
+                @csrf
+                <div class="p-6 space-y-4">
+                    <div>
+                        <h3 class="mb-3 font-medium text-gray-800 text-md">Record payment details upon delivery</h3>
+
+                        <label class="block mb-2 text-sm font-medium text-gray-700">Payment Status</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center px-3 py-2 border rounded-md hover:bg-gray-50">
+                                <input type="radio" name="payment_status" value="paid"
+                                    class="w-4 h-4 text-green-600" checked>
+                                <span class="ml-2 font-medium text-green-700">Paid</span>
+                            </label>
+                            <label class="flex items-center px-3 py-2 border rounded-md hover:bg-gray-50">
+                                <input type="radio" name="payment_status" value="unpaid"
+                                    class="w-4 h-4 text-red-600">
+                                <span class="ml-2 font-medium text-red-700">Unpaid</span>
+                            </label>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">This will update both delivery status and payment record
+                        </p>
+                    </div>
+
+                    <div>
+                        <label for="payment_note" class="block mb-2 text-sm font-medium text-gray-700">Payment Notes
+                            (Optional)</label>
+                        <textarea id="payment_note" name="payment_note" rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Add notes about this payment (e.g., paid with cash, promised to pay next week, etc.)"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 p-4 rounded-b-lg bg-gray-50">
+                    <button type="button" onclick="closePaymentModal()"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Complete Delivery
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Hidden Form for Mark as Delivered -->
     <form id="markDeliveredForm" method="POST" class="hidden">
         @csrf
@@ -529,24 +590,42 @@
         function markAsDelivered() {
             if (!currentDeliveryId) return;
 
+            // Show payment modal instead of direct confirmation
+            document.getElementById('paymentModal').classList.remove('hidden');
+
+            // Set the form action dynamically
+            const paymentForm = document.getElementById('paymentForm');
+            paymentForm.action = "{{ route('distributors.deliveries.mark-delivered', ['delivery' => ':id']) }}"
+                .replace(':id', currentDeliveryId);
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.add('hidden');
+        }
+
+        document.getElementById('paymentForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent immediate form submission
+
+            const form = this;
+            const paymentStatus = form.querySelector('input[name="payment_status"]:checked').value;
+
             Swal.fire({
-                title: 'Confirm Delivery',
-                text: "Are you sure this order has been delivered?",
+                title: 'Confirm Delivery & Payment',
+                html: `
+            <p>Are you sure this order has been delivered?</p>
+            <p class="mt-2">Payment will be marked as <strong>${paymentStatus === 'paid' ? 'PAID' : 'UNPAID'}</strong>.</p>
+        `,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#4CAF50',
                 cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, mark as delivered'
+                confirmButtonText: 'Yes, confirm'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    const form = document.getElementById('markDeliveredForm');
-                    // Fix: Generate URL correctly with ID as a parameter
-                    form.action = "{{ route('distributors.deliveries.mark-delivered', ['delivery' => ':id']) }}"
-                        .replace(':id', currentDeliveryId);
-                    form.submit();
+                    form.submit(); // Actually submit the form
                 }
             });
-        }
+        });
 
         function openEstimatedDeliveryModal() {
             // Set minimum date to today

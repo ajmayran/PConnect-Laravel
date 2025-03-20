@@ -56,10 +56,10 @@ class ProfileController extends Controller
     {
         $request->validate([
             'business_name' => ['nullable', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:15'],
-            'city' => ['required', 'string', 'max:10'],
-            'province' => ['required', 'string', 'max:10'],
-            'region' => ['required', 'string', 'max:10'],
+            'phone' => ['nullable', 'numeric', 'digits:11'],
+            'city' => ['nullable', 'string', 'max:10'],
+            'province' => ['nullable', 'string', 'max:10'],
+            'region' => ['nullable', 'string', 'max:10'],
             'barangay' => ['nullable', 'string', 'max:20'],
             'street' => ['nullable', 'string', 'max:255'],
             'profile_picture' => ['nullable', 'image', 'max:2048'],
@@ -86,9 +86,9 @@ class ProfileController extends Controller
                 Storage::disk('public')->delete($retailerProfile->profile_picture);
             }
             // Create a custom file name
-            $fileName = time() . '_' . $request->user()->id . '.' . $request->file('profile_picture')->getClientOriginalExtension();
-            // Store the file in the "profile_pictures" folder in the "public" disk
-            $path = $request->file('profile_picture')->storeAs('profile_pictures', $fileName, 'public');
+            $fileName = time() . $request->user()->id . '.' . $request->file('profile_picture')->getClientOriginalExtension();
+            // Store the file in the "profile_pictures" folder in the "public" disk with custom filename
+            $path = Storage::disk('public')->putFileAs('retailers_profile', $request->file('profile_picture'), $fileName);
             $retailerProfile->profile_picture = $path;
         }
 

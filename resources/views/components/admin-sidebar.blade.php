@@ -1,11 +1,21 @@
-<div class="fixed top-0 left-0 z-50 w-64 h-full p-4 transition-transform sidebar-menu" style="background-color: #abebc6;">
-    <a href="#" class="flex items-center pb-4 border-b border-b-gray-800">
+<x-app-layout>
+    @if (session('success'))
+        <div class="relative px-4 py-3 text-green-700 bg-green-100 border border-green-400 rounded" role="alert">
+            <span class="block sm:inline">{{ session('success') }}</span>
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="relative px-4 py-3 text-red-700 bg-red-100 border border-red-400 rounded" role="alert">
+            <span class="block sm:inline">{{ session('error') }}</span>
+        </div>
+    @endif<div class="fixed top-0 left-0 z-50 w-64 h-full p-4 transition-transform sidebar-menu" style="background-color: #abebc6;">
+    <a href="{{ route('admin.dashboard') }}" class="flex items-center pb-4 border-b border-b-gray-800">
         <img src="\img\Pconnect Logo.png" alt="Logo" class="object-cover w-8 h-8">
         <span class="ml-3 text-lg font-bold">PConnect</span>
     </a>
     <ul class="mt-4">
         <li class="mb-1 group active">
-            <a href="#" class="flex items-center px-4 py-2 text-white bg-green-600 rounded-md">
+            <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-2 text-white bg-green-600 rounded-md">
                 <iconify-icon icon="mdi:home" class="mr-3 text-xl"></iconify-icon>
                 <span class="text-sm">Dashboard</span>
             </a>
@@ -20,20 +30,18 @@
             </a>
             <ul class="pl-7 mt-2 hidden group-[.selected]:block">
                 <li class="mb-4">
-                    <a href="#"
+                    <a href="{{ route('admin.allProducts') }}"
                         class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">All
                         Products</a>
                 </li>
-                <li class="mb-4">
-                    <a href="{{ route('admin.pendingProducts') }}"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Pending
-                        Products</a>
-                </li>
-                <li class="mb-4">
-                    <a href="#"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Removed
-                        Products</a>
-                </li>
+                {{-- filepath: c:\Users\nunez\Documents\PConnect-Laravel\resources\views\components\admin-sidebar.blade.php --}}
+            <li class="mb-1 group">
+                <a href="{{ route('categories.index') }}"
+                    class="flex items-center py-2 px-4 hover:bg-green-500 hover:text-gray-100 rounded-md group-[.active]:bg-green-600 group-[.active]:text-white">
+                    <iconify-icon icon="mdi:folder" class="mr-3 text-xl"></iconify-icon>
+                    <span class="text-sm">Manage Categories</span>
+                </a>
+            </li>
             </ul>
         </li>
         <li class="mb-1 group">
@@ -46,14 +54,9 @@
             </a>
             <ul class="pl-7 mt-2 hidden group-[.selected]:block">
                 <li class="mb-4">
-                    <a href="./transactions/completedOrders.php"
+                    <a href="#"
                         class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Transaction
-                        History</a>
-                </li>
-                <li class="mb-4">
-                    <a href="./transactions/CancelledOrders.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Cancelled
-                        order</a>
+                        Subscription</a>
                 </li>
             </ul>
         </li>
@@ -67,19 +70,8 @@
             </a>
             <ul class="pl-7 mt-2 hidden group-[.selected]:block">
                 <li class="mb-4">
-                    <a href="./retailers/activeRetailers.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Active
-                        Retailers</a>
-                </li>
-                <li class="mb-4">
-                    <a href="./retailers/restricted.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Restricted
-                        Retailers</a>
-                </li>
-                <li class="mb-4">
-                    <a href="./retailers/banned.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Banned
-                        Retailers</a>
+                    <a href="{{ route('admin.allRetailers') }}"
+                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">All Retailers</a>
                 </li>
             </ul>
         </li>
@@ -98,21 +90,8 @@
                         Distributor</a>
                 </li>
                 <li class="mb-4">
-                    <a href="./distributors/activeDist.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Active
-                        Distributor</a>
-                </li>
-                <li class="mb-4">
-                    <a href="./distributors/restrictedDist.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Restricted</a>
-                </li>
-                <li class="mb-4">
-                    <a href="./distributors/bannedDist.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Banned</a>
-                </li>
-                <li class="mb-4">
                     <a href="{{ route('admin.approvedDistributors') }}"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Manage</a>
+                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Manage Distributors</a>
                 </li>
             </ul>
         </li>
@@ -126,12 +105,18 @@
             </a>
             <ul class="pl-7 mt-2 hidden group-[.selected]:block">
                 <li class="mb-4">
-                    <a href="./support/tickets.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Tickets</a>
+                    <a href="{{ route('admin.tickets.index') }}"
+                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Pending Tickets</a>
                 </li>
-                <li class="mb-4">
-                    <a href="./support/resolved.php"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Resolved</a>
+                <li class="mb-1 group">
+                    <a href="{{ route('admin.tickets.resolved') }}" class="flex items-center py-2 px-4 hover:bg-green-500 hover:text-gray-100 rounded-md">
+                        <span class="text-sm">Resolved Tickets</span>
+                    </a>
+                </li>
+                <li class="mb-1 group">
+                    <a href="{{ route('admin.tickets.rejected') }}" class="flex items-center py-2 px-4 hover:bg-green-500 hover:text-gray-100 rounded-md">
+                        <span class="text-sm">Rejected Tickets</span>
+                    </a>
                 </li>
             </ul>
         </li>
@@ -155,3 +140,4 @@
         </li>
     </ul>
 </div>
+</x-app-layout>

@@ -14,7 +14,11 @@ use App\Http\Controllers\BroadcastAuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Retailers\CartController;
 use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Retailers\BuynowController;
+use App\Http\Controllers\Retailers\ReviewController;
+use App\Http\Controllers\Admin\AdminTicketController;
+use App\Http\Controllers\Admin\AllRetailerController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Distributors\OrderController;
 use App\Http\Controllers\Distributors\TruckController;
@@ -28,21 +32,51 @@ use App\Http\Controllers\Retailers\AllProductController;
 use App\Http\Controllers\Distributors\DeliveryController;
 use App\Http\Controllers\Distributors\InsightsController;
 use App\Http\Controllers\Retailers\ProductDescController;
+use App\Http\Controllers\Distributors\DashboardController;
 use App\Http\Controllers\Distributors\InventoryController;
+use App\Http\Controllers\Retailers\RetailerNotifController;
 use App\Http\Controllers\Distributors\DistributorController;
 use App\Http\Controllers\Retailers\AllDistributorController;
 use App\Http\Controllers\Retailers\RetailerOrdersController;
 use App\Http\Controllers\Retailers\RetailerSearchController;
+use App\Http\Controllers\Retailers\RetailerTicketController;
 use App\Http\Controllers\Distributors\CancellationController;
 use App\Http\Controllers\Retailers\DistributorPageController;
 use App\Http\Controllers\Retailers\RetailerMessageController;
 use App\Http\Controllers\Retailers\RetailerProductController;
+use App\Http\Controllers\Distributors\ReturnRequestController;
 use App\Http\Controllers\Retailers\RetailerDashboardController;
+use App\Http\Controllers\Auth\EmailVerificationPromptController;
+use App\Http\Controllers\Distributors\RetailerActionsController;
+use App\Http\Controllers\Distributors\RetailerProfileController;
+use App\Http\Controllers\Distributors\DistributorNotifController;
+use App\Http\Controllers\Distributors\DistributorTicketController;
 use App\Http\Controllers\Distributors\DistributorMessageController;
 use App\Http\Controllers\Distributors\DistributorProductController;
 use App\Http\Controllers\Distributors\DistributorProfileController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
+use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 
+
+Route::middleware('auth')->group(function () {
+    // Email verification routes - these are already in your file
+    Route::get('verify-email', EmailVerificationPromptController::class)
+        ->name('verification.notice');
+
+    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+
+    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
+
+    // Also add the approval-waiting route for authenticated users
+    Route::get('approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])
+        ->name('auth.approval-waiting');
+
+    
+});
 
 Route::post('/broadcasting/auth', [BroadcastAuthController::class, 'authenticate'])
     ->middleware(['web', 'auth'])
@@ -65,25 +99,57 @@ Route::get('/', function () {
     return view('index');
 });
 
+use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Retailers\RetailerController;
+
 // Admin Routes
 Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function () {
     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/distributors/pending', [Distributor::class, 'pendingDistributors'])->name('pendingDistributors');
     Route::post('/admin/accept-distributor/{id}', [Distributor::class, 'acceptDistributor'])->name('acceptDistributor');
     Route::post('/admin/decline-distributor/{id}', [Distributor::class, 'declineDistributor'])->name('declineDistributor');
-    Route::get('/admin/products/pending', [AdminProductController::class, 'pendingProducts'])->name('pendingProducts');
-    Route::post('/admin/approve-product/{id}', [AdminProductController::class, 'approveProduct'])->name('approveProduct');
-    Route::post('/admin/reject-product/{id}', [AdminProductController::class, 'rejectProduct'])->name('rejectProduct');
     Route::get('/admin/distributors/approved', [Distributor::class, 'approvedDistributors'])->name('approvedDistributors');
-    Route::get('/admin/distributors/{id}/products', [Distributor::class, 'distributorProducts'])->name('distributorProducts');
-    Route::delete('/admin/product/{id}/remove', [Distributor::class, 'removeProduct'])->name('removeProduct');
 
     Route::get('/admin/download-credential/{id}', [AdminDashboardController::class, 'downloadCredential'])->name('downloadCredential');
+    Route::get('/admin/distributors/all', [Distributor::class, 'allDistributors'])->name('allDistributors');
+    Route::get('/admin/retailers', [AllRetailerController::class, 'allRetailers'])->name('allRetailers');
+
+    // Tickets Routes
+    Route::get('/admin/tickets', [AdminTicketController::class, 'index'])->name('tickets.index');
+    Route::get('/admin/tickets/resolved', [AdminTicketController::class, 'resolved'])->name('tickets.resolved');
+    Route::get('/admin/tickets/rejected', [AdminTicketController::class, 'rejected'])->name('tickets.rejected');
+    Route::get('/admin/tickets/{id}', [AdminTicketController::class, 'show'])->name('tickets.show');
+    Route::post('/admin/tickets/{id}/resolve', [AdminTicketController::class, 'resolve'])->name('tickets.resolve');
+    Route::post('/admin/tickets/{id}/reject', [AdminTicketController::class, 'reject'])->name('tickets.reject');
+
+    // Category 
+    Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories.index'); // View all categories
+    Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create'); // Create category form
+    Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store'); // Store new category
+    Route::get('/categories/{id}/edit', [CategoryController::class, 'edit'])->name('categories.edit'); // Edit category form
+    Route::put('/categories/{id}', [CategoryController::class, 'update'])->name('categories.update'); // Update category
+    Route::delete('/categories/{id}', [CategoryController::class, 'destroy'])->name('categories.destroy'); // Delete category
+
+    // All users
+    Route::get('/users', [AdminUserController::class, 'index'])->name('users.index'); // List all users
+           
+    // All Products Route
+    Route::get('/admin/products/all', [AdminProductController::class, 'allProducts'])->name('allProducts');
+    Route::get('/admin/distributor/{id}/products', [AdminProductController::class, 'distributorProducts'])->name('distributorProducts');
+
+    // Retailer Routes
+    Route::delete('/admin/product/{id}/remove', [AdminProductController::class, 'removeProduct'])->name('removeProduct');
 });
 
+
+
 // Retailer Routes
-Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('retailers')->group(function () {
+Route::middleware(['auth', 'verified','checkRole:retailer', 'check.distributor.block'])->name('retailers.')->prefix('retailers')->group(function () {
     Route::get('/dashboard', [RetailerDashboardController::class, 'index'])->name('dashboard');
+
+    // Ticket Routes
+    Route::get('/tickets/create', [RetailerTicketController::class, 'create'])->name('tickets.create');
+    Route::post('/tickets', [RetailerTicketController::class, 'store'])->name('tickets.store');
 
     // Profile Routes
     Route::put('retailers/profile/update-retailer', [ProfileController::class, 'updateRetailerProfile'])->name('profile.update.retailer');
@@ -100,11 +166,15 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     Route::post('/messages/send', [App\Http\Controllers\Retailers\RetailerMessageController::class, 'sendMessage'])->name('messages.send');
     Route::get('/messages/unread-count', [App\Http\Controllers\Retailers\RetailerMessageController::class, 'getUnreadCount'])->name('messages.unread-count');
     Route::post('/messages/mark-read', [RetailerMessageController::class, 'markAsRead'])->name('messages.mark-read');
+    Route::get('/messages/preview', [RetailerMessageController::class, 'getMessagePreviews'])->name('retailers.messages.preview');
+    Route::get('/messages/show/{user}', [RetailerMessageController::class, 'show'])->name('messages.show');
 
     // Product Routes
     Route::get('/products', [RetailerProductController::class, 'index'])->name('products.index');
     Route::get('/distributors/{id}', [DistributorPageController::class, 'show'])->name('distributor-page');
     Route::post('/products', [RetailerProductController::class, 'store'])->name('products.store');
+    Route::get('/products/{product}', [ProductDescController::class, 'show'])->name('products.show');
+    Route::get('/all-products', [AllProductController::class, 'index'])->name('all-product');
     Route::get('/products/{product}', [ProductDescController::class, 'show'])->name('products.show');
 
     // Cart Routes 
@@ -135,10 +205,12 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
     Route::get('/orders/completed', [RetailerOrdersController::class, 'completed'])->name('orders.completed');
     Route::get('/orders/cancelled', [RetailerOrdersController::class, 'cancelled'])->name('orders.cancelled');
     Route::get('/orders/returned', [RetailerOrdersController::class, 'returned'])->name('orders.returned');
+    Route::get('/orders/track', [RetailerOrdersController::class, 'trackOrder'])->name('orders.track');
 
     Route::get('/orders/{order}', [RetailerOrdersController::class, 'show'])->name('orders.show');
-    Route::post('/orders/{order}/cancel', [RetailerOrdersController::class, 'cancel'])->name('orders.cancel');
-    Route::post('/orders/{order}/return', [RetailerOrdersController::class, 'return'])->name('orders.return');
+    Route::post('/orders/{order}/cancel', [RetailerOrdersController::class, 'cancelOrder'])->name('orders.cancel');
+    Route::post('/orders/{order}/request-return', [RetailerOrdersController::class, 'requestReturn'])->name('orders.request-return');
+
 
     //Nav Routes
     Route::get('/all-distributors', [AllDistributorController::class, 'index'])->name('all-distributor');
@@ -146,8 +218,17 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
 
     //
     Route::get('/search', [RetailerSearchController::class, 'search'])->name('search');
-    Route::get('/all-products', [AllProductController::class, 'index'])->name('all-product');
-    Route::get('/products/{product}', [ProductDescController::class, 'show'])->name('products.show');
+    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::get('orders/{order}/view-receipt', [RetailerOrdersController::class, 'viewReceipt'])->name('orders.view-receipt');
+    Route::get('orders/{order}/receipt/download', [RetailerOrdersController::class, 'downloadReceipt'])->name('orders.download-receipt');
+    Route::post('/distributors/{id}/report', [DistributorPageController::class, 'reportDistributor'])->name('distributors.report');
+
+    // Notification Routes
+    Route::get('/notifications', [RetailerNotifController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [RetailerNotifController::class, 'getUnreadCount'])->name('notifications.unread-count');
+    Route::get('/notifications/latest', [RetailerNotifController::class, 'getLatestNotifications'])->name('notifications.latest');
+    Route::post('/notifications/mark-read', [RetailerNotifController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('/notifications/mark-all-read', [RetailerNotifController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
 });
 
 
@@ -155,9 +236,15 @@ Route::middleware(['auth', 'checkRole:retailer'])->name('retailers.')->prefix('r
 Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'profile.completed'])->group(function () {
     Route::get('/distributors/setup', [DistributorProfileController::class, 'setup'])->name('distributors.setup');
     Route::post('/profile/setup', [DistributorProfileController::class, 'updateSetup'])->name('profile.updateSetup');
+    Route::get('/profile', [DistributorProfileController::class, 'edit'])->name('distributors.profile.edit');
+    Route::patch('/profile/update', [DistributorProfileController::class, 'update'])->name('distributors.profile.update');
+    Route::put('/profile/update-distributor', [DistributorProfileController::class, 'updateDistributorProfile'])->name('distributors.profile.update.distributor');
+    Route::delete('/profile', [DistributorProfileController::class, 'destroy'])->name('distributors.profile.destroy');
+    Route::post('/profile/update-password', [DistributorProfileController::class, 'updatePassword'])->name('distributors.profile.update-password');
 
     Route::get('/distributors', [DistributorDashboardController::class, 'index'])->name('distributors.index');
-    Route::get('/dashboard', [DistributorDashboardController::class, 'dashboard'])->name('distributors.dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('distributors.dashboard');
+    Route::get('/dashboard/sales-data', [DashboardController::class, 'getSalesData'])->name('distributors.dashboard.sales-data');
 
     // Product Routes   
     Route::get('/products', [DistributorProductController::class, 'index'])->name('distributors.products.index');
@@ -174,23 +261,40 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::post('/orders/{order}/accept', [OrderController::class, 'acceptOrder'])->name('orders.accept');
     Route::post('/orders/{order}/reject', [OrderController::class, 'rejectOrder'])->name('orders.reject');
     Route::get('/orders/{id}/details', [OrderController::class, 'getOrderDetails'])->name('orders.details');
+    Route::post('/toggle-order-acceptance', [OrderController::class, 'toggleOrderAcceptance'])->name('distributors.toggle-order-acceptance');
+
+    // Order QR Routes
     Route::get('/orders/{order}/qrcode', [OrderQrController::class, 'showQrCode'])->name('distributors.orders.qrcode');
     Route::get('/orders/verify/{token}', [OrderQrController::class, 'verifyOrder'])->name('distributors.orders.verify');
     Route::post('/orders/action/{token}', [OrderQrController::class, 'processAction'])->name('distributors.orders.action');
     Route::get('/orders/processing', [OrderQrController::class, 'getProcessingOrders'])->name('distributors.orders.processing');
     Route::post('/orders/batch-qrcode', [OrderQrController::class, 'generateBatchQrCodes'])->name('distributors.orders.batch-qrcode');
 
-
     // Return Routes
-    Route::get('/returns', [ReturnController::class, 'index'])->name('distributors.returns.index');
+    Route::get('/returns', [ReturnRequestController::class, 'index'])->name('distributors.returns.index');
+    Route::get('/returns/{id}', [ReturnRequestController::class, 'show'])->name('distributors.returns.show');
+    Route::post('/returns/{returnRequest}/approve', [ReturnRequestController::class, 'approve'])->name('distributors.returns.approve');
+    Route::post('/returns/{returnRequest}/reject', [ReturnRequestController::class, 'reject'])->name('distributors.returns.reject');
+    Route::get('/returns/export', [ReturnRequestController::class, 'export'])->name('distributors.returns.export');
+    Route::get('/returns/{id}', [ReturnRequestController::class, 'show'])->name('distributors.returns.show');
 
+    Route::get('/retailers/{id}', [RetailerProfileController::class, 'show'])->name('distributors.retailers.show');
+    Route::get('/retailers/{retailer}/orders', [RetailerProfileController::class, 'getRetailerOrders']);
+
+    Route::post('/retailers/{retailer}/report', [RetailerActionsController::class, 'reportRetailer'])->name('distributors.retailers.report');
+    Route::post('/retailers/{retailer}/block', [RetailerActionsController::class, 'toggleBlockRetailer'])->name('distributors.retailers.block');
+  
     // Cancellation Routes
     Route::get('/cancellations', [CancellationController::class, 'index'])->name('distributors.cancellations.index');
+    Route::get('/cancellations/{orderId}/details', [CancellationController::class, 'getOrderDetails'])->name('distributors.cancellations.details');
+    Route::delete('/cancellations/batch-delete', [CancellationController::class, 'batchDelete'])->name('distributors.cancellations.batch-delete');
+    Route::delete('/cancellations/{id}',  [CancellationController::class, 'delete'])->name('distributors.cancellations.delete');
+
 
     // Delivery Routes
     Route::get('/delivery', [DeliveryController::class, 'index'])->name('distributors.delivery.index');
     Route::post('/delivery/{id}/update-status', [DeliveryController::class, 'updateStatus'])->name('delivery.update-status');
-    Route::patch('/deliveries/{delivery}/mark-delivered', [DeliveryController::class, 'markDelivered'])->name('distributors.deliveries.mark-delivered');
+    Route::post('/deliveries/{delivery}/mark-delivered', [DeliveryController::class, 'markDelivered'])->name('distributors.deliveries.mark-delivered');
     Route::post('/delivery/{delivery}/assign-truck', [TruckController::class, 'assignDelivery'])->name('distributors.delivery.assign-truck');
     Route::get('/delivery/{delivery}/scan-qr', [DeliveryController::class, 'scanQrCode'])->name('distributors.delivery.scan-qr-general');
     Route::post('/delivery/process-general-scan', [OrderQrController::class, 'processGeneralScan'])->name('distributors.delivery.process-general-scan');
@@ -206,7 +310,14 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::post('/messages/send', [DistributorMessageController::class, 'sendMessage'])->name('distributors.messages.send');
     Route::get('/messages/unread-count', [DistributorMessageController::class, 'getUnreadCount'])->name('distributors.messages.unread-count');
     Route::post('/messages/mark-read', [DistributorMessageController::class, 'markAsRead'])->name('distributors.messages.mark-read');
+    Route::get('/messages/{retailerId}', [DistributorMessageController::class, 'show'])->name('distributors.messages.show');
 
+    // Notification Routes
+    Route::get('/notifications', [DistributorNotifController::class, 'index'])->name('distributors.notifications.index');
+    Route::post('/notifications/mark-read', [DistributorNotifController::class, 'markAsRead'])->name('distributors.notifications.mark-read');
+    Route::post('/notifications/mark-all-read', [DistributorNotifController::class, 'markAllAsRead'])->name('distributors.notifications.mark-all-read');
+    Route::get('/notifications/unread-count', [DistributorNotifController::class, 'getUnreadCount'])->name('distributors.notifications.unread-count');
+    Route::get('/notifications/latest', [DistributorNotifController::class, 'getLatestNotifications'])->name('distributors.notifications.latest');
 
     // Insights Routes
     Route::get('/insights', [InsightsController::class, 'index'])->name('distributors.insights.index');
@@ -234,7 +345,11 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     // Route::get('/distributors/create', [DistributorController::class, 'create'])->name('distributors.create');
     // Route::post('/distributors', [DistributorController::class, 'store'])->name('distributors.store');
 
-    Route::get('/approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])->name('auth.approval-waiting');
+    // Route::get('/approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])->name('auth.approval-waiting');
+
+    // Ticket Routes
+    Route::get('/tickets/create', [DistributorTicketController::class, 'create'])->name('distributors.tickets.create');
+    Route::post('/tickets', [DistributorTicketController::class, 'store'])->name('distributors.tickets.store');
 });
 
 // Social Authentication Routes
@@ -253,3 +368,9 @@ Route::get('barangays/{cityCode}', [AddressController::class, 'getBarangays']);
 
 Route::get('/api/debug/zamboanga', [AddressController::class, 'debugZamboangaData']);
 require __DIR__ . '/auth.php';
+
+
+//Distributor Subscription Route
+Route::get('/subscription', function () {
+    return view('distributors.subscription');
+});

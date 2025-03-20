@@ -51,7 +51,12 @@ class Order extends Model
     }
 
     public function payment()
-{
-    return $this->hasOne(Payment::class);
-}
+    {
+        return $this->hasOne(Payment::class);
+    }
+    
+    public function returnRequests()
+    {
+        return $this->hasMany(\App\Models\ReturnRequest::class);
+    }
 }

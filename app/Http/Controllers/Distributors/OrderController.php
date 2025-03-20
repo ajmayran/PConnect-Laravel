@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\Distributors;
 
 use App\Models\Order;
-use Illuminate\Http\Request;
 use App\Models\Payment;
-use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Delivery;
 use App\Models\Product;
+use App\Models\Delivery;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use App\Services\NotificationService;
 
 
 class OrderController extends Controller
@@ -101,6 +103,13 @@ class OrderController extends Controller
                 'payment_status'  => 'unpaid',
 
             ]);
+
+            app(NotificationService::class)->orderStatusChanged(
+                $order->id,
+                'processing',
+                $order->user_id,
+                $order->distributor_id
+            );
         });
 
 
@@ -124,6 +133,13 @@ class OrderController extends Controller
             'status_updated_at' => now()
         ]);
 
+        app(NotificationService::class)->orderStatusChanged(
+            $order->id,
+            'rejected',
+            $order->user_id,
+            $order->distributor_id,
+            $data['reject_reason']
+        );
         return redirect()->back()->with('success', 'Order rejected successfully.');
     }
 
@@ -137,5 +153,28 @@ class OrderController extends Controller
         ])->render();
 
         return response()->json(['html' => $html]);
+    }
+
+    public function toggleOrderAcceptance(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $distributor = $user->distributor;
+
+            if (!$distributor) {
+                return response()->json(['success' => false, 'message' => 'Distributor profile not found'], 404);
+            }
+
+            $distributor->accepting_orders = $request->accepting_orders;
+            $distributor->save();
+
+            return response()->json([
+                'success' => true,
+                'accepting_orders' => $distributor->accepting_orders
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to toggle order acceptance: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'An error occurred'], 500);
+        }
     }
 }
