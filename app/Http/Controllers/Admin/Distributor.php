@@ -122,4 +122,3 @@ class Distributor extends Controller
 }
 
 }
-}
