@@ -2,9 +2,10 @@
     <x-dashboard-nav />
 
     <div class="container px-4 py-6 mx-auto" id="cartContainer">
-        <div class="center px-4 py-6 mx-auto">
+        <div class="px-4 py-6 mx-auto center">
             <h2 class="mb-6 text-3xl font-bold text-gray-800">Shopping Cart</h2>
-            <a href="{{ route('retailers.profile.my-purchase') }}" class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">My Purchases</a>
+            <a href="{{ route('retailers.profile.my-purchase') }}"
+                class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">My Purchases</a>
         </div>
 
         @forelse($groupedItems as $distributorId => $items)
@@ -47,7 +48,8 @@
                                                 onerror="this.src='{{ asset('img/default-product.jpg') }}'"
                                                 alt="{{ $item->product->product_name }}">
                                             <div>
-                                                <h4 class="font-medium text-gray-800">{{ $item->product->product_name }}
+                                                <h4 class="font-medium text-gray-800">
+                                                    {{ $item->product->product_name }}
                                                 </h4>
                                                 <p class="text-sm text-gray-500">SKU: {{ $item->product->sku }}</p>
                                             </div>
@@ -417,6 +419,7 @@
             }
 
             input.value = newQty;
+            cartChanges[itemId] = newQty;
 
             // Update both mobile and desktop versions if they exist
             const allItemContainers = document.querySelectorAll(`[data-item-id="${itemId}"]`);
@@ -428,13 +431,23 @@
                 updateItemSubtotal(item, newQty);
             });
 
-            updateDistributorSubtotal(container);
+            // Find the correct distributor group and update its subtotal
+            const distributorId = container.dataset.distributorId;
+            updateDistributorSubtotal(distributorId);
+
+            // Update the global cart total
             updateCartTotal();
         }
 
         function updateItemSubtotal(container, quantity) {
-            const price = parseFloat(container.querySelector('[data-price]').dataset.price);
+            // Get the price element which has the data-price attribute
+            const priceElement = container.querySelector('[data-price]');
+            if (!priceElement) return;
+
+            const price = parseFloat(priceElement.dataset.price);
             const subtotal = price * quantity;
+
+            // Update all subtotal elements within this container
             const subtotalElements = container.querySelectorAll('.item-subtotal');
             subtotalElements.forEach(element => {
                 element.textContent =
@@ -442,18 +455,37 @@
             });
         }
 
-        function updateDistributorSubtotal(container) {
-            const cartGroup = container.closest('.cart-group');
-            const items = cartGroup.querySelectorAll('.item-subtotal');
-            const subtotal = Array.from(items).reduce((sum, item) => {
-                // Just take the first one if there are duplicates (mobile + desktop)
-                if (!item.dataset.counted) {
-                    let sub = parseFloat(item.textContent.replace('₱', '').replace(/,/g, ''));
-                    return sum + sub;
-                }
-                return sum;
-            }, 0);
+        function updateDistributorSubtotal(distributorId) {
+            // Get the cart group for this distributor
+            const cartGroup = document.querySelector(`.cart-group[data-distributor-id="${distributorId}"]`);
+            if (!cartGroup) return;
 
+            // Calculate the total by summing up all item subtotals in this cart group
+            let subtotal = 0;
+            const items = cartGroup.querySelectorAll('[data-item-id]');
+
+            // Process each item once (avoid double-counting mobile and desktop views)
+            const processedItems = new Set();
+
+            items.forEach(item => {
+                const itemId = item.dataset.itemId;
+
+                // Skip if we've already processed this item
+                if (processedItems.has(itemId)) return;
+                processedItems.add(itemId);
+
+                // Get the price and quantity
+                const priceElement = item.querySelector('[data-price]');
+                const inputElement = item.querySelector('input[type="number"]');
+
+                if (priceElement && inputElement) {
+                    const price = parseFloat(priceElement.dataset.price);
+                    const quantity = parseInt(inputElement.value);
+                    subtotal += price * quantity;
+                }
+            });
+
+            // Update all distributor subtotal elements in this cart group
             const subtotalElements = cartGroup.querySelectorAll('.distributor-subtotal');
             subtotalElements.forEach(element => {
                 element.textContent =
@@ -462,11 +494,33 @@
         }
 
         function updateCartTotal() {
-            const subtotals = document.querySelectorAll('.distributor-subtotal');
-            const total = Array.from(subtotals).reduce((sum, item) => {
-                let sub = parseFloat(item.textContent.replace('₱', '').replace(/,/g, ''));
-                return sum + sub;
-            }, 0);
+            // Calculate the total from all distributor subtotals
+            const subtotalElements = document.querySelectorAll('.distributor-subtotal');
+
+            // Each distributor appears twice (mobile and desktop view), so we need to count each one only once
+            const processedDistributors = new Set();
+            let total = 0;
+
+            subtotalElements.forEach(element => {
+                // Get the distributor ID from the closest cart-group
+                const cartGroup = element.closest('.cart-group');
+                if (!cartGroup) return;
+
+                const distributorId = cartGroup.dataset.distributorId;
+
+                // Skip if we've already processed this distributor
+                if (processedDistributors.has(distributorId)) return;
+                processedDistributors.add(distributorId);
+
+                // Add this distributor's subtotal to the total
+                const subtotalText = element.textContent.replace('₱', '').replace(/,/g, '');
+                const subtotal = parseFloat(subtotalText);
+                if (!isNaN(subtotal)) {
+                    total += subtotal;
+                }
+            });
+
+            // Update the global cart total
             const globalTotalElement = document.getElementById('globalCartTotal');
             if (globalTotalElement) {
                 globalTotalElement.textContent = `₱${total.toLocaleString('en-US', { 
@@ -474,7 +528,6 @@
             maximumFractionDigits: 2 
         })}`;
             }
-
         }
 
         function askToRemoveItem(itemId, minQty) {
@@ -580,16 +633,34 @@
                     input.value = minQty;
                     newQty = minQty;
                     cartChanges[itemId] = newQty;
-                    const row = input.closest('tr');
-                    updateItemSubtotal(row, newQty);
-                    updateDistributorSubtotal(row);
+
+                    // Update all instances of this item
+                    const allItemContainers = document.querySelectorAll(`[data-item-id="${itemId}"]`);
+                    allItemContainers.forEach(container => {
+                        updateItemSubtotal(container, newQty);
+                    });
+
+                    // Update the distributor subtotal
+                    const distributorId = input.closest('[data-distributor-id]').dataset.distributorId;
+                    updateDistributorSubtotal(distributorId);
+
+                    // Update the global cart total
                     updateCartTotal();
                 });
             } else {
                 cartChanges[itemId] = newQty;
-                const row = input.closest('tr');
-                updateItemSubtotal(row, newQty);
-                updateDistributorSubtotal(row);
+
+                // Update all instances of this item
+                const allItemContainers = document.querySelectorAll(`[data-item-id="${itemId}"]`);
+                allItemContainers.forEach(container => {
+                    updateItemSubtotal(container, newQty);
+                });
+
+                // Update the distributor subtotal
+                const distributorId = input.closest('[data-distributor-id]').dataset.distributorId;
+                updateDistributorSubtotal(distributorId);
+
+                // Update the global cart total
                 updateCartTotal();
             }
         }

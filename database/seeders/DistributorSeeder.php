@@ -19,6 +19,7 @@ class DistributorSeeder extends Seeder
             'user_type' => 'distributor',
             'profile_completed' => true, // Set profile_completed to true
             'status' => 'approved', // Set status to approved
+            'email_verified_at' => now(), 
         ]);
 
         // Create a corresponding distributor record

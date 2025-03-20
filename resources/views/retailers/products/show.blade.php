@@ -63,7 +63,8 @@
                                     -
                                 </button>
                                 <input type="number" id="quantity" value="{{ $product->minimum_purchase_qty }}"
-                                    min="1"
+                                    min="{{ $product->minimum_purchase_qty }}"
+                                    data-min-qty="{{ $product->minimum_purchase_qty }}"
                                     class="w-20 px-3 py-1 text-center border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                                     oninput="validateQuantity()">
                                 <button onclick="increaseQuantity()"
@@ -142,27 +143,35 @@
         document.getElementById('addToCartBtn').addEventListener('click', function(event) {
             event.preventDefault();
 
+            // Force re-fetch the minimum purchase quantity directly from the hidden field or data attribute
+            const minPurchaseQty = parseInt(document.getElementById('quantity').getAttribute('min'));
+
             if (!validateQuantity()) {
                 return false;
             }
 
-            // Get form data
+            // Get form data with the explicitly re-fetched minimum purchase quantity
             const formData = {
                 product_id: {{ $product->id }},
                 price: {{ $product->price }},
-                quantity: parseInt(document.getElementById('quantity').value)
+                quantity: parseInt(document.getElementById('quantity').value),
+                minimum_purchase_qty: minPurchaseQty // Add this to ensure consistency
             };
 
-            // Show loading state
-            Swal.fire({
-                title: 'Processing...',
-                text: 'Adding product to cart',
-                allowOutsideClick: false,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
+            // Log the data we're about to send
+            console.log("Sending data:", formData);
+
+            // Additional validation to ensure we're meeting minimum purchase requirements
+            if (formData.quantity < minPurchaseQty) {
+                Swal.fire({
+                    title: 'Invalid Quantity',
+                    text: 'Quantity cannot be less than the minimum purchase quantity of ' +
+                        minPurchaseQty + '.',
+                    icon: 'warning',
+                    confirmButtonColor: '#10B981'
+                });
+                return false;
+            }
 
             // Send the add to cart request
             fetch('{{ route('retailers.cart.add') }}', {
@@ -177,7 +186,9 @@
                 .then(response => {
                     // First parse the JSON response regardless of status code
                     return response.json().then(data => {
-                        // Then handle based on the HTTP status
+                        // Log the server's response for debugging
+                        console.log("Server response:", data);
+
                         if (!response.ok) {
                             // Server returned an error with a status code (4xx or 5xx)
                             throw new Error(data.message || 'Server returned an error');
@@ -304,18 +315,25 @@
 
         function decreaseQuantity() {
             var quantityInput = document.getElementById('quantity');
-            var minQty = {{ $product->minimum_purchase_qty }};
+            // Get the min purchase quantity directly with parseInt
+            var minQty = parseInt('{{ $product->minimum_purchase_qty }}');
+
+            console.log("Decrease - Min purchase qty:", minQty, "Type:", typeof minQty);
 
             if (parseInt(quantityInput.value) > minQty) {
                 quantityInput.value = parseInt(quantityInput.value) - 1;
             }
         }
 
+
         function validateQuantity() {
             var quantityInput = document.getElementById('quantity');
             var currentQty = parseInt(quantityInput.value);
-            var minQty = {{ $product->minimum_purchase_qty }};
-            var maxStock = {{ $product->stock_quantity }};
+
+            var minQty = parseInt('{{ $product->minimum_purchase_qty }}');
+            var maxStock = parseInt('{{ $product->stock_quantity }}');
+
+            console.log("Validating quantity, min required:", minQty, "Type:", typeof minQty);
 
             if (currentQty < minQty) {
                 Swal.fire({
@@ -349,24 +367,6 @@
 
             return true;
         }
-        document.addEventListener('DOMContentLoaded', function() {
-            const addToCartBtn = document.getElementById('addToCartBtn');
-            const buyNowBtn = document.getElementById('buyNowBtn');
-
-            if (addToCartBtn) {
-                addToCartBtn.addEventListener('click', function(event) {
-                    // Your existing code
-                });
-            }
-
-            if (buyNowBtn) {
-                buyNowBtn.addEventListener('click', function(event) {
-                    // Your existing code
-                });
-            }
-
-            // Rest of your functions
-        });
     </script>
 
     <x-footer />

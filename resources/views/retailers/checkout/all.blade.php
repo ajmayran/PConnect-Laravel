@@ -33,7 +33,8 @@
                                             <div class="flex items-center px-4 py-4 border-b border-gray-100">
                                                 <div class="flex items-center flex-1">
                                                     <img class="object-cover w-16 h-16 mr-4 rounded"
-                                                        src="{{ asset('storage/' . $product->product->image) }}"
+                                                        src="{{ $product->product->image ? asset('storage/products/' . basename($product->product->image)) : asset('img/default-product.jpg') }}"
+                                                        onerror="this.src='{{ asset('img/default-product.jpg') }}'"
                                                         alt="{{ $product->product->product_name }}">
                                                     <div>
                                                         <p class="font-semibold">

@@ -121,6 +121,11 @@
                     </div>
                 @endforelse
             </div>
+
+            <!-- Pagination Links -->
+            <div class="flex justify-end mt-6">
+                {{ $products->appends(['category' => $selectedCategory])->links() }}
+            </div>
         </div>
     @endif
     <!-- Report Modal -->
