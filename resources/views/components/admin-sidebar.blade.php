@@ -9,13 +9,13 @@
             <span class="block sm:inline">{{ session('error') }}</span>
         </div>
     @endif<div class="fixed top-0 left-0 z-50 w-64 h-full p-4 transition-transform sidebar-menu" style="background-color: #abebc6;">
-    <a href="#" class="flex items-center pb-4 border-b border-b-gray-800">
+    <a href="{{ route('admin.dashboard') }}" class="flex items-center pb-4 border-b border-b-gray-800">
         <img src="\img\Pconnect Logo.png" alt="Logo" class="object-cover w-8 h-8">
         <span class="ml-3 text-lg font-bold">PConnect</span>
     </a>
     <ul class="mt-4">
         <li class="mb-1 group active">
-            <a href="#" class="flex items-center px-4 py-2 text-white bg-green-600 rounded-md">
+            <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-2 text-white bg-green-600 rounded-md">
                 <iconify-icon icon="mdi:home" class="mr-3 text-xl"></iconify-icon>
                 <span class="text-sm">Dashboard</span>
             </a>
@@ -34,10 +34,14 @@
                         class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">All
                         Products</a>
                 </li>
-                <li class="mb-4">
-                    <a href="#"
-                        class="text-sm flex items-center hover:text-gray-100 before:contents-[''] before:w-1 before:h-1 before:rounded-full before:bg-gray-300 before:mr-3">Add Category</a>
-                </li>
+                {{-- filepath: c:\Users\nunez\Documents\PConnect-Laravel\resources\views\components\admin-sidebar.blade.php --}}
+            <li class="mb-1 group">
+                <a href="{{ route('categories.index') }}"
+                    class="flex items-center py-2 px-4 hover:bg-green-500 hover:text-gray-100 rounded-md group-[.active]:bg-green-600 group-[.active]:text-white">
+                    <iconify-icon icon="mdi:folder" class="mr-3 text-xl"></iconify-icon>
+                    <span class="text-sm">Manage Categories</span>
+                </a>
+            </li>
             </ul>
         </li>
         <li class="mb-1 group">

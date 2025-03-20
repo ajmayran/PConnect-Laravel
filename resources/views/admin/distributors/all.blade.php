@@ -53,4 +53,6 @@
             </div>
         </div>
     </div>
+            <!-- Include Admin Dashboard Scripts -->
+            @vite(['resources/js/admin_dash.js'])
 </x-app-layout>
