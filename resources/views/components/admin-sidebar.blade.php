@@ -9,13 +9,13 @@
             <span class="block sm:inline">{{ session('error') }}</span>
         </div>
     @endif<div class="fixed top-0 left-0 z-50 w-64 h-full p-4 transition-transform sidebar-menu" style="background-color: #abebc6;">
-    <a href="#" class="flex items-center pb-4 border-b border-b-gray-800">
+    <a href="{{ route('admin.dashboard') }}" class="flex items-center pb-4 border-b border-b-gray-800">
         <img src="\img\Pconnect Logo.png" alt="Logo" class="object-cover w-8 h-8">
         <span class="ml-3 text-lg font-bold">PConnect</span>
     </a>
     <ul class="mt-4">
         <li class="mb-1 group active">
-            <a href="#" class="flex items-center px-4 py-2 text-white bg-green-600 rounded-md">
+            <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-2 text-white bg-green-600 rounded-md">
                 <iconify-icon icon="mdi:home" class="mr-3 text-xl"></iconify-icon>
                 <span class="text-sm">Dashboard</span>
             </a>

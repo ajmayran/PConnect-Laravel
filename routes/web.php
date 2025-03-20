@@ -80,6 +80,9 @@ Route::get('/', function () {
     return view('index');
 });
 
+use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Retailers\RetailerController;
+
 // Admin Routes
 Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function () {
     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('dashboard');
@@ -101,8 +104,6 @@ Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function (
     Route::post('/admin/tickets/{id}/reject', [AdminTicketController::class, 'reject'])->name('tickets.reject');
 
     // Category 
-
-
     Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories.index'); // View all categories
     Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create'); // Create category form
     Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store'); // Store new category
@@ -110,6 +111,9 @@ Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function (
     Route::put('/categories/{id}', [CategoryController::class, 'update'])->name('categories.update'); // Update category
     Route::delete('/categories/{id}', [CategoryController::class, 'destroy'])->name('categories.destroy'); // Delete category
 
+    // All users
+    Route::get('/users', [AdminUserController::class, 'index'])->name('users.index'); // List all users
+           
     // All Products Route
     Route::get('/admin/products/all', [AdminProductController::class, 'allProducts'])->name('allProducts');
     Route::get('/admin/distributor/{id}/products', [AdminProductController::class, 'distributorProducts'])->name('distributorProducts');
