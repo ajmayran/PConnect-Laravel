@@ -17,9 +17,6 @@ class AdminDashboardController extends Controller
         // Fetch the number of active retailers
         $activeRetailersCount = User::where('user_type', 'retailer')->where('status', 'active')->count();
     
-        // Fetch the number of visitors (if the visitors table exists)
-        $visitorsCount = DB::table('visitors')->count();
-    
         // Fetch the number of active orders
         $activeOrdersCount = DB::table('orders')->where('status', 'active')->count();
     
@@ -36,7 +33,6 @@ class AdminDashboardController extends Controller
         return view('admin.dashboard', [
             'user' => Auth::user(),
             'activeRetailersCount' => $activeRetailersCount,
-            'visitorsCount' => $visitorsCount,
             'activeOrdersCount' => $activeOrdersCount,
             'completedOrdersCount' => $completedOrdersCount,
             'canceledOrdersCount' => $canceledOrdersCount,
