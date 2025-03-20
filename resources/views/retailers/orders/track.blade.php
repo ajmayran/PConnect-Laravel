@@ -143,10 +143,17 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 w-10 h-10">
-                                            @if($detail->product && $detail->product->image_path)
-                                            <img class="w-10 h-10 rounded-full" src="{{ asset('storage/' . $detail->product->image_path) }}" alt="{{ $detail->product->product_name }}">
+                                            @if($detail->product && $detail->product->image)
+                                                <img class="object-cover w-10 h-10 rounded-full" 
+                                                    src="{{ asset('storage/products/' . basename($detail->product->image)) }}" 
+                                                    alt="{{ $detail->product->product_name }}"
+                                                    onerror="this.src='{{ asset('img/default-product.jpg') }}'">
                                             @else
-                                            <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
+                                                <div class="flex items-center justify-center w-10 h-10 text-gray-400 bg-gray-200 rounded-full">
+                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                    </svg>
+                                                </div>
                                             @endif
                                         </div>
                                         <div class="ml-4">

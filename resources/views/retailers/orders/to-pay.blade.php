@@ -114,6 +114,10 @@
                     </div>
                 @endforeach
             </div>
+            <!-- Pagination -->
+            <div class="container flex justify-end px-2 pb-8 mx-auto sm:px-4">
+                {{ $orders->links() }}
+            </div>
         @endif
     </div>
 </x-app-layout>

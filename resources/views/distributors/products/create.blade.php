@@ -131,6 +131,7 @@
                     <div>
                         <label class="block mb-2 text-sm font-medium">Stock Quantity</label>
                         <input type="number" name="stock_quantity" class="w-full px-3 py-2 border rounded-md"
+                            min="1" max="9999" oninput="this.value = this.value > 9999 ? 9999 : this.value" 
                             required>
                     </div>
                     <div>
@@ -242,13 +243,6 @@
                     if (validateBasicInfo()) {
                         basicInfo.classList.add('hidden');
                         specifications.classList.remove('hidden');
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Basic Information Saved',
-                            text: 'Please complete the specifications',
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
                     }
                 });
 

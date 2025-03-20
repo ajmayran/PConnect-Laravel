@@ -49,7 +49,7 @@
                                             {{ $order->delivery->estimated_delivery ? \Carbon\Carbon::parse($order->delivery->estimated_delivery)->format('M d, Y') : 'Not specified' }}
                                         </p>
                                     @endif
-                                    
+
                                     @if ($order->delivery && $order->delivery->tracking_number)
                                         <p class="text-gray-600">
                                             <span class="font-medium">Tracking Number:</span>
@@ -131,7 +131,8 @@
                     </div>
                 @endforeach
             </div>
-            <div class="flex justify-end mt-6">
+            <!-- Pagination -->
+            <div class="container flex justify-end px-2 pb-8 mx-auto sm:px-4">
                 {{ $orders->links() }}
             </div>
         @endif

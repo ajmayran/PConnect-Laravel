@@ -74,13 +74,13 @@
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 @foreach ($products as $product)
                     <div class="overflow-hidden bg-white rounded-lg shadow-md">
-                        <div class="relative">
+                        <div class="relative h-48 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
                             @if ($product->image && Storage::disk('public')->exists($product->image))
                                 <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->product_name }}"
-                                    class="object-cover w-full h-48">
+                                    class="object-contain w-full h-48 transition-transform duration-300 hover:scale-105">
                             @else
                                 <img src="{{ asset('img/default-product.jpg') }}" alt="Default Product Image"
-                                    class="object-cover w-full h-48">
+                                    class="object-contain w-full h-48 transition-transform duration-300 hover:scale-105">
                             @endif
                         </div>
                         <div class="p-4">

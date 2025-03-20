@@ -37,16 +37,17 @@ class DistributorPageController extends Controller
         // Only get products if not blocked
         if (!$isBlocked) {
             $productsQuery = Product::where('distributor_id', $id)
-                ->where('status', 'accepted')
                 ->where('stock_quantity', '>', 0);
 
             if ($selectedCategory !== 'all') {
                 $productsQuery->where('category_id', $selectedCategory);
             }
 
-            $products = $productsQuery->get();
+            // Apply pagination - 10 products per page
+            $products = $productsQuery->paginate(10);
         } else {
-            $products = collect(); // Empty collection if blocked
+            // Create an empty paginator if blocked
+            $products = Product::where('id', 0)->paginate(10);
         }
 
         return view('retailers.distributor-page', [

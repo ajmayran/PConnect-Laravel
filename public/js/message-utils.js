@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Set up polling for unread messages
         fetchAndUpdateUnreadCount();
-        setInterval(fetchAndUpdateUnreadCount, 30000);
+        setInterval(fetchAndUpdateUnreadCount, 1000);
 
         // Set up Pusher if available
         setupPusherForMessages();
@@ -88,34 +88,96 @@ function updateAllMessageBadges(count) {
  * Sets up Pusher to listen for new messages
  */
 function setupPusherForMessages() {
-    // Only proceed if Pusher is loaded and we have a user ID
-    if (window.Pusher && window.userId) {
-        const pusher = new Pusher(window.pusherAppKey, {
-            cluster: window.pusherAppCluster,
-            encrypted: true,
-            authEndpoint: '/broadcasting/auth',
-            auth: {
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            }
-        });
+    // Only proceed if Echo is initialized and we have a user ID
+    if (window.Echo && window.userId) {
+        console.log('Setting up Echo listener for messages');
 
-        // Subscribe to the private channel
-        try {
-            const channel = pusher.subscribe(`private-chat.${window.userId}`);
+        // Use Echo to listen on the private channel
+        window.Echo.private(`chat.${window.userId}`)
+            .listen('MessageSent', function (data) {
+                console.log('New message received via Echo:', data);
 
-            // Listen for new messages
-            channel.bind('message.sent', function (data) {
-                console.log('New message received:', data);
-
-                // Update unread count when receiving a new message
+                // Update unread count
                 fetchAndUpdateUnreadCount();
+
+                // Show toast notification
+                showMessageToast(data);
+
+                // Append message directly
+                appendMessageToChat(data);
             });
-        } catch (error) {
-            console.error('Error setting up Pusher:', error);
-        }
+
+        console.log('✅ Echo listener setup complete');
+    } else {
+        console.error('❌ Echo not initialized or userId not available');
     }
+}
+
+/**
+ * Updates chat messages on the page if the chat container is visible
+ */
+function appendMessageToChat(data) {
+    const messagesContainer = document.getElementById('messages-container');
+    if (!messagesContainer) {
+        console.warn('⚠️ Chat container not found!');
+        return;
+    }
+
+    console.log('🔄 Appending message:', data);
+
+    // Create message element
+    const messageDiv = document.createElement('div');
+
+    // Set appropriate classes based on who sent the message
+    if (data.senderId == window.userId) {
+        // Outgoing message
+        messageDiv.className = 'flex justify-end';
+        messageDiv.innerHTML = `
+        <div class="max-w-xs p-3 bg-green-100 rounded-lg shadow lg:max-w-md">
+            <p class="text-sm">${data.message}</p>
+            <p class="mt-1 text-xs text-gray-500">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+        </div>
+        `;
+    } else {
+        // Incoming message
+        messageDiv.className = 'flex justify-start';
+        messageDiv.innerHTML = `
+        <div class="max-w-xs p-3 bg-white rounded-lg shadow lg:max-w-md">
+            <p class="text-sm">${data.message}</p>
+            <p class="mt-1 text-xs text-gray-500">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+        </div>
+        `;
+
+        // Mark message as read
+        markMessageAsRead(data.senderId);
+    }
+
+    // Append to container
+    messagesContainer.appendChild(messageDiv);
+
+    // Scroll to the latest message
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+/**
+ * Marks messages from a sender as read
+ */
+function markMessageAsRead(senderId) {
+    const userType = document.body.getAttribute('data-user-type');
+    const endpoint = userType === 'retailer'
+        ? '/retailers/messages/mark-read'
+        : '/distributors/messages/mark-read';
+
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ sender_id: senderId })
+    }).catch(error => {
+        console.error('Error marking message as read:', error);
+    });
 }
 
 function showMessageToast(data) {

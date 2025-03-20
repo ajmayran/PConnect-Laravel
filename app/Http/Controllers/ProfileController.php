@@ -86,9 +86,9 @@ class ProfileController extends Controller
                 Storage::disk('public')->delete($retailerProfile->profile_picture);
             }
             // Create a custom file name
-            $fileName = time() . '_' . $request->user()->id . '.' . $request->file('profile_picture')->getClientOriginalExtension();
-            // Store the file in the "profile_pictures" folder in the "public" disk
-            $path = $request->file('profile_picture')->storeAs('profile_pictures', $fileName, 'public');
+            $fileName = time() . $request->user()->id . '.' . $request->file('profile_picture')->getClientOriginalExtension();
+            // Store the file in the "profile_pictures" folder in the "public" disk with custom filename
+            $path = Storage::disk('public')->putFileAs('retailers_profile', $request->file('profile_picture'), $fileName);
             $retailerProfile->profile_picture = $path;
         }
 

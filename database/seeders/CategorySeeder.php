@@ -21,7 +21,7 @@ class CategorySeeder extends Seeder
             ['name' => 'Personal Care'],
             ['name' => 'Dairy Products'],
             ['name' => 'Frozen Products'],
-            ['name' => 'Powered Products'],
+            ['name' => 'Powdered Products'],
             ['name' => 'Sauces & Condiments'],
             ['name' => 'Juices & Concentrates'],
         ];

@@ -1,9 +1,95 @@
 <x-app-layout>
     <x-dashboard-nav />
 
+    @if (session('verified'))
+        <div id="verification-success"
+            class="fixed z-[200] max-w-md p-5 mb-4 transition-all duration-500 ease-in-out transform translate-y-0 bg-white border-l-4 border-green-500 rounded-lg shadow-lg opacity-100 top-4 right-4">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 mr-3">
+                    <svg class="w-8 h-8 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-green-800">Verification Successful!</h3>
+                    <p class="text-green-700">Your email has been verified. Welcome to PConnect!</p>
+                </div>
+            </div>
+            <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5">
+                <div id="progress-bar" class="bg-green-500 h-1.5 rounded-full w-full"></div>
+            </div>
+            <div class="absolute -top-2 -right-2">
+                <div class="absolute inline-flex w-3 h-3 bg-green-400 rounded-full opacity-75 animate-ping"></div>
+                <div class="relative inline-flex w-3 h-3 bg-green-500 rounded-full"></div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const notification = document.getElementById('verification-success');
+                const progressBar = document.getElementById('progress-bar');
+
+                // Add confetti effect
+                const confettiColors = ['#22c55e', '#16a34a', '#86efac', '#4ade80', '#bbf7d0'];
+                const confettiCount = 200;
+
+                // Create and append confetti elements
+                for (let i = 0; i < confettiCount; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.classList.add('absolute', 'z-40');
+                    confetti.style.width = Math.random() * 10 + 5 + 'px';
+                    confetti.style.height = Math.random() * 10 + 5 + 'px';
+                    confetti.style.backgroundColor = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.top = '-5vh';
+                    confetti.style.opacity = Math.random() + 0.5;
+                    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                    confetti.style.animation = `fall ${Math.random() * 3 + 2}s linear forwards`;
+                    document.body.appendChild(confetti);
+
+                    // Remove confetti after animation
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 5000);
+                }
+
+                // Add keyframe animation for falling confetti
+                const style = document.createElement('style');
+                style.innerHTML = `
+                    @keyframes fall {
+                        to {
+                            transform: translateY(100vh) rotate(360deg);
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+
+                // Animate progress bar countdown
+                setTimeout(() => {
+                    progressBar.style.transition = 'width 4.5s linear';
+                    progressBar.style.width = '0';
+                }, 500);
+
+                // Hide notification after 5 seconds
+                setTimeout(() => {
+                    notification.style.transform = 'translateY(-20px)';
+                    notification.style.opacity = '0';
+
+                    // Remove from DOM after fade out
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 500);
+                }, 5000);
+            });
+        </script>
+    @endif
+
     <!-- Search Section - Made more compact on mobile -->
     <div class="relative z-20">
-        <form action="{{ route('retailers.search') }}" method="GET" class="max-w-2xl p-2 mx-auto sm:p-4" id="searchForm">
+        <form action="{{ route('retailers.search') }}" method="GET" class="max-w-2xl p-2 mx-auto sm:p-4"
+            id="searchForm">
             <div class="flex gap-0">
                 <div class="relative w-full">
                     <input type="search" id="search-dropdown" name="query"

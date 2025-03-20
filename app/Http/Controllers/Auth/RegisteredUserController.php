@@ -3,20 +3,25 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Models\Credential;
-use App\Models\Distributors;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Mail\DistributorRegistrationMail;
+use App\Mail\RetailerRegistrationMail;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
+    /**
+     * Display the registration view.
+     */
     public function createRetailer(): View
     {
         return view('auth.register-retailer');
@@ -65,54 +70,40 @@ class RegisteredUserController extends Controller
         ]);
 
         if ($request->hasFile('credentials')) {
-            if ($validated['user_type'] === 'distributor') {
-                $filePath = $request->file('credentials')->store('credentials/bir', 'public');
-        
-                // Store file path in the credentials table
-                Credential::create([
-                    'user_id' => $user->id,
-                    'file_path' => $filePath,
-                ]);
-            } else if ($validated['user_type'] === 'retailer') {
-                $filePath = $request->file('credentials')->store('credentials/permit', 'public');
-        
-                // Store file path in the credentials table
-                Credential::create([
-                    'user_id' => $user->id,
-                    'file_path' => $filePath,
-                ]);
-            }
+            $filePath = $request->file('credentials')->store('credentials', 'public');
+
+            // Store file path in the credentials table
+            Credential::create([
+                'user_id' => $user->id,
+                'file_path' => $filePath,
+            ]);
         }
 
         if ($request->hasFile('credentials2')) {
-            $filePath2 = $request->file('credentials2')->store('credentials/sec', 'public');
+            $filePath2 = $request->file('credentials2')->store('credentials', 'public');
             Credential::create([
                 'user_id'   => $user->id,
                 'file_path' => $filePath2,
             ]);
         }
 
-        if ($validated['user_type'] === 'distributor') {
-            Distributors::create([
-                'user_id' => $user->id,
-                'company_name' => $request->input('company_name'),
-                'company_email' => $request->input('company_email'),
-                'company_address' => $request->input('company_address'),
-                'company_phone_number' => $request->input('company_phone_number'),
-                'bir_form' => $filePath,
-                'sec_document' => $filePath2,
-            ]);
-        }
-
         event(new Registered($user));
 
-        if ($user->user_type === 'distributor') {
-            return redirect()->route('auth.approval-waiting')
-                ->with('message', 'Registration successful! Please wait for admin approval.');
-        }
-
         Auth::login($user);
-        return redirect(route('retailers.dashboard', absolute: false));
+
+        // Send appropriate emails based on user type
+        // if ($user->user_type === 'distributor') {
+        //     Mail::to($user->email)->send(new DistributorRegistrationMail($user));
+        //     return redirect()->route('verification.notice');
+        // } else {
+        //     Mail::to($user->email)->send(new RetailerRegistrationMail($user));
+
+        // Either redirect to verification notice (to enforce email verification)
+        return redirect()->route('verification.notice');
+
+        // Or keep the current behavior to skip verification for retailers
+        // return redirect(route('retailers.dashboard', absolute: false));
+
     }
 
     /**

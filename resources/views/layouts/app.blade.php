@@ -6,6 +6,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>
+        window.userId = {{ auth()->id() }};
+        window.pusherAppKey = "{{ env('PUSHER_APP_KEY') }}";
+        window.pusherAppCluster = "{{ env('PUSHER_APP_CLUSTER') }}";
+    </script>
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <title>PConnect</title>
@@ -19,7 +24,6 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
     <script src="https://unpkg.com/iconify-icon/dist/iconify-icon.min.js"></script>
     <style>
         .notification-dot {
@@ -67,6 +71,6 @@
         </script>
     @endif
 </body>
-<script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+
 
 </html>

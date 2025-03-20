@@ -161,7 +161,7 @@
                                         class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
                                         Close
                                     </button>
-                                    <button type="submit"
+                                    <button type="button" id="confirmCancelBtn{{ $order->id }}"
                                         class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
                                         Confirm Cancel
                                     </button>
@@ -171,18 +171,120 @@
                     </div>
                 @endforeach
             </div>
-            <div class="flex justify-end mt-6">
+            <!-- Pagination -->
+            <div class="container flex justify-end px-2 pb-8 mx-auto sm:px-4">
                 {{ $orders->links() }}
             </div>
         @endif
     </div>
     <script>
-        // Show/hide custom reason textarea
-        document.querySelectorAll('input[name="cancel_reason"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const textarea = this.closest('form').querySelector('textarea[name="custom_reason"]');
-                textarea.style.display = this.value === 'other' ? 'block' : 'none';
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show/hide custom reason textarea
+            document.querySelectorAll('input[name="cancel_reason"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const textarea = this.closest('form').querySelector(
+                        'textarea[name="custom_reason"]');
+                    textarea.style.display = this.value === 'other' ? 'block' : 'none';
+                });
             });
+
+            // Handle all cancel buttons directly
+            @foreach ($orders as $order)
+                // Only setup handlers for pending orders that can be cancelled
+                @if ($order->status === 'pending')
+                    // Get direct references to elements
+                    const confirmBtn{{ $order->id }} = document.getElementById(
+                        'confirmCancelBtn{{ $order->id }}');
+                    const modal{{ $order->id }} = document.getElementById('cancelModal{{ $order->id }}');
+                    const form{{ $order->id }} = modal{{ $order->id }}.querySelector('form');
+
+                    if (confirmBtn{{ $order->id }} && form{{ $order->id }}) {
+                        confirmBtn{{ $order->id }}.addEventListener('click', function() {
+                            console.log('Cancel button clicked for order {{ $order->id }}');
+
+                            // Check if a reason is selected
+                            const selectedReason = form{{ $order->id }}.querySelector(
+                                'input[name="cancel_reason"]:checked');
+                            if (!selectedReason) {
+                                Swal.fire({
+                                    title: 'Error',
+                                    text: 'Please select a cancellation reason',
+                                    icon: 'error'
+                                });
+                                return;
+                            }
+
+                            // If "other" is selected, verify text is entered
+                            if (selectedReason.value === 'other') {
+                                const customReason = form{{ $order->id }}.querySelector(
+                                    'textarea[name="custom_reason"]').value.trim();
+                                if (!customReason) {
+                                    Swal.fire({
+                                        title: 'Error',
+                                        text: 'Please provide your reason for cancellation',
+                                        icon: 'error'
+                                    });
+                                    return;
+                                }
+                            }
+
+                            // Show confirmation alert
+                            Swal.fire({
+                                title: 'Cancel Order?',
+                                text: 'Are you sure you want to cancel this order #{{ $order->formatted_order_id }}?',
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#ef4444',
+                                cancelButtonColor: '#6b7280',
+                                confirmButtonText: 'Yes, cancel it',
+                                cancelButtonText: 'Keep my order'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // Show loading state
+                                    Swal.fire({
+                                        title: 'Processing...',
+                                        text: 'Cancelling your order',
+                                        allowOutsideClick: false,
+                                        showConfirmButton: false,
+                                        didOpen: () => {
+                                            Swal.showLoading();
+                                            // Submit the form
+                                            form{{ $order->id }}.submit();
+                                        }
+                                    });
+                                }
+                            });
+                        });
+                    }
+
+                    // Close modal when clicking outside
+                    modal{{ $order->id }}.addEventListener('click', function(e) {
+                        if (e.target === this) {
+                            this.style.display = 'none';
+                        }
+                    });
+                @endif
+            @endforeach
+
+            // Show success alert if present in session
+            @if (session('success'))
+                Swal.fire({
+                    title: 'Success!',
+                    text: '{{ session('success') }}',
+                    icon: 'success',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            @endif
+
+            // Show error alert if present in session
+            @if (session('error'))
+                Swal.fire({
+                    title: 'Error!',
+                    text: '{{ session('error') }}',
+                    icon: 'error'
+                });
+            @endif
         });
     </script>
 </x-app-layout>

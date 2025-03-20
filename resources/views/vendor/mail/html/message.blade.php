@@ -2,7 +2,7 @@
 {{-- Header --}}
 <x-slot:header>
 <x-mail::header :url="config('app.url')">
-{{ config('app.name') }}
+<img src="{{ asset('img/Pconnect Logo.png') }}" alt="PConnect Logo" style="max-height: 75px; width: auto;">
 </x-mail::header>
 </x-slot:header>
 
@@ -21,7 +21,7 @@
 {{-- Footer --}}
 <x-slot:footer>
 <x-mail::footer>
-© {{ date('Y') }} {{ config('app.name') }}. {{ __('All rights reserved.') }}
+© {{ date('Y') }} PConnect. All rights reserved.
 </x-mail::footer>
 </x-slot:footer>
 </x-mail::layout>

@@ -39,7 +39,12 @@
                             Company Name
                         </label>
                         <input type="text" id="company_name" name="company_name" required
+                            pattern="^[a-zA-Z0-9 ,.'\-]+$"
+                            oninput="this.value = this.value.replace(/[^a-zA-Z0-9 ,.'\-]/g, '')"
+                            title="Only letters, numbers, spaces, commas, periods, apostrophes, and hyphens are allowed"
                             class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        <p class="mt-1 text-xs text-gray-500">Only letters, numbers, spaces and basic punctuation
+                            allowed</p>
                     </div>
 
                     <!-- Company Email -->
@@ -90,8 +95,10 @@
                         <label for="company_phone_number" class="block mb-2 text-sm font-medium text-gray-700">
                             Company Phone Number
                         </label>
-                        <input type="text" id="company_phone_number" name="company_phone_number" required
+                        <input type="tel" id="company_phone_number" name="company_phone_number" required
+                            pattern="[0-9]+" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                             class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        <p class="mt-1 text-xs text-gray-500">Please enter 11 digit numbers</p>
                     </div>
 
                     <!-- Submit Button -->

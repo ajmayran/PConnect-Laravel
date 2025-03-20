@@ -122,7 +122,7 @@ class DistributorMessageController extends Controller
         ]);
 
         // Broadcast the message
-        event(new MessageSent($message->message, Auth::id(), $request->receiver_id));
+        broadcast(new MessageSent($message->message, Auth::id(), $request->receiver_id))->toOthers();
 
         return response()->json([
             'status' => 'success',

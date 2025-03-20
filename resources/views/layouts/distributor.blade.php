@@ -5,6 +5,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>
+        window.userId = {{ auth()->id() }};
+        window.pusherAppKey = "{{ env('PUSHER_APP_KEY') }}";
+        window.pusherAppCluster = "{{ env('PUSHER_APP_CLUSTER') }}";
+    </script>
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <title>PConnect</title>
@@ -101,13 +106,9 @@
         </script>
     @endif
 </body>
-<script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+
 <script src="{{ asset('js/distributornotif-utils.js') }}"></script>
 <script>
-    window.pusherAppKey = '{{ env('PUSHER_APP_KEY') }}';
-    window.pusherAppCluster = '{{ env('PUSHER_APP_CLUSTER') }}';
-    window.userId = {{ auth()->id() }};
-
     function dropdown() {
         document.querySelector("#submenu").classList.toggle("hidden");
         document.querySelector("#arrow").classList.toggle("rotate-180");

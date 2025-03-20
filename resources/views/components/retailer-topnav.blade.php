@@ -167,7 +167,14 @@
 
         <!-- Menu Panel -->
         <div
-            class="absolute top-0 right-0 w-4/5 h-full max-w-xs overflow-y-auto transition-transform duration-300 ease-in-out transform bg-white shadow-xl">
+            class="absolute top-0 left-0 w-4/5 h-full max-w-xs overflow-y-auto transition-transform duration-300 ease-in-out transform bg-white shadow-xl">
+            <!-- Close Button --> <button id="mobile-menu-close"
+                class="absolute p-3 text-gray-500 hover:text-gray-700 top-2 right-2" onclick="toggleMobileMenu()">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
             <!-- User Profile Section -->
             <div class="p-4 border-b border-gray-200 bg-gray-50">
                 <div class="flex items-center">
@@ -672,7 +679,7 @@
 
                     // Allow DOM to update before adding transform
                     setTimeout(() => {
-                        mobileMenuPanel.classList.remove('translate-x-full');
+                        mobileMenuPanel.classList.remove('translate-x-[-100%]');
                     }, 10);
 
                     // Toggle icons
@@ -682,7 +689,7 @@
                     }
                 } else {
                     // Close menu - first animate, then hide
-                    mobileMenuPanel.classList.add('translate-x-full');
+                    mobileMenuPanel.classList.add('translate-x-[-100%]');
 
                     // Wait for animation to finish before hiding completely
                     setTimeout(() => {
@@ -696,6 +703,30 @@
                         closeIcon.classList.add('hidden');
                     }
                 }
+            }
+
+            const mobileMenuCloseBtn = document.getElementById('mobile-menu-close');
+            if (mobileMenuCloseBtn) {
+                // Remove the inline onclick attribute for better separation
+                mobileMenuCloseBtn.removeAttribute('onclick');
+
+                // Add event listener
+                mobileMenuCloseBtn.addEventListener('click', function() {
+                    // Close menu - first animate, then hide
+                    mobileMenuPanel.classList.add('translate-x-[-100%]');
+
+                    // Wait for animation to finish before hiding completely
+                    setTimeout(() => {
+                        mobileMenu.classList.add('hidden');
+                        document.body.classList.remove('overflow-hidden');
+
+                        // Toggle icons back to burger
+                        if (burgerIcon && closeIcon) {
+                            burgerIcon.classList.remove('hidden');
+                            closeIcon.classList.add('hidden');
+                        }
+                    }, 300);
+                });
             }
 
             mobileMenuButton.addEventListener('click', toggleMobileMenu);

@@ -30,7 +30,12 @@
 
                         <!-- Product Info -->
                         <div class="w-full p-4 sm:p-6 md:p-8 md:w-1/2">
-                            <!-- Product Title and Distributor -->
+                            <!-- Hidden Inputs for JavaScript -->
+                            <input type="hidden" id="product-id" value="{{ $product->id }}">
+                            <input type="hidden" id="product-price" value="{{ $product->price }}">
+                            <input type="hidden" id="min-purchase-qty" value="{{ $product->minimum_purchase_qty }}">
+                            <input type="hidden" id="max-stock" value="{{ $product->stock_quantity }}">
+
                             <div class="mb-3 sm:mb-4">
                                 <h1 class="mb-1 text-xl font-bold text-gray-900 sm:text-2xl md:text-3xl sm:mb-2">
                                     {{ $product->product_name }}</h1>
@@ -63,7 +68,8 @@
                                     -
                                 </button>
                                 <input type="number" id="quantity" value="{{ $product->minimum_purchase_qty }}"
-                                    min="1"
+                                    min="{{ $product->minimum_purchase_qty }}"
+                                    data-min-qty="{{ $product->minimum_purchase_qty }}"
                                     class="w-20 px-3 py-1 text-center border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                                     oninput="validateQuantity()">
                                 <button onclick="increaseQuantity()"
@@ -138,234 +144,217 @@
     </div>
 
     <script>
-        // Add to Cart button handler - unchanged
-        document.getElementById('addToCartBtn').addEventListener('click', function(event) {
-            event.preventDefault();
-
-            if (!validateQuantity()) {
-                return false;
-            }
-
-            // Get form data
-            const formData = {
-                product_id: {{ $product->id }},
-                price: {{ $product->price }},
-                quantity: parseInt(document.getElementById('quantity').value)
-            };
-
-            // Show loading state
-            Swal.fire({
-                title: 'Processing...',
-                text: 'Adding product to cart',
-                allowOutsideClick: false,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            // Send the add to cart request
-            fetch('{{ route('retailers.cart.add') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                })
-                .then(response => {
-                    // First parse the JSON response regardless of status code
-                    return response.json().then(data => {
-                        // Then handle based on the HTTP status
-                        if (!response.ok) {
-                            // Server returned an error with a status code (4xx or 5xx)
-                            throw new Error(data.message || 'Server returned an error');
-                        }
-                        return data;
-                    });
-                })
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            title: 'Success!',
-                            text: data.message,
-                            icon: 'success',
-                            confirmButtonColor: '#10B981',
-                            timer: 2000
-                        });
-                    } else {
-                        throw new Error(data.message || 'Something went wrong');
-                    }
-                })
-                .catch(error => {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: error.message || 'Failed to add product to cart',
-                        icon: 'error',
-                        confirmButtonColor: '#EF4444'
-                    });
-                });
-        });
-
-        // Buy Now button handler 
-        document.getElementById('buyNowBtn').addEventListener('click', function(event) {
-            event.preventDefault();
-
-            if (!validateQuantity()) {
-                return false;
-            }
-
-            // Show confirmation dialog
-            Swal.fire({
-                title: 'Proceed to Checkout?',
-                text: "You'll be redirected to complete your purchase.",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#10B981',
-                cancelButtonColor: '#6B7280',
-                confirmButtonText: 'Yes, proceed',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Show loading animation
-                    Swal.fire({
-                        title: 'Processing...',
-                        text: 'Preparing your checkout. Please wait.',
-                        allowOutsideClick: false,
-                        showConfirmButton: false,
-                        timer: 4000,
-                        timerProgressBar: true,
-                        willOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-
-                    // Get form data
-                    const formData = {
-                        product_id: {{ $product->id }},
-                        quantity: parseInt(document.getElementById('quantity').value)
-                    };
-
-                    // Direct checkout flow
-                    fetch('{{ route('retailers.direct-purchase.buy-now') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Accept': 'application/json'
-                            },
-                            body: JSON.stringify(formData)
-                        })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data.success) {
-                                // Close loading animation and redirect
-                                Swal.close();
-                                // Redirect to direct checkout page
-                                window.location.href = data.redirect_url;
-                            } else {
-                                throw new Error(data.message || 'Something went wrong');
-                            }
-                        })
-                        .catch(error => {
-                            Swal.fire({
-                                title: 'Error!',
-                                text: error.message || 'Failed to process request',
-                                icon: 'error',
-                                confirmButtonColor: '#EF4444'
-                            });
-                        });
-                }
-            });
-        });
-        // Existing quantity functions - unchanged
-        function increaseQuantity() {
-            var quantityInput = document.getElementById('quantity');
-            var currentVal = parseInt(quantityInput.value);
-            var maxStock = {{ $product->stock_quantity }};
-
-            if (currentVal < maxStock) {
-                quantityInput.value = currentVal + 1;
-            } else {
-                Swal.fire({
-                    title: 'Maximum Stock Reached',
-                    text: 'You cannot add more than the available stock quantity',
-                    icon: 'warning',
-                    confirmButtonColor: '#10B981',
-                });
-            }
-        }
-
-        function decreaseQuantity() {
-            var quantityInput = document.getElementById('quantity');
-            var minQty = {{ $product->minimum_purchase_qty }};
-
-            if (parseInt(quantityInput.value) > minQty) {
-                quantityInput.value = parseInt(quantityInput.value) - 1;
-            }
-        }
-
-        function validateQuantity() {
-            var quantityInput = document.getElementById('quantity');
-            var currentQty = parseInt(quantityInput.value);
-            var minQty = {{ $product->minimum_purchase_qty }};
-            var maxStock = {{ $product->stock_quantity }};
-
-            if (currentQty < minQty) {
-                Swal.fire({
-                    title: 'Invalid Quantity',
-                    text: 'Quantity cannot be less than the minimum purchase quantity of ' + minQty + '.',
-                    icon: 'warning',
-                    confirmButtonColor: '#10B981'
-                });
-                return false;
-            }
-
-            if (currentQty > maxStock) {
-                Swal.fire({
-                    title: 'Invalid Quantity',
-                    text: 'Quantity cannot exceed the available stock of ' + maxStock + '.',
-                    icon: 'warning',
-                    confirmButtonColor: '#10B981'
-                });
-                return false;
-            }
-
-            if (isNaN(currentQty) || currentQty <= 0) {
-                Swal.fire({
-                    title: 'Invalid Quantity',
-                    text: 'Please enter a valid quantity.',
-                    icon: 'warning',
-                    confirmButtonColor: '#10B981'
-                });
-                return false;
-            }
-
-            return true;
-        }
         document.addEventListener('DOMContentLoaded', function() {
+            // Cache DOM elements
+            const quantityInput = document.getElementById('quantity');
             const addToCartBtn = document.getElementById('addToCartBtn');
             const buyNowBtn = document.getElementById('buyNowBtn');
 
-            if (addToCartBtn) {
-                addToCartBtn.addEventListener('click', function(event) {
-                    // Your existing code
+            // Get values from hidden inputs
+            const productId = parseInt(document.getElementById('product-id').value);
+            const productPrice = parseFloat(document.getElementById('product-price').value);
+            const minPurchaseQty = parseInt(document.getElementById('min-purchase-qty').value) || 1;
+            const maxStock = parseInt(document.getElementById('max-stock').value);
+
+            console.log("Initial Values: ", {
+                minPurchaseQty,
+                maxStock,
+                productId,
+                productPrice
+            });
+
+            // Ensure input has correct min value
+            quantityInput.min = minPurchaseQty;
+            quantityInput.value = minPurchaseQty;
+
+            // ---------------------- QUANTITY CONTROL FUNCTIONS ----------------------
+
+            function increaseQuantity() {
+                let currentVal = parseInt(quantityInput.value);
+                if (currentVal < maxStock) {
+                    quantityInput.value = currentVal + 1;
+                } else {
+                    showWarning("Maximum Stock Reached", `You cannot add more than ${maxStock} items.`);
+                }
+            }
+
+            function decreaseQuantity() {
+                let currentVal = parseInt(quantityInput.value);
+                if (currentVal > minPurchaseQty) {
+                    quantityInput.value = currentVal - 1;
+                } else {
+                    showWarning("Minimum Purchase Limit", `You cannot have less than ${minPurchaseQty} items.`);
+                }
+            }
+
+            function validateQuantity() {
+                let currentQty = parseInt(quantityInput.value);
+
+                if (isNaN(currentQty) || currentQty < minPurchaseQty) {
+                    showWarning("Invalid Quantity", `Quantity cannot be less than ${minPurchaseQty}.`);
+                    quantityInput.value = minPurchaseQty;
+                    return false;
+                }
+
+                if (currentQty > maxStock) {
+                    showWarning("Invalid Quantity", `Quantity cannot exceed ${maxStock}.`);
+                    quantityInput.value = maxStock;
+                    return false;
+                }
+
+                return true;
+            }
+
+            // ---------------------- CART ACTIONS ----------------------
+
+            function addToCart(event) {
+                event.preventDefault();
+                if (!validateQuantity()) return;
+
+                const quantity = parseInt(quantityInput.value);
+
+                // Log the request data
+                console.log("🛒 Sending Add to Cart Request:", {
+                    productId,
+                    productPrice,
+                    quantity,
+                    minPurchaseQty
+                });
+
+                const formData = {
+                    product_id: productId,
+                    price: productPrice,
+                    quantity: quantity,
+                    minimum_purchase_qty: minPurchaseQty
+                };
+
+                fetch('{{ route('retailers.cart.add') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    })
+                    .then(response => response.json().then(data => ({
+                        status: response.status,
+                        data
+                    })))
+                    .then(({
+                        status,
+                        data
+                    }) => {
+                        console.log("Server Response:", data);
+
+                        if (status === 422 || !data.success) {
+                            throw new Error(data.message || "Failed to add product to cart.");
+                        }
+
+                        showSuccess("Success!", data.message);
+                    })
+                    .catch(error => showError("Error!", error.message));
+            }
+
+            function buyNow(event) {
+                event.preventDefault();
+                if (!validateQuantity()) return;
+
+                Swal.fire({
+                    title: 'Proceed to Checkout?',
+                    text: "You'll be redirected to complete your purchase.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10B981',
+                    cancelButtonColor: '#6B7280',
+                    confirmButtonText: 'Yes, proceed',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Processing...',
+                            text: 'Preparing your checkout. Please wait.',
+                            allowOutsideClick: false,
+                            showConfirmButton: false,
+                            timer: 4000,
+                            timerProgressBar: true,
+                            willOpen: () => Swal.showLoading()
+                        });
+
+                        const formData = {
+                            product_id: productId,
+                            quantity: parseInt(quantityInput.value)
+                        };
+
+                        fetch('{{ route('retailers.direct-purchase.buy-now') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify(formData)
+                            })
+                            .then(response => response.json().then(data => ({
+                                status: response.status,
+                                data
+                            })))
+                            .then(({
+                                status,
+                                data
+                            }) => {
+                                if (status !== 200 || !data.success) {
+                                    throw new Error(data.message || "Failed to process request.");
+                                }
+
+                                Swal.close();
+                                window.location.href = data.redirect_url;
+                            })
+                            .catch(error => showError("Error!", error.message));
+                    }
                 });
             }
 
-            if (buyNowBtn) {
-                buyNowBtn.addEventListener('click', function(event) {
-                    // Your existing code
+            // ---------------------- UTILITY FUNCTIONS ----------------------
+
+            function showSuccess(title, message) {
+                Swal.fire({
+                    title: title,
+                    text: message,
+                    icon: 'success',
+                    confirmButtonColor: '#10B981',
+                    timer: 2000
                 });
             }
 
-            // Rest of your functions
+            function showError(title, message) {
+                Swal.fire({
+                    title: title,
+                    text: message,
+                    icon: 'error',
+                    confirmButtonColor: '#EF4444'
+                });
+            }
+
+            function showWarning(title, message) {
+                Swal.fire({
+                    title: title,
+                    text: message,
+                    icon: 'warning',
+                    confirmButtonColor: '#10B981'
+                });
+            }
+
+            // ---------------------- EVENT LISTENERS ----------------------
+
+            addToCartBtn.addEventListener('click', addToCart);
+            buyNowBtn.addEventListener('click', buyNow);
+
+            // Assigning quantity increase/decrease to respective buttons
+            document.querySelectorAll('[onclick="increaseQuantity()"]').forEach(btn => btn.addEventListener('click',
+                increaseQuantity));
+            document.querySelectorAll('[onclick="decreaseQuantity()"]').forEach(btn => btn.addEventListener('click',
+                decreaseQuantity));
         });
     </script>
 

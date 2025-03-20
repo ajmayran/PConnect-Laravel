@@ -14,38 +14,38 @@ class AllProductController extends Controller
     public function index(Request $request)
     {
         $retailerId = Auth::id();
-        
+
         // Get IDs of distributors who have blocked this retailer
         $blockingDistributorIds = BlockedRetailer::where('retailer_id', $retailerId)
             ->pluck('distributor_id')
             ->toArray();
-            
+
         $selectedCategory = $request->get('category', 'all');
         $query = Product::query();
-        
+
         // Filter by category if selected
         if ($selectedCategory !== 'all') {
             $query->where('category_id', $selectedCategory);
         }
-        
+
         // Only show products with stock
         $query->where('stock_quantity', '>', 0);
-        $query->where('status', 'accepted');
 
         // Exclude products from distributors who blocked this retailer
         $query->whereDoesntHave('distributor', function ($query) use ($blockingDistributorIds) {
             $query->whereIn('user_id', $blockingDistributorIds);
         });
-      
+
         // Get products with eager loading
-        $products = $query->with('distributor:id,company_name,user_id')->paginate(15);
+        $perPage = ($selectedCategory === 'all') ? 10 : 10;
+        $products = $query->with('distributor:id,company_name,user_id')->paginate($perPage);
         $categories = Category::all();
-        
+
         $hasBlockedDistributors = count($blockingDistributorIds) > 0;
-        
+
         return view('retailers.all-product', compact(
-            'products', 
-            'categories', 
+            'products',
+            'categories',
             'selectedCategory',
             'hasBlockedDistributors'
         ));

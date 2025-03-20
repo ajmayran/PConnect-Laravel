@@ -86,11 +86,17 @@ class RetailerOrdersController extends Controller
     public function cancelled()
     {
         $user = Auth::user();
+        // Get both cancelled and rejected orders
         $orders = Order::where('user_id', $user->id)
             ->whereIn('status', ['cancelled', 'rejected'])
             ->with(['distributor', 'orderDetails.product'])
             ->latest()
             ->paginate(3);
+
+        // Calculate total amount for each order
+        foreach ($orders as $order) {
+            $order->total_amount = $order->orderDetails->sum('subtotal');
+        }
 
         return view('retailers.orders.cancelled', compact('orders'));
     }
@@ -223,6 +229,7 @@ class RetailerOrdersController extends Controller
         try {
             $order->update([
                 'status' => 'cancelled',
+                'cancel_reason' => $request->reason,
                 'status_updated_at' => now()
             ]);
 
