@@ -26,7 +26,7 @@
                         <div id="imageHolder"
                             class="flex flex-col items-center justify-center h-64 max-w-xs gap-4 p-2 overflow-hidden border rounded-md cursor-pointer md:w-1/2">
                             <img id="image_preview"
-                                src="{{ Auth::user()->distributor->company_profile_image ? asset('storage/' . Auth::user()->distributor->company_profile_image) : asset('images/default-placeholder.png') }}"
+                                src="{{ Auth::user()->distributor->company_profile_image ? asset('storage/' . Auth::user()->distributor->company_profile_image) : asset('img/default-distributor.jpg') }}"
                                 alt="Image Preview" class="h-auto max-w-full">
                             <input id="company_profile_image" name="company_profile_image" type="file"
                                 accept="image/*" class="hidden">
