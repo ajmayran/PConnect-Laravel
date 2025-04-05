@@ -23,18 +23,15 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var list<string>
      */
     protected $fillable = [
-        'user_id',
         'first_name',
         'last_name',
         'middle_name',
-        'credentials',
         'email',
         'password',
         'user_type',
-        'facebook_id',
-        'google_id',
         'status',
         'profile_completed',
+        'rejection_reason',
     ];
 
     protected $casts = [
@@ -59,7 +56,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function distributor(): HasOne
     {
-        return $this->hasOne(Distributors::class);
+        return $this->hasOne(Distributors::class, 'user_id');
     }
 
     protected function casts(): array

@@ -107,13 +107,13 @@ Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function (
     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/distributors/pending', [Distributor::class, 'pendingDistributors'])->name('pendingDistributors');
     Route::post('/admin/accept-distributor/{id}', [Distributor::class, 'acceptDistributor'])->name('acceptDistributor');
-    Route::post('/admin/decline-distributor/{id}', [Distributor::class, 'declineDistributor'])->name('declineDistributor');
+    Route::post('/distributors/{id}/decline', [Distributor::class, 'declineDistributor'])->name('declineDistributor');
     Route::get('/admin/distributors/approved', [Distributor::class, 'approvedDistributors'])->name('approvedDistributors');
-
+    Route::get('/distributors/rejected', [Distributor::class, 'rejectedDistributors'])->name('rejectedDistributors');
     Route::get('/admin/download-credential/{id}', [AdminDashboardController::class, 'downloadCredential'])->name('downloadCredential');
     Route::get('/admin/distributors/all', [Distributor::class, 'allDistributors'])->name('allDistributors');
     Route::get('/admin/retailers', [AllRetailerController::class, 'allRetailers'])->name('allRetailers');
-
+    Route::get('/distributors/{id}/view-information', [Distributor::class, 'viewInformation'])->name('viewInformation');
     // Tickets Routes
     Route::get('/admin/tickets', [AdminTicketController::class, 'index'])->name('tickets.index');
     Route::get('/admin/tickets/resolved', [AdminTicketController::class, 'resolved'])->name('tickets.resolved');
