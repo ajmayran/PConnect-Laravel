@@ -15,8 +15,8 @@
                                 placeholder="Search products..."
                                 class="w-full py-2 pl-4 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             <button type="submit"
-                                class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-blue-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+                                class="absolute inset-y-0 right-0 flex items-center px-2 text-gray-500 hover:text-blue-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
