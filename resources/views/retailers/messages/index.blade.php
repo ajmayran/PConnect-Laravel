@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-dashboard-nav />
-    <div class="py-8">
+    <div class="py-8 retailers-messages-page">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <x-retailer-sidebar />
             <!-- Main Content Area -->
@@ -531,7 +531,7 @@
                 } else {
                     console.error('❌ Laravel Echo is NOT initialized');
                     // Try again in another second (in case of delayed initialization)
-                    setTimeout(checkEcho, 1000);
+                    setTimeout(checkEcho, 5000);
                 }
             }, 500);
         </script>

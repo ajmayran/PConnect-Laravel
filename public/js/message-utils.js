@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
-/**
+/**     
  * Fetches the latest unread message count and updates badges
  */
 function fetchAndUpdateUnreadCount() {
@@ -40,7 +40,7 @@ function fetchAndUpdateUnreadCount() {
         })
         .then(data => {
             // Log the full response for debugging
-            console.log('Unread count API response:', data);
+            // console.log('Unread count API response:', data);
 
             if (data.success) {
                 // Use unread_count which should be the senders count
@@ -92,6 +92,15 @@ function setupPusherForMessages() {
     if (window.Echo && window.userId) {
         console.log('Setting up Echo listener for messages');
 
+        // Check if we're on the messages page (has its own implementation)
+        const messagesContainer = document.getElementById('messages-container');
+        const isMessagesPage = document.querySelector('.retailers-messages-page') !== null;
+
+        if (isMessagesPage) {
+            console.log('On messages page - skipping global Echo listener setup');
+            return; // Skip setup on messages page
+        }
+
         // Use Echo to listen on the private channel
         window.Echo.private(`chat.${window.userId}`)
             .listen('MessageSent', function (data) {
@@ -103,8 +112,10 @@ function setupPusherForMessages() {
                 // Show toast notification
                 showMessageToast(data);
 
-                // Append message directly
-                appendMessageToChat(data);
+                // Append message directly if on a page with the message container
+                if (messagesContainer) {
+                    appendMessageToChat(data);
+                }
             });
 
         console.log('✅ Echo listener setup complete');

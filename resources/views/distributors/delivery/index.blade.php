@@ -32,35 +32,37 @@
             </div>
 
             <!-- Delivery Status Tabs -->
-            <div class="flex mb-4 border-b">
-                <a href="?status=pending"
-                    class="px-4 py-2 -mb-px font-semibold 
-                          @if (request('status') === 'pending' || !request('status')) text-green-500 border-green-500 
-                          @else text-gray-600 border-transparent @endif 
-                          border-b-2">
-                    Pending
-                </a>
-                <a href="?status=in_transit"
-                    class="px-4 py-2 -mb-px font-semibold 
-                          @if (request('status') === 'in_transit') text-green-500 border-green-500 
-                          @else text-gray-600 border-transparent @endif  
-                          border-b-2">
-                    In Transit
-                </a>
-                <a href="?status=out_for_delivery"
-                    class="px-4 py-2 -mb-px font-semibold 
-                          @if (request('status') === 'out_for_delivery') text-green-500 border-green-500 
-                          @else text-gray-600 border-transparent @endif  
-                          border-b-2">
-                    Out for Delivery
-                </a>
-                <a href="?status=delivered"
-                    class="px-4 py-2 -mb-px font-semibold 
-                          @if (request('status') === 'delivered') text-green-500 border-green-500 
-                          @else text-gray-600 border-transparent @endif  
-                          border-b-2">
-                    Delivered
-                </a>
+            <div class="mb-4 overflow-x-auto border-b scrollbar-hide">
+                <div class="flex min-w-max">
+                    <a href="?status=pending"
+                        class="px-2 py-2 -mb-px text-xs sm:text-sm font-semibold
+            @if (request('status') === 'pending' || !request('status')) text-green-500 border-green-500 
+            @else text-gray-600 border-transparent @endif 
+            border-b-2">
+                        Pending
+                    </a>
+                    <a href="?status=in_transit"
+                        class="px-2 py-2 -mb-px text-xs sm:text-sm font-semibold
+            @if (request('status') === 'in_transit') text-green-500 border-green-500 
+            @else text-gray-600 border-transparent @endif  
+            border-b-2">
+                        In Transit
+                    </a>
+                    <a href="?status=out_for_delivery"
+                        class="px-2 py-2 -mb-px text-xs sm:text-sm font-semibold
+            @if (request('status') === 'out_for_delivery') text-green-500 border-green-500 
+            @else text-gray-600 border-transparent @endif  
+            border-b-2">
+                        Out for Delivery
+                    </a>
+                    <a href="?status=delivered"
+                        class="px-2 py-2 -mb-px text-xs sm:text-sm font-semibold
+            @if (request('status') === 'delivered') text-green-500 border-green-500 
+            @else text-gray-600 border-transparent @endif  
+            border-b-2">
+                        Delivered
+                    </a>
+                </div>
             </div>
 
             @if ($deliveries->isEmpty())
@@ -193,7 +195,7 @@
         </div>
     </div>
 
-   
+
     {{-- <div id="changeStatusModal"
         class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
         <div class="w-11/12 max-w-md bg-white rounded-lg shadow-xl md:w-1/3 sm:w-2/3">
@@ -346,7 +348,7 @@
             class="px-4 py-2 text-sm font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">
             Assign Truck
         </button>`;
-            } 
+            }
 
             // Always add a close button
             footerContent += `<button onclick="closeDeliveryModal()" 

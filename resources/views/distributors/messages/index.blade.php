@@ -1,4 +1,5 @@
 <x-distributor-layout>
+    
     <div class="py-6">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
@@ -228,7 +229,7 @@
                                 tempMessageDiv.remove();
                                 alert(
                                     'Failed to send message. Please check your connection and try again.'
-                                    );
+                                );
                             });
                     });
                 }
@@ -243,24 +244,41 @@
                             console.log('Received message event via Echo:', data);
 
                             if (messagesContainer) {
-                                const currentRetailerId = {{ $currentRetailer->id ?? 0 }};
+                                // Extract sender ID from different possible locations in the data object
+                                const senderId = data.senderId || data.sender_id;
+                                const currentRetailerId = {{ isset($currentRetailer) ? $currentRetailer->id : 0 }};
 
                                 console.log('Current retailer ID:', currentRetailerId);
-                                console.log('Message sender ID:', data.senderId);
+                                console.log('Message sender ID:', senderId);
+                                console.log('Full data object:', JSON.stringify(data));
 
                                 // Check if the message is from the current retailer
-                                if (data.senderId == currentRetailerId) {
-                                    // Add the message to the current chat
+                                if (senderId == currentRetailerId) {
+                                    // Add the message to the current chat with animation
                                     const messageDiv = document.createElement('div');
                                     messageDiv.className = 'flex justify-start';
+
+                                    // Add animation class that slides in the message
+                                    messageDiv.style.opacity = '0';
+                                    messageDiv.style.transform = 'translateY(10px)';
+                                    messageDiv.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+
                                     messageDiv.innerHTML = `
-                                <div class="max-w-xs p-3 bg-white rounded-lg shadow lg:max-w-md">
-                                    <p class="text-sm">${data.message}</p>
-                                    <p class="mt-1 text-xs text-gray-500">${data.time || new Date().toLocaleString()}</p>
-                                </div>
-                                `;
+                <div class="max-w-xs p-3 bg-white rounded-lg shadow lg:max-w-md">
+                    <p class="text-sm">${data.message}</p>
+                    <p class="mt-1 text-xs text-gray-500">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                </div>
+                `;
 
                                     messagesContainer.appendChild(messageDiv);
+
+                                    // Force browser reflow to ensure the animation runs
+                                    void messageDiv.offsetWidth;
+
+                                    // Animate in
+                                    messageDiv.style.opacity = '1';
+                                    messageDiv.style.transform = 'translateY(0)';
+
                                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
                                     // Mark as read
@@ -271,15 +289,15 @@
                                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                         },
                                         body: JSON.stringify({
-                                            sender_id: data.senderId
+                                            sender_id: senderId
                                         })
                                     }).catch(error => {
                                         console.error('Error marking message as read:', error);
                                     });
                                 } else {
-                                    // Highlight the retailer in the sidebar to indicate new message
+                                    // Retailer sidebar updating code remains the same
                                     const retailerElement = document.querySelector(
-                                        `a[href*="retailer=${data.senderId}"]`);
+                                        `a[href*="retailer=${senderId}"]`);
                                     if (retailerElement) {
                                         // Add unread badge or highlight retailer
                                         const avatarContainer = retailerElement.querySelector('.relative');

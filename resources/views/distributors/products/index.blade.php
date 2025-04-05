@@ -15,8 +15,8 @@
                                 placeholder="Search products..."
                                 class="w-full py-2 pl-4 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             <button type="submit"
-                                class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-blue-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+                                class="absolute inset-y-0 right-0 flex items-center px-2 text-gray-500 hover:text-blue-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -25,18 +25,32 @@
                         </div>
                     </form>
                 </div>
-                <div class="flex items-center justify-end space-x-4">
-                    <div class="flex items-center space-x-4">
+                <div class="flex items-center justify-end space-x-2">
+                    <div class="items-center hidden sm:block md:flex">
                         <button onclick="openModal('priceModal')"
-                            class="px-4 py-2 font-bold text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600">
+                            class="px-2 py-1 text-xs font-medium text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600">
                             Product Prices
                         </button>
                     </div>
-                    <div class="space-x-2">
+                    <div>
                         <a href="{{ route('distributors.products.create') }}"
-                            class="px-4 py-2 font-bold text-white transition duration-200 bg-green-500 rounded-lg hover:bg-green-600">
-                            Add New Product
+                            class="px-2 py-1 text-xs font-medium text-green-500 transition duration-200 rounded-lg">
+                            <span class="hidden sm:inline">Add New Product</span>
+                            <span class="sm:hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                            </span>
                         </a>
+                    </div>
+                    <!-- Mobile-only price button with icon -->
+                    <div class="block sm:hidden">
+                        <button onclick="openModal('priceModal')"
+                            class="px-2 py-1 text-xs font-medium text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
