@@ -13,10 +13,12 @@ class AdminUserController extends Controller
         // Get the user_type filter from the request
         $userType = $request->get('user_type');
 
-        // Fetch users, optionally filtering by user_type
-        $users = User::when($userType, function ($query, $userType) {
-            return $query->where('user_type', $userType);
-        })->paginate(10);
+        // Fetch users, filtering only for 'retailer' and 'distributor' user types
+        $users = User::whereIn('user_type', ['retailer', 'distributor'])
+            ->when($userType, function ($query, $userType) {
+                return $query->where('user_type', $userType);
+            })
+            ->paginate(10);
 
         // Define navigation links for user types
         $navigationLinks = [
