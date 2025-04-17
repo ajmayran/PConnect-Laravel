@@ -40,7 +40,7 @@ class Distributors extends Model
 
         return $barangays[$this->barangay];
     }
-    
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -74,7 +74,17 @@ class Distributors extends Model
     }
 
     public function credentials()
-{
-    return $this->hasMany(Credential::class, 'user_id', 'id');
-}
+    {
+        return $this->hasMany(Credential::class, 'user_id', 'id');
+    }
+
+    public function followers()
+    {
+        return $this->hasMany(DistributorFollower::class, 'distributor_id');
+    }
+
+    public function getFollowersCountAttribute()
+    {
+        return $this->followers->count();
+    }
 }

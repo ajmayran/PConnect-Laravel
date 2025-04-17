@@ -23,6 +23,30 @@
                     <h1 class="text-xl font-bold text-gray-800 sm:text-2xl">{{ $distributor->company_name }}</h1>
                     <p class="text-sm text-gray-600 sm:text-base">
                         {{ $distributor->barangay_name }}, {{ $distributor->street }}</p>
+
+                    <!-- Follower Info -->
+                    <div class="flex items-center mt-2">
+                        <span class="inline-flex items-center text-sm text-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1 text-gray-500" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            <span id="follower-count">{{ number_format($distributor->followers_count ?? 0) }} Followers</span>
+                        </span>
+
+                        <!-- Average Rating -->
+                        @if (isset($rating) && $rating > 0)
+                            <span class="inline-flex items-center ml-4 text-sm text-gray-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1 text-yellow-400"
+                                    viewBox="0 0 20 20" fill="currentColor">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                {{ number_format($rating, 1) }}
+                            </span>
+                        @endif
+                    </div>
                 </div>
             </div>
 
@@ -30,6 +54,22 @@
                 @if (isset($isBlocked) && $isBlocked)
                     <span class="px-3 py-2 text-sm text-white bg-red-500 rounded-md sm:px-4">Blocked</span>
                 @else
+                    <!-- Follow/Unfollow Button -->
+                    <button id="followDistributorBtn" data-distributor-id="{{ $distributor->id }}"
+                        class="flex items-center px-3 py-2 text-sm text-white transition-colors duration-200 bg-green-500 rounded-lg sm:px-4 sm:py-2 sm:text-base hover:bg-green-600 active:bg-green-700 touch-manipulation">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 sm:w-5 sm:h-5" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            @if ($isFollowing ?? false)
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            @else
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4" />
+                            @endif
+                        </svg>
+                        <span>{{ $isFollowing ?? false ? 'Following' : 'Follow' }}</span>
+                    </button>
+
                     <x-modal-review :distributor="$distributor" :reviews="$distributor->reviews" />
                     <a href="{{ route('retailers.messages.index', ['distributor' => $distributor->user_id]) }}"
                         class="flex items-center px-3 py-2 text-sm text-white transition-colors duration-200 bg-green-500 rounded-lg sm:px-4 sm:py-2 sm:text-base hover:bg-green-600 active:bg-green-700 touch-manipulation">
@@ -137,7 +177,8 @@
                 <button onclick="closeReportModal()" data-action="close"
                     class="p-1 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12">
                         </path>
                     </svg>
                 </button>
@@ -253,6 +294,91 @@
                     closeReportModal();
                 }
             });
+        });
+
+        // Follow/Unfollow Distributor
+        document.addEventListener('DOMContentLoaded', function() {
+            const followBtn = document.getElementById('followDistributorBtn');
+            if (followBtn) {
+                followBtn.addEventListener('click', function() {
+                    const distributorId = this.dataset.distributorId;
+
+                    fetch('{{ route('retailers.distributors.follow') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                distributor_id: distributorId
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Update button text
+                                const buttonText = followBtn.querySelector('span');
+                                buttonText.textContent = data.is_following ? 'Following' : 'Follow';
+
+                                // Update icon
+                                const iconElement = followBtn.querySelector('svg');
+                                if (iconElement) {
+                                    if (data.is_following) {
+                                        // Change to "check" icon for following
+                                        iconElement.innerHTML =
+                                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />';
+                                    } else {
+                                        // Change to "plus" icon for not following
+                                        iconElement.innerHTML =
+                                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />';
+                                    }
+                                }
+
+                                // Update follower count
+                                const followerCountElement = document.getElementById('follower-count');
+                                if (followerCountElement) {
+                                    followerCountElement.textContent = new Intl.NumberFormat().format(
+                                        data.follower_count);
+                                }
+
+                                // Show a notification using SweetAlert (if available)
+                                if (typeof Swal !== 'undefined') {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success',
+                                        text: data.message,
+                                        timer: 2000,
+                                        showConfirmButton: false
+                                    });
+                                }
+                            } else {
+                                // Show error message
+                                if (typeof Swal !== 'undefined') {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: 'Unable to update follow status'
+                                    });
+                                } else {
+                                    alert('Error: Unable to update follow status');
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Follow error:', error);
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An error occurred while processing your request'
+                                });
+                            } else {
+                                alert('Error: An error occurred while processing your request');
+                            }
+                        });
+                });
+            }
         });
     </script>
 

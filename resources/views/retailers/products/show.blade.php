@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-dashboard-nav />
 
-    <div class="py-4 sm:py-8 bg-gray-50">
+    <div class="py-2 sm:py-8 bg-gray-50">
         <div class="container px-4 mx-auto">
             <div class="mx-auto max-w-7xl">
                 <!-- Back Button -->
@@ -47,7 +47,8 @@
                             <div class="mb-4 sm:mb-6">
                                 <h2 class="mb-2 text-2xl font-bold text-green-600 sm:text-3xl md:text-4xl">
                                     ₱{{ number_format($product->price, 2) }}</h2>
-                                <p class="mb-4 text-sm text-gray-700 sm:text-base">{{ $product->description }}</p>
+                                <p class="p-2 mb-4 text-sm text-gray-700 rounded-md bg-green-50 sm:text-base">
+                                    {{ $product->description }}</p>
                             </div>
 
                             <!-- Stock Information -->
@@ -56,7 +57,7 @@
                                     Stock Available: <span class="font-semibold">{{ $product->stock_quantity }}</span>
                                 </p>
                                 <p class="text-sm text-gray-600 sm:text-base">
-                                    Min. Purchase: <span
+                                    Minimum Purchase Quantity: <span
                                         class="font-semibold">{{ $product->minimum_purchase_qty }}</span>
                                 </p>
                             </div>
@@ -107,6 +108,102 @@
         </div>
     </div>
 
+    <!-- Distributor Info Section -->
+    <div class="pb-4 bg-gray-50">
+        <div class="container px-4 mx-auto">
+            <div class="mx-auto max-w-7xl">
+                <div class="overflow-hidden bg-white rounded-lg shadow-lg">
+                    <div class="flex flex-col md:flex-row">
+                        <!-- Left Side - Profile Image -->
+                        <div class="flex items-center justify-center p-4 md:w-1/6 md:p-6">
+                            <img src="{{ $product->distributor->company_profile_image ? asset('storage/' . $product->distributor->company_profile_image) : asset('img/default-distributor.jpg') }}"
+                                alt="{{ $product->distributor->company_name }}"
+                                class="object-cover w-24 h-24 border-2 border-green-500 rounded-full">
+                        </div>
+
+                        <!-- Right Side - Split into two columns on larger screens -->
+                        <div class="flex flex-col p-4 md:w-5/6 md:p-6">
+                            <div class="flex flex-col gap-4 md:flex-row md:justify-between">
+                                <!-- Left Column: Company Info & Action Buttons -->
+                                <div class="flex flex-col md:w-1/2">
+                                    <!-- Company Name -->
+                                    <div class="mb-3">
+                                        <h3 class="text-xl font-bold text-gray-800">
+                                            {{ $product->distributor->company_name }}</h3>
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="flex flex-col mt-2 space-y-3 sm:flex-row sm:space-y-0 sm:space-x-4">
+                                        <a href="{{ route('retailers.distributor-page', $product->distributor->id) }}"
+                                            class="flex items-center justify-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                            </svg>
+                                            View Shop
+                                        </a>
+
+                                        <!-- Add Follow Button -->
+                                        <button id="followDistributorBtn"
+                                            data-distributor-id="{{ $product->distributor->id }}"
+                                            class="flex items-center justify-center px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                @if ($isFollowing ?? false)
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M5 13l4 4L19 7" />
+                                                @else
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M12 4v16m8-8H4" />
+                                                @endif
+                                            </svg>
+                                            <span>{{ $isFollowing ?? false ? 'Unfollow' : 'Follow' }}</span>
+                                        </button>
+
+                                        <!-- Contact Button -->
+                                        <a href="{{ route('retailers.messages.show', $product->distributor->user_id) }}"
+                                            class="flex items-center justify-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                            </svg>
+                                            Contact
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Right Column: Stats -->
+                                <div class="flex justify-end gap-4 mt-4 md:mt-0 md:gap-6">
+                                    <div class="px-3 py-2 text-center rounded-lg ">
+                                        <p class="text-sm font-medium text-gray-600">Ratings</p>
+                                        <p class="text-lg font-bold text-gray-800">
+                                            {{ number_format($rating ?? 0, 1) }}</p>
+                                    </div>
+                                    <div class="px-3 py-2 text-center rounded-lg ">
+                                        <p class="text-sm font-medium text-gray-600">Products</p>
+                                        <p class="text-lg font-bold text-gray-800">{{ $productsCount ?? 0 }}</p>
+                                    </div>
+                                    <div class="px-3 py-2 text-center rounded-lg ">
+                                        <p class="text-sm font-medium text-gray-600">Joined</p>
+                                        <p class="text-lg font-bold text-gray-800">
+                                            {{ \Carbon\Carbon::parse($product->distributor->created_at)->diffForHumans(null, true) }}
+                                            ago</p>
+                                    </div>
+                                    <div class="px-3 py-2 text-center rounded-lg ">
+                                        <p class="text-sm font-medium text-gray-600">Followers</p>
+                                        <p class="text-lg font-bold text-gray-800">
+                                            {{ number_format($product->distributor->followers_count ?? 0) }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Related Products Section -->
     <div class="py-8 bg-white sm:py-12">
         <div class="container px-4 mx-auto">
@@ -356,6 +453,66 @@
             document.querySelectorAll('[onclick="decreaseQuantity()"]').forEach(btn => btn.addEventListener('click',
                 decreaseQuantity));
         });
+
+
+        // Follow/Unfollow Distributor
+        const followBtn = document.getElementById('followDistributorBtn');
+        if (followBtn) {
+            followBtn.addEventListener('click', function() {
+                const distributorId = this.dataset.distributorId;
+
+                fetch('{{ route('retailers.distributors.follow') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            distributor_id: distributorId
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update button text
+                            const buttonText = followBtn.querySelector('span');
+                            buttonText.textContent = data.is_following ? 'Unfollow' : 'Follow';
+
+                            // Update icon (optional)
+                            const iconElement = followBtn.querySelector('svg');
+                            if (iconElement) {
+                                if (data.is_following) {
+                                    // Change to "check" or "minus" icon for following
+                                    iconElement.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" 
+                            stroke-width="2" d="M5 13l4 4L19 7" />`;
+                                } else {
+                                    // Change back to "plus" icon for not following
+                                    iconElement.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" 
+                            stroke-width="2" d="M12 4v16m8-8H4" />`;
+                                }
+                            }
+
+                            // Update follower count
+                            const followerCountElement = document.querySelector(
+                                '.text-lg.font-bold:last-of-type');
+                            if (followerCountElement) {
+                                followerCountElement.textContent = new Intl.NumberFormat().format(data
+                                    .follower_count);
+                            }
+
+                            // Show a notification
+                            showSuccess('Success', data.message);
+                        } else {
+                            showError('Error', 'Unable to update follow status');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Follow error:', error);
+                        showError('Error', 'An error occurred while processing your request');
+                    });
+            });
+        }
     </script>
 
     <x-footer />
