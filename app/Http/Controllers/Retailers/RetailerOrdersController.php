@@ -211,6 +211,7 @@ class RetailerOrdersController extends Controller
         }
     }
 
+
     public function cancelOrder(Request $request, Order $order)
     {
         // Check if the order belongs to the authenticated user
@@ -218,8 +219,8 @@ class RetailerOrdersController extends Controller
             return redirect()->back()->with('error', 'You are not authorized to cancel this order.');
         }
 
-        // Check if the order status allows cancellation (usually only pending orders can be cancelled)
-        if ($order->status !== 'pending') {
+        // Check if the order status allows cancellation (usually only pending and processing orders can be cancelled)
+        if (!in_array($order->status, ['pending', 'processing'])) {
             return redirect()->back()->with('error', 'This order cannot be cancelled.');
         }
 
@@ -232,6 +233,20 @@ class RetailerOrdersController extends Controller
                 'cancel_reason' => $request->reason,
                 'status_updated_at' => now()
             ]);
+
+            // Return stock to inventory for each order detail
+            foreach ($order->orderDetails as $detail) {
+                // Create a stock "in" record to add the quantity back
+                \App\Models\Stock::create([
+                    'product_id' => $detail->product_id,
+                    'batch_id' => null, // For non-batch products
+                    'type' => 'in',
+                    'quantity' => $detail->quantity,
+                    'user_id' => Auth::id(),
+                    'notes' => 'Order #' . $order->id . ' cancelled',
+                    'stock_updated_at' => now()
+                ]);
+            }
 
             // Send notification to both retailer and distributor with the correct recipient_type
             $this->notificationService->orderStatusChanged(
@@ -310,13 +325,6 @@ class RetailerOrdersController extends Controller
 
                 // Calculate total amount
                 $totalAmount += $cartDetail->subtotal;
-
-                // Update product stock
-                $product = Product::find($cartDetail->product_id);
-                if ($product) {
-                    $product->stock_quantity -= $cartDetail->quantity;
-                    $product->save();
-                }
             }
 
             // Update order with total amount
@@ -442,13 +450,6 @@ class RetailerOrdersController extends Controller
                         ]);
 
                         $totalAmount += $cartDetail->subtotal;
-
-                        // Update product stock
-                        $product = Product::find($cartDetail->product_id);
-                        if ($product) {
-                            $product->stock_quantity -= $cartDetail->quantity;
-                            $product->save();
-                        }
                     }
 
                     // Update order total

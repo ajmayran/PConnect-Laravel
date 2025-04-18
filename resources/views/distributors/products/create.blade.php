@@ -182,38 +182,28 @@
                 const imagePreview = document.getElementById('imagePreview');
                 let partialSaveTriggered = false;
 
-                // Batch categories definition
-                const batchCategories = [
-                    'Ready To Cook',
-                    'Beverages',
-                    'Instant Products',
-                    'Snacks',
-                    'Sauces & Condiments',
-                    'Juices & Concentrates',
-                    'Powdered Products',
-                    'Frozen Products',
-                    'Dairy Products'
-                ];
+                // Batch categories by ID (update these IDs to match your DB)
+                const batchCategoryIds = [1, 2, 3, 4, 6, 7, 8, 9, 10];
 
                 function isBatchCategory() {
-                    if (!categorySelect) return false;
-                    const selectedOption = categorySelect.options[categorySelect.selectedIndex];
-                    if (!selectedOption || !selectedOption.text) return false;
-                    return batchCategories.includes(selectedOption.text);
+                    return batchCategoryIds.includes(Number(categorySelect.value));
                 }
 
                 function updateCategoryBasedUI() {
                     if (!stockQuantityField || !batchInfoMessage || !stockQuantityInput) return;
                     if (isBatchCategory()) {
+                        // Hide and disable stock quantity for batch products
                         stockQuantityField.classList.add('hidden');
                         batchInfoMessage.classList.remove('hidden');
-                        stockQuantityInput.value = '0';
+                        stockQuantityInput.value = '';
                         stockQuantityInput.removeAttribute('required');
+                        stockQuantityInput.setAttribute('disabled', 'disabled');
                     } else {
+                        // Show and require stock quantity for non-batch products
                         stockQuantityField.classList.remove('hidden');
                         batchInfoMessage.classList.add('hidden');
+                        stockQuantityInput.removeAttribute('disabled');
                         stockQuantityInput.setAttribute('required', 'required');
-                        if (stockQuantityInput.value === '0') stockQuantityInput.value = '';
                     }
                 }
 
@@ -224,6 +214,23 @@
                         html: message.replace(/\n/g, '<br>'),
                         confirmButtonColor: '#3085d6'
                     });
+                }
+
+                function capitalizeFirst(element) {
+                    if (element.value.length > 0) {
+                        element.value = element.value.charAt(0).toUpperCase() + element.value.slice(1);
+                    }
+                }
+
+                function capitalizeCommaSeparated(element) {
+                    if (element.value) {
+                        const tags = element.value.split(',');
+                        const capitalizedTags = tags.map(tag => {
+                            const trimmedTag = tag.trim();
+                            return trimmedTag ? trimmedTag.charAt(0).toUpperCase() + trimmedTag.slice(1) : '';
+                        });
+                        element.value = capitalizedTags.join(', ');
+                    }
                 }
 
                 function validateBasicInfo() {
@@ -293,6 +300,10 @@
                     imagePreview.classList.add('hidden');
                 });
 
+                // Capitalization helpers for inputs
+                window.capitalizeFirst = capitalizeFirst;
+                window.capitalizeCommaSeparated = capitalizeCommaSeparated;
+
                 // Category change handler
                 if (categorySelect) categorySelect.addEventListener('change', updateCategoryBasedUI);
 
@@ -323,9 +334,8 @@
                 document.getElementById('completeSave').addEventListener('click', function(e) {
                     e.preventDefault();
                     partialSaveTriggered = false;
-                    if (isBatchCategory()) stockQuantityInput.value = '0';
+                    if (isBatchCategory()) stockQuantityInput.value = 0;
                     if (validateSalesInfo()) {
-                        // Remove any partial save marker
                         const existingHiddenInput = document.querySelector('input[name="save_product"]');
                         if (existingHiddenInput) existingHiddenInput.remove();
                         productForm.submit();
@@ -337,9 +347,9 @@
                     partialSaveTriggered = true;
                     if (validateBasicInfo() && validateSpecifications()) {
                         if (isBatchCategory()) {
-                            stockQuantityInput.value = '0';
+                            stockQuantityInput.value = 0;
                         } else if (!stockQuantityInput.value || stockQuantityInput.value < 0) {
-                            stockQuantityInput.value = '0';
+                            stockQuantityInput.value = 0;
                         }
                         let hiddenInput = document.querySelector('input[name="save_product"]');
                         if (!hiddenInput) {

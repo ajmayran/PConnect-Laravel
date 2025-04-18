@@ -16,7 +16,6 @@ use App\Http\Controllers\Retailers\CartController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\VerifyEmailController;
-use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Retailers\BuynowController;
 use App\Http\Controllers\Retailers\ReviewController;
 use App\Http\Controllers\Admin\AdminTicketController;
@@ -44,6 +43,7 @@ use App\Http\Controllers\Retailers\RetailerOrdersController;
 use App\Http\Controllers\Retailers\RetailerSearchController;
 use App\Http\Controllers\Retailers\RetailerTicketController;
 use App\Http\Controllers\Distributors\CancellationController;
+use App\Http\Controllers\Distributors\ProductBatchController;
 use App\Http\Controllers\Retailers\DistributorPageController;
 use App\Http\Controllers\Retailers\RetailerMessageController;
 use App\Http\Controllers\Retailers\RetailerProductController;
@@ -59,6 +59,7 @@ use App\Http\Controllers\Distributors\DistributorMessageController;
 use App\Http\Controllers\Distributors\DistributorProductController;
 use App\Http\Controllers\Distributors\DistributorProfileController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
+use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 
 
 Route::middleware('auth')->group(function () {
@@ -257,7 +258,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::delete('/products/{id}', [DistributorProductController::class, 'destroy'])->name('distributors.products.destroy');
     Route::put('/products/{id}/update-price', [DistributorProductController::class, 'updatePrice'])->name('distributors.products.updatePrice');
     Route::get('/products/list', [DistributorProductController::class, 'getProductsList'])->name('distributors.products.list');
-
+  
     // Order Routes
     Route::get('/orders', [OrderController::class, 'index'])->name('distributors.orders.index');
     Route::post('/orders/{order}/accept', [OrderController::class, 'acceptOrder'])->name('orders.accept');
@@ -306,7 +307,9 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     // Inventory Routes
     Route::get('/inventory', [InventoryController::class, 'index'])->name('distributors.inventory.index');
     Route::put('/inventory/{id}/update-stock', [InventoryController::class, 'updateStock'])->name('distributors.inventory.updateStock');
-
+    Route::get('/inventory/{productId}/batches', [InventoryController::class, 'getBatches'])->name('distributors.inventory.batches');
+    Route::get('inventory/history', [InventoryController::class, 'history'])->name('distributors.inventory.history');
+    
     // Message Routes
     Route::get('/messages', [DistributorMessageController::class, 'index'])->name('distributors.messages.index');
     Route::post('/messages/send', [DistributorMessageController::class, 'sendMessage'])->name('distributors.messages.send');

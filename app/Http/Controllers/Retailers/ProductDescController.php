@@ -34,8 +34,7 @@ class ProductDescController extends Controller
 
         $relatedProducts = Product::where('distributor_id', $product->distributor_id)
             ->where('id', '!=', $product->id)
-            ->where('status', 'accepted')
-            ->where('stock_quantity', '>', 0)
+            // ->where('status', 'accepted')
             ->limit(5)
             ->get();
 

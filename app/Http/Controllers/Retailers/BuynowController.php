@@ -165,8 +165,6 @@ class BuynowController extends Controller
             'delivery_address' => $deliveryAddress,
         ]);
 
-        // Update product stock
-        $product->stock_quantity -= $directPurchase['quantity'];
         $product->save();
 
         // Commit the transaction

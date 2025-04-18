@@ -111,6 +111,66 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Add action buttons -->
+                        <div class="flex justify-end p-4 bg-gray-50">
+                            <!-- Cancel Button -->
+                            <button
+                                onclick="document.getElementById('cancelModal{{ $order->id }}').style.display='block'"
+                                class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
+                                Cancel Order
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Cancel Modal -->
+                    <div id="cancelModal{{ $order->id }}"
+                        class="fixed inset-0 z-50 hidden overflow-auto bg-black bg-opacity-50">
+                        <div class="relative max-w-md p-8 mx-auto mt-20 bg-white rounded-lg">
+                            <h3 class="mb-4 text-lg font-bold">Cancel Order #{{ $order->formatted_order_id }}</h3>
+
+                            <form action="{{ route('retailers.orders.cancel', $order) }}" method="POST">
+                                @csrf
+                                <p class="mb-4 text-gray-600">Please select a reason for cancellation:</p>
+
+                                <div class="space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="radio" name="cancel_reason" value="Changed my mind" required
+                                            class="mr-2">
+                                        Changed my mind
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="cancel_reason" value="Ordered by mistake"
+                                            class="mr-2">
+                                        Ordered by mistake
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="cancel_reason" value="Found better price"
+                                            class="mr-2">
+                                        Found better price elsewhere
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="cancel_reason" value="other" class="mr-2">
+                                        Other reason
+                                    </label>
+                                </div>
+
+                                <textarea name="custom_reason" class="w-full p-2 mt-4 border rounded" placeholder="Specify other reason..."
+                                    style="display: none" rows="3"></textarea>
+
+                                <div class="flex justify-end gap-2 mt-6">
+                                    <button type="button"
+                                        onclick="document.getElementById('cancelModal{{ $order->id }}').style.display='none'"
+                                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                                        Close
+                                    </button>
+                                    <button type="button" id="confirmCancelBtn{{ $order->id }}"
+                                        class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
+                                        Confirm Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 @endforeach
             </div>
@@ -120,4 +180,110 @@
             </div>
         @endif
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show/hide custom reason textarea
+            document.querySelectorAll('input[name="cancel_reason"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const textarea = this.closest('form').querySelector(
+                        'textarea[name="custom_reason"]');
+                    textarea.style.display = this.value === 'other' ? 'block' : 'none';
+                });
+            });
+
+            // Handle all cancel buttons
+            @foreach ($orders as $order)
+                // Get direct references to elements
+                const confirmBtn{{ $order->id }} = document.getElementById(
+                    'confirmCancelBtn{{ $order->id }}');
+                const modal{{ $order->id }} = document.getElementById('cancelModal{{ $order->id }}');
+                const form{{ $order->id }} = modal{{ $order->id }}.querySelector('form');
+
+                if (confirmBtn{{ $order->id }} && form{{ $order->id }}) {
+                    confirmBtn{{ $order->id }}.addEventListener('click', function() {
+                        // Check if a reason is selected
+                        const selectedReason = form{{ $order->id }}.querySelector(
+                            'input[name="cancel_reason"]:checked');
+                        if (!selectedReason) {
+                            Swal.fire({
+                                title: 'Error',
+                                text: 'Please select a cancellation reason',
+                                icon: 'error'
+                            });
+                            return;
+                        }
+
+                        // If "other" is selected, verify text is entered
+                        if (selectedReason.value === 'other') {
+                            const customReason = form{{ $order->id }}.querySelector(
+                                'textarea[name="custom_reason"]').value.trim();
+                            if (!customReason) {
+                                Swal.fire({
+                                    title: 'Error',
+                                    text: 'Please provide your reason for cancellation',
+                                    icon: 'error'
+                                });
+                                return;
+                            }
+                        }
+
+                        // Show confirmation alert
+                        Swal.fire({
+                            title: 'Cancel Order?',
+                            text: 'Are you sure you want to cancel this order #{{ $order->formatted_order_id }}?',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#ef4444',
+                            cancelButtonColor: '#6b7280',
+                            confirmButtonText: 'Yes, cancel it',
+                            cancelButtonText: 'Keep my order'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Show loading state
+                                Swal.fire({
+                                    title: 'Processing...',
+                                    text: 'Cancelling your order',
+                                    allowOutsideClick: false,
+                                    showConfirmButton: false,
+                                    didOpen: () => {
+                                        Swal.showLoading();
+                                        // Submit the form
+                                        form{{ $order->id }}.submit();
+                                    }
+                                });
+                            }
+                        });
+                    });
+                }
+
+                // Close modal when clicking outside
+                modal{{ $order->id }}.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.style.display = 'none';
+                    }
+                });
+            @endforeach
+
+            // Show success alert if present in session
+            @if (session('success'))
+                Swal.fire({
+                    title: 'Success!',
+                    text: '{{ session('success') }}',
+                    icon: 'success',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            @endif
+
+            // Show error alert if present in session
+            @if (session('error'))
+                Swal.fire({
+                    title: 'Error!',
+                    text: '{{ session('error') }}',
+                    icon: 'error'
+                });
+            @endif
+        });
+    </script>
 </x-app-layout>

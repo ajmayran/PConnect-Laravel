@@ -90,6 +90,17 @@
                                             later.
                                         </p>
                                     </div>
+                                @elseif ($product->stock_quantity <= 0)
+                                    <div class="w-full p-4 text-center bg-red-100 border border-red-200 rounded-lg">
+                                        <p class="flex items-center justify-center text-red-700">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                            Out of Stock
+                                        </p>
+                                    </div>
                                 @else
                                     <button id="addToCartBtn" type="submit"
                                         class="px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600">
@@ -148,8 +159,8 @@
                                         <button id="followDistributorBtn"
                                             data-distributor-id="{{ $product->distributor->id }}"
                                             class="flex items-center justify-center px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none"
-                                                viewBox="0 0 24 24" stroke="currentColor">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 @if ($isFollowing ?? false)
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2" d="M5 13l4 4L19 7" />
@@ -443,15 +454,24 @@
             }
 
             // ---------------------- EVENT LISTENERS ----------------------
+            
+            if (addToCartBtn && maxStock > 0) {
+                addToCartBtn.addEventListener('click', addToCart);
+            }
 
-            addToCartBtn.addEventListener('click', addToCart);
-            buyNowBtn.addEventListener('click', buyNow);
+            if (buyNowBtn && maxStock > 0) {
+                buyNowBtn.addEventListener('click', buyNow);
+            }
 
             // Assigning quantity increase/decrease to respective buttons
-            document.querySelectorAll('[onclick="increaseQuantity()"]').forEach(btn => btn.addEventListener('click',
-                increaseQuantity));
-            document.querySelectorAll('[onclick="decreaseQuantity()"]').forEach(btn => btn.addEventListener('click',
-                decreaseQuantity));
+            if (maxStock > 0) {
+                document.querySelectorAll('[onclick="increaseQuantity()"]').forEach(btn => btn.addEventListener(
+                    'click',
+                    increaseQuantity));
+                document.querySelectorAll('[onclick="decreaseQuantity()"]').forEach(btn => btn.addEventListener(
+                    'click',
+                    decreaseQuantity));
+            }
         });
 
 

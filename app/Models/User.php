@@ -131,4 +131,17 @@ class User extends Authenticatable implements MustVerifyEmail
             parent::sendEmailVerificationNotification();
         }
     }
+
+    public function followedDistributors()
+    {
+        return $this->hasMany(DistributorFollower::class, 'retailer_id')
+            ->with('distributor');
+    }
+
+    public function isFollowing($distributorId)
+    {
+        return $this->followedDistributors()
+            ->where('distributor_id', $distributorId)
+            ->exists();
+    }
 }

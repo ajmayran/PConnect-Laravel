@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Distributors;
 
 use App\Models\Order;
+use App\Models\Stock;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Delivery;
@@ -77,9 +78,16 @@ class OrderController extends Controller
             // Update each product quantity based on the order details
             foreach ($order->orderDetails as $detail) {
                 $product = $detail->product;
-                // Deduct the ordered quantity (ensure your business logic prevents negative inventory)
-                $product->stock_quantity = max(0, $product->stock_quantity - $detail->quantity);
-                $product->save();
+
+                Stock::create([
+                    'product_id' => $product->id,
+                    'batch_id' => null, // For batch-managed products, you might want to implement batch selection logic
+                    'type' => 'out',
+                    'quantity' => $detail->quantity,
+                    'user_id' => Auth::id(),
+                    'notes' => 'Order #' . $order->id . ' accepted',
+                    'stock_updated_at' => now()
+                ]);
             }
             $order->status = self::STATUS_PROCESSING;
             $order->status_updated_at = now();

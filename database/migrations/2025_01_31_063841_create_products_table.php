@@ -30,7 +30,7 @@ return new class extends Migration
 
             // Sales Information
             $table->decimal('price', 10, 2);
-            $table->integer('stock_quantity');
+            // $table->integer('stock_quantity');
             $table->integer('minimum_purchase_qty');
             $table->json('wholesale_prices')->nullable(); // For bulk pricing
 
@@ -38,7 +38,6 @@ return new class extends Migration
             $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
             $table->string('rejection_reason')->nullable();
             $table->timestamp('price_updated_at')->nullable();
-            $table->timestamp('stock_updated_at')->nullable();
             $table->softDeletes();
             $table->timestamps();
 

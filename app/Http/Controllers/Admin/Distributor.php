@@ -54,15 +54,15 @@ class Distributor extends Controller
     public function declineDistributor(Request $request, $id)
     {
         $distributor = User::findOrFail($id);
-    
+
         // Update the user's status to rejected and save the rejection reason
         $distributor->update([
             'status' => 'rejected',
             'rejection_reason' => $request->input('reason'), // Save rejection reason in the users table
         ]);
-    
+
         logger('Rejection reason saved: ' . $request->input('reason')); // Debug log
-    
+
         return redirect()->back()->with('success', 'Distributor application declined');
     }
     public function downloadCredential($id)
@@ -103,23 +103,21 @@ class Distributor extends Controller
 
 
     public function rejectedDistributors()
-{
-    // Fetch all rejected distributors
-    $rejectedDistributors = User::where('user_type', 'distributor')
-        ->where('status', 'rejected')
-        ->paginate(10);
+    {
+        // Fetch all rejected distributors
+        $rejectedDistributors = User::where('user_type', 'distributor')
+            ->where('status', 'rejected')
+            ->paginate(10);
 
-    ($rejectedDistributors->items());
+        ($rejectedDistributors->items());
 
-    return view('admin.distributors.rejected', compact('rejectedDistributors'));
-}
+        return view('admin.distributors.rejected', compact('rejectedDistributors'));
+    }
 
     public function viewInformation($id)
-{
-    $distributor = User::with('credentials')->findOrFail($id);
+    {
+        $distributor = User::with('credentials')->findOrFail($id);
 
-    return view('admin.distributors.view-information', compact('distributor'));
-}
-
-}
+        return view('admin.distributors.view-information', compact('distributor'));
+    }
 }

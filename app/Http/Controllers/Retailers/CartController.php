@@ -48,11 +48,12 @@ class CartController extends Controller
             ]);
 
             $product = Product::findOrFail($validated['product_id']);
+            $availableStock = $product->stock_quantity; 
 
             Log::info("🛒 Adding Product to Cart:", [
                 'Request Product ID' => $validated['product_id'],
                 'Product Name' => $product->product_name,
-                'Stock Available' => $product->stock_quantity,
+                'Stock Available' => $availableStock,
                 'Min Purchase Qty' => $product->minimum_purchase_qty,
             ]);
 
@@ -66,11 +67,11 @@ class CartController extends Controller
                 ], 422);
             }
 
-            if ($validated['quantity'] > $product->stock_quantity) {
+            if ($validated['quantity'] > $availableStock) {
                 DB::rollBack();
                 return response()->json([
                     'success' => false,
-                    'message' => "Only {$product->stock_quantity} items available in stock"
+                    'message' => "Only {$availableStock} items available in stock"
                 ], 422);
             }
 
@@ -106,11 +107,11 @@ class CartController extends Controller
                     ], 422);
                 }
 
-                if ($newQuantity > $product->stock_quantity) {
+                if ($newQuantity > $availableStock) {
                     DB::rollBack();
                     return response()->json([
                         'success' => false,
-                        'message' => "Only {$product->stock_quantity} items available in stock"
+                        'message' => "Only {$availableStock} items available in stock"
                     ], 422);
                 }
 
@@ -214,6 +215,7 @@ class CartController extends Controller
             foreach ($validated['items'] as $item) {
                 $cartDetail = CartDetail::findOrFail($item['cart_detail_id']);
                 $product = $cartDetail->product;
+                $availableStock = $product->stock_quantity; 
 
                 // Validate minimum purchase quantity
                 if ($item['quantity'] < $product->minimum_purchase_qty) {
@@ -221,8 +223,8 @@ class CartController extends Controller
                 }
 
                 // Validate stock availability
-                if ($item['quantity'] > $product->stock_quantity) {
-                    throw new \Exception("Only {$product->stock_quantity} items available in stock for {$product->product_name}");
+                if ($item['quantity'] > $availableStock) {
+                    throw new \Exception("Only {$availableStock} items available in stock for {$product->product_name}");
                 }
 
                 $cartDetail->update([
