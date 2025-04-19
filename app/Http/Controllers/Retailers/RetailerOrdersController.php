@@ -230,25 +230,76 @@ class RetailerOrdersController extends Controller
         try {
             $order->update([
                 'status' => 'cancelled',
-                'cancel_reason' => $request->reason,
+                'cancel_reason' => $request->input('cancel_reason') === 'other'
+                    ? $request->input('custom_reason')
+                    : $request->input('cancel_reason'),
                 'status_updated_at' => now()
             ]);
 
             // Return stock to inventory for each order detail
             foreach ($order->orderDetails as $detail) {
-                // Create a stock "in" record to add the quantity back
-                \App\Models\Stock::create([
-                    'product_id' => $detail->product_id,
-                    'batch_id' => null, // For non-batch products
-                    'type' => 'in',
-                    'quantity' => $detail->quantity,
-                    'user_id' => Auth::id(),
-                    'notes' => 'Order #' . $order->id . ' cancelled',
-                    'stock_updated_at' => now()
-                ]);
+                $product = $detail->product;
+
+                // Handle batch-managed products differently
+                if ($product->isBatchManaged()) {
+                    // Find the stock out records related to this order detail
+                    $stockRecords = \App\Models\Stock::where('product_id', $detail->product_id)
+                        ->where('type', 'out')
+                        ->where('notes', 'like', '%Order #' . $order->id . '%')
+                        ->get();
+
+                    foreach ($stockRecords as $stockRecord) {
+                        if ($stockRecord->batch_id) {
+                            // Check if the batch still exists or was deleted (empty)
+                            $batch = \App\Models\ProductBatch::withTrashed()->find($stockRecord->batch_id);
+
+                            if ($batch) {
+                                if ($batch->trashed()) {
+                                    // If batch was deleted, restore it first
+                                    $batch->restore();
+                                    $batch->quantity = $stockRecord->quantity;
+                                } else {
+                                    // If batch exists, just add the quantity back
+                                    $batch->quantity += $stockRecord->quantity;
+                                }
+                                $batch->save();
+
+                                // Create a stock in record to track the return
+                                \App\Models\Stock::create([
+                                    'product_id' => $product->id,
+                                    'batch_id' => $batch->id,
+                                    'type' => 'in',
+                                    'quantity' => $stockRecord->quantity,
+                                    'user_id' => Auth::id(),
+                                    'notes' => 'Order #' . $order->id . ' cancelled - returned to batch #' . $batch->batch_number,
+                                    'stock_updated_at' => now()
+                                ]);
+                            }
+                        }
+                    }
+
+                    // Resequence batches to maintain proper order
+                    app(\App\Http\Controllers\Distributors\InventoryController::class)
+                        ->resequenceBatchesByExpiryDate($product->id);
+                }
+                // Handle non-batch products (your existing code)
+                else {
+                    \App\Models\Stock::create([
+                        'product_id' => $detail->product_id,
+                        'batch_id' => null,
+                        'type' => 'in',
+                        'quantity' => $detail->quantity,
+                        'user_id' => Auth::id(),
+                        'notes' => 'Order #' . $order->id . ' cancelled',
+                        'stock_updated_at' => now()
+                    ]);
+                }
+
+                // Update product's stock_updated_at timestamp
+                $product->update(['stock_updated_at' => now()]);
             }
 
-            // Send notification to both retailer and distributor with the correct recipient_type
+            // Send notification to both retailer and distributor
             $this->notificationService->orderStatusChanged(
                 $order->id,
                 'cancelled',

@@ -67,9 +67,9 @@ class OrderController extends Controller
         return view('distributors.orders.index', compact('orders'));
     }
 
+
     public function acceptOrder(Request $request, Order $order)
     {
-
         if ($order->status !== self::STATUS_PENDING) {
             return redirect()->back()->with('error', 'Only pending orders can be accepted.');
         }
@@ -78,17 +78,68 @@ class OrderController extends Controller
             // Update each product quantity based on the order details
             foreach ($order->orderDetails as $detail) {
                 $product = $detail->product;
+                $quantityRemaining = $detail->quantity;
 
-                Stock::create([
-                    'product_id' => $product->id,
-                    'batch_id' => null, // For batch-managed products, you might want to implement batch selection logic
-                    'type' => 'out',
-                    'quantity' => $detail->quantity,
-                    'user_id' => Auth::id(),
-                    'notes' => 'Order #' . $order->id . ' accepted',
-                    'stock_updated_at' => now()
-                ]);
+                // Handle batch-managed products using FIFO
+                if ($product->isBatchManaged()) {
+                    // Get batches ordered by expiry date (soonest first)
+                    $batches = $product->batches()
+                        ->where('quantity', '>', 0)
+                        ->orderBy('expiry_date')
+                        ->get();
+
+                    foreach ($batches as $batch) {
+                        // Skip if we've fulfilled the order
+                        if ($quantityRemaining <= 0) break;
+
+                        // Calculate how much we can take from this batch
+                        $quantityToTake = min($batch->quantity, $quantityRemaining);
+
+                        // Create stock out record for this batch
+                        Stock::create([
+                            'product_id' => $product->id,
+                            'batch_id' => $batch->id,
+                            'type' => 'out',
+                            'quantity' => $quantityToTake,
+                            'user_id' => Auth::id(),
+                            'notes' => 'Order #' . $order->id . ' accepted',
+                            'stock_updated_at' => now()
+                        ]);
+
+                        // Update the batch quantity
+                        $batch->quantity -= $quantityToTake;
+                        $batch->save();
+
+                        // If batch is empty, delete it
+                        if ($batch->quantity <= 0) {
+                            $batch->delete();
+                        }
+
+                        // Reduce remaining quantity to be fulfilled
+                        $quantityRemaining -= $quantityToTake;
+                    }
+
+                    // After processing batches, resequence batch numbers
+                    app(InventoryController::class)->resequenceBatchesByExpiryDate($product->id);
+                }
+                // Handle regular non-batch products
+                else {
+                    Stock::create([
+                        'product_id' => $product->id,
+                        'batch_id' => null,
+                        'type' => 'out',
+                        'quantity' => $detail->quantity,
+                        'user_id' => Auth::id(),
+                        'notes' => 'Order #' . $order->id . ' accepted',
+                        'stock_updated_at' => now()
+                    ]);
+                }
+
+                // Update product's stock_updated_at timestamp
+                $product->update(['stock_updated_at' => now()]);
             }
+
+            // Rest of your existing code for order processing
             $order->status = self::STATUS_PROCESSING;
             $order->status_updated_at = now();
             $order->save();
@@ -101,15 +152,12 @@ class OrderController extends Controller
                 'status'        => 'pending',
                 'created_at' => now(),
                 'updated_at' => now()
-
-                // Add additional fields as per your Delivery model
             ]);
 
             Payment::create([
                 'order_id'        => $order->id,
                 'distributor_id' => $order->distributor_id,
                 'payment_status'  => 'unpaid',
-
             ]);
 
             app(NotificationService::class)->orderStatusChanged(
@@ -119,7 +167,6 @@ class OrderController extends Controller
                 $order->distributor_id
             );
         });
-
 
         return redirect()->back()->with('success', 'Order accepted successfully.');
     }
