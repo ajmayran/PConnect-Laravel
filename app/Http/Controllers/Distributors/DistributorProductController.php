@@ -54,7 +54,13 @@ class DistributorProductController extends Controller
     public function store(Request $request)
     {
         try {
-            Log::info('Product store attempt', $request->all());
+            Log::info('Product store attempt', [
+                'request_data' => $request->all(),
+                'has_image' => $request->hasFile('image'),
+                'category' => Category::find($request->category_id)?->name,
+                'is_batch_managed' => $this->isBatchManagedCategory(Category::find($request->category_id)?->name),
+                'stock_quantity' => $request->stock_quantity
+            ]);
 
             $user = Auth::user();
             $distributor = $user->distributor;
@@ -79,7 +85,7 @@ class DistributorProductController extends Controller
                 'category_id' => 'required|exists:categories,id',
                 'image' => 'required|image|max:2048',
                 'brand' => 'required|string|max:255',
-                'sku' => 'required|string|max:255',
+                'sku' => 'required|string|max:255|unique:products,sku',
                 'weight' => 'nullable|numeric|min:0',
                 'tags' => 'nullable|string',
             ]);
@@ -95,11 +101,17 @@ class DistributorProductController extends Controller
                     // Force stock_quantity to 0 for batch-managed products
                     $validatedSales['stock_quantity'] = 0;
                 } else {
+                    // For non-batch products, make stock_quantity required and ensure it's present
                     $validatedSales = $request->validate([
                         'price' => 'required|numeric|min:0',
                         'minimum_purchase_qty' => 'required|integer|min:1',
                         'stock_quantity' => 'required|integer|min:0',
                     ]);
+
+                    // Ensure stock_quantity is always present even if it wasn't in the request
+                    if (!isset($validatedSales['stock_quantity'])) {
+                        $validatedSales['stock_quantity'] = 0;
+                    }
                 }
 
                 $validatedData = array_merge($validatedData, $validatedSales);
@@ -386,5 +398,20 @@ class DistributorProductController extends Controller
         }
 
         return view('distributors.products.history', compact('productHistories', 'products'));
+    }
+
+    public function checkSku(Request $request)
+    {
+        $sku = $request->input('sku');
+        $productId = $request->input('product_id'); // In case of editing a product
+        
+        $query = Product::where('sku', $sku);
+        if ($productId) {
+            $query->where('id', '!=', $productId); // Exclude current product when editing
+        }
+        
+        $exists = $query->exists();
+        
+        return response()->json(['unique' => !$exists]);
     }
 }

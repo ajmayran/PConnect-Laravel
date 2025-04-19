@@ -64,7 +64,10 @@
                                     required>
                                     <option value="">Select Category</option>
                                     @foreach ($categories as $category)
-                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                        <option value="{{ $category->id }}"
+                                            data-batch-managed="{{ in_array($category->name, ['Ready To Cook', 'Beverages', 'Instant Products', 'Snacks', 'Sauces & Condiments', 'Juices & Concentrates', 'Powdered Products', 'Frozen Products', 'Dairy Products']) ? 'true' : 'false' }}">
+                                            {{ $category->name }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -183,10 +186,9 @@
                 let partialSaveTriggered = false;
 
                 // Batch categories by ID (update these IDs to match your DB)
-                const batchCategoryIds = [1, 2, 3, 4, 6, 7, 8, 9, 10];
-
                 function isBatchCategory() {
-                    return batchCategoryIds.includes(Number(categorySelect.value));
+                    const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+                    return selectedOption && selectedOption.getAttribute('data-batch-managed') === 'true';
                 }
 
                 function updateCategoryBasedUI() {
@@ -239,10 +241,27 @@
                     const description = document.querySelector('textarea[name="description"]').value.trim();
                     const image = imageInput.files[0];
                     const errors = [];
+
                     if (!productName) errors.push('Product name is required');
                     if (!category) errors.push('Category is required');
                     if (!description) errors.push('Description is required');
-                    if (!image) errors.push('Product image is required');
+
+                    // Only validate the image if it's been selected or if we're not doing a partial save
+                    if (!image && !partialSaveTriggered) {
+                        errors.push('Product image is required');
+                    } else if (image) {
+                        // Validate file size (max 2MB)
+                        if (image.size > 10 * 1024 * 1024) {
+                            errors.push('Image must be smaller than 10MB');
+                        }
+
+                        // Validate file type
+                        const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+                        if (!validTypes.includes(image.type)) {
+                            errors.push('Image must be a JPG, PNG, or GIF file');
+                        }
+                    }
+
                     if (errors.length) {
                         showError(errors.join('\n'));
                         return false;
@@ -250,17 +269,22 @@
                     return true;
                 }
 
-                function validateSpecifications() {
+                async function validateSpecifications() {
                     const brand = document.querySelector('input[name="brand"]').value.trim();
                     const sku = document.querySelector('input[name="sku"]').value.trim();
                     const errors = [];
+
                     if (!brand) errors.push('Brand is required');
                     if (!sku) errors.push('SKU is required');
+
                     if (errors.length) {
                         showError(errors.join('\n'));
                         return false;
                     }
-                    return true;
+
+                    // Check SKU uniqueness only if there are no other errors
+                    const isSkuUnique = await checkSkuUniqueness();
+                    return isSkuUnique;
                 }
 
                 function validateSalesInfo() {
@@ -318,13 +342,14 @@
                     document.getElementById('specifications').classList.add('hidden');
                     document.getElementById('basicInfo').classList.remove('hidden');
                 });
-                document.getElementById('nextToSales').addEventListener('click', function() {
-                    if (validateSpecifications()) {
+                document.getElementById('nextToSales').addEventListener('click', async function() {
+                    if (await validateSpecifications()) {
                         document.getElementById('specifications').classList.add('hidden');
                         document.getElementById('salesInfo').classList.remove('hidden');
                         updateCategoryBasedUI();
                     }
                 });
+
                 document.getElementById('backToSpecs').addEventListener('click', function() {
                     document.getElementById('salesInfo').classList.add('hidden');
                     document.getElementById('specifications').classList.remove('hidden');
@@ -334,7 +359,14 @@
                 document.getElementById('completeSave').addEventListener('click', function(e) {
                     e.preventDefault();
                     partialSaveTriggered = false;
-                    if (isBatchCategory()) stockQuantityInput.value = 0;
+
+                    stockQuantityInput.disabled = false;
+
+                    if (isBatchCategory()) {
+                        stockQuantityInput.disabled = false; // Enable before submitting
+                        stockQuantityInput.value = 0;
+                    }
+
                     if (validateSalesInfo()) {
                         const existingHiddenInput = document.querySelector('input[name="save_product"]');
                         if (existingHiddenInput) existingHiddenInput.remove();
@@ -345,12 +377,33 @@
                 document.getElementById('partialSave').addEventListener('click', function(e) {
                     e.preventDefault();
                     partialSaveTriggered = true;
-                    if (validateBasicInfo() && validateSpecifications()) {
-                        if (isBatchCategory()) {
-                            stockQuantityInput.value = 0;
-                        } else if (!stockQuantityInput.value || stockQuantityInput.value < 0) {
+
+                    // Determine which section is currently visible
+                    const basicInfoVisible = !document.getElementById('basicInfo').classList.contains('hidden');
+                    const specificationsVisible = !document.getElementById('specifications').classList.contains(
+                        'hidden');
+                    const salesInfoVisible = !document.getElementById('salesInfo').classList.contains('hidden');
+
+                    let isValid = true;
+
+                    // Only validate the currently visible section
+                    if (basicInfoVisible) {
+                        isValid = validateBasicInfo();
+                    } else if (specificationsVisible) {
+                        isValid = validateSpecifications();
+                    } else if (salesInfoVisible) {
+                        isValid = validateSalesInfo();
+                    }
+
+                    if (isValid) {
+                        // Make sure stock quantity is enabled and has a value
+                        stockQuantityInput.disabled = false;
+
+                        if (!stockQuantityInput.value || stockQuantityInput.value < 0) {
                             stockQuantityInput.value = 0;
                         }
+
+                        // Add the hidden input for partial save
                         let hiddenInput = document.querySelector('input[name="save_product"]');
                         if (!hiddenInput) {
                             hiddenInput = document.createElement('input');
@@ -359,9 +412,57 @@
                             hiddenInput.value = '1';
                             productForm.appendChild(hiddenInput);
                         }
+
+                        // Submit the form
                         productForm.submit();
                     }
                 });
+
+                function checkSkuUniqueness() {
+                    return new Promise((resolve, reject) => {
+                        const skuInput = document.querySelector('input[name="sku"]');
+                        const sku = skuInput.value.trim();
+
+                        if (!sku) {
+                            resolve(true); // No SKU entered, so uniqueness check passes
+                            return;
+                        }
+
+                        // Show loading indicator
+                        skuInput.classList.add('border-yellow-400');
+
+                        // Send AJAX request to check SKU uniqueness
+                        fetch(`/distributors/products/check-sku?sku=${encodeURIComponent(sku)}`, {
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                skuInput.classList.remove('border-yellow-400');
+
+                                if (data.unique) {
+                                    // SKU is unique
+                                    skuInput.classList.add('border-green-500');
+                                    setTimeout(() => skuInput.classList.remove('border-green-500'), 2000);
+                                    resolve(true);
+                                } else {
+                                    // SKU already exists
+                                    skuInput.classList.add('border-red-500');
+                                    showError('This SKU already exists. Please use a different one.');
+                                    resolve(false);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error checking SKU:', error);
+                                skuInput.classList.remove('border-yellow-400');
+                                // If there's an error in the check, we'll allow it to proceed
+                                // and let the server-side validation catch it
+                                resolve(true);
+                            });
+                    });
+                }
 
                 // Initial UI setup
                 updateCategoryBasedUI();
