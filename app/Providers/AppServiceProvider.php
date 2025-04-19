@@ -8,6 +8,8 @@ use App\View\Components\Label;
 use App\View\Components\Input;
 use Illuminate\Support\ServiceProvider;
 use App\View\Components\ProfileCompletionAlert;
+use App\Models\Product;
+use App\Observers\ProductObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
         config(['broadcasting.default' => 'pusher']);
         Paginator::defaultView('vendor.pagination.tailwind');
         Blade::component('profile-completion-alert', ProfileCompletionAlert::class);
+        Product::observe(\App\Observers\ProductObserver::class);
     }
 
 

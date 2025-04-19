@@ -258,6 +258,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::delete('/products/{id}', [DistributorProductController::class, 'destroy'])->name('distributors.products.destroy');
     Route::put('/products/{id}/update-price', [DistributorProductController::class, 'updatePrice'])->name('distributors.products.updatePrice');
     Route::get('/products/list', [DistributorProductController::class, 'getProductsList'])->name('distributors.products.list');
+    Route::get('/products/history', [DistributorProductController::class, 'history'])->name('distributors.products.history');
 
     // Order Routes
     Route::get('/orders', [OrderController::class, 'index'])->name('distributors.orders.index');

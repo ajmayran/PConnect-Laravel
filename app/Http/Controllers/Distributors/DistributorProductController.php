@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Distributors;
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use App\Models\ProductHistory;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\View\View;
@@ -219,12 +220,38 @@ class DistributorProductController extends Controller
 
     public function destroy($id)
     {
-        $product = Product::findOrFail($id);
-        $product->delete();
+        try {
+            // Start a transaction to ensure data consistency
+            DB::beginTransaction();
 
-        return redirect()->route('distributors.products.index')->with('success', 'Product deleted successfully.');
+            $product = Product::findOrFail($id);
+
+            // Create history record
+            ProductHistory::create([
+                'product_id' => $product->id, // We can keep the ID since the product will still exist (soft deleted)
+                'user_id' => Auth::id(),
+                'action_type' => 'deleted',
+                'old_values' => $product->toArray(),
+                'notes' => 'Product deleted'
+            ]);
+
+            // Soft delete the product
+            $product->delete(); // This does a soft delete if SoftDeletes is used
+
+            // Commit the transaction
+            DB::commit();
+
+            return redirect()->route('distributors.products.index')
+                ->with('success', 'Product deleted successfully.');
+        } catch (\Exception $e) {
+            // Rollback in case of error
+            DB::rollBack();
+
+            Log::error('Product deletion failed: ' . $e->getMessage());
+            return redirect()->route('distributors.products.index')
+                ->with('error', 'Failed to delete product: ' . $e->getMessage());
+        }
     }
-
 
     public function getProductsList()
     {
@@ -312,5 +339,52 @@ class DistributorProductController extends Controller
         ];
 
         return in_array($categoryName, $batchCategories);
+    }
+
+    public function history(Request $request)
+    {
+        $user = Auth::user();
+        $distributor = $user->distributor;
+
+        // Get all products for filtering (include soft deleted ones)
+        $products = Product::withTrashed()
+            ->where('distributor_id', $distributor->id)
+            ->select('id', 'product_name')
+            ->orderBy('product_name')
+            ->get();
+
+        // Build the query for histories
+        $query = ProductHistory::whereHas('product', function ($query) use ($distributor) {
+            $query->withTrashed() // Include soft-deleted products
+                ->where('distributor_id', $distributor->id);
+        })
+            ->with(['product' => function ($query) {
+                $query->withTrashed(); // Include soft-deleted products in eager loading
+            }, 'user']);
+
+        // Filter by product
+        if ($request->has('product') && $request->product) {
+            $query->where('product_id', $request->product);
+        }
+
+        // Filter by action type
+        if ($request->has('action') && $request->action) {
+            $query->where('action_type', $request->action);
+        }
+
+        // Filter by date
+        if ($request->has('date') && $request->date) {
+            $query->whereDate('created_at', $request->date);
+        }
+
+        // Get paginated results
+        $productHistories = $query->latest()->paginate(10);
+
+        // Pass query parameters to pagination links
+        if ($request->has(['product', 'action', 'date'])) {
+            $productHistories->appends($request->only(['product', 'action', 'date']));
+        }
+
+        return view('distributors.products.history', compact('productHistories', 'products'));
     }
 }
