@@ -1,4 +1,21 @@
 <x-distributor-layout>
+    <style>
+        #navbar {
+            z-index: 50;
+            /* Ensure navbar is above most elements */
+        }
+
+        #notificationsPopup {
+            z-index: 1050;
+            /* Ensure dropdown is above product cards */
+        }
+
+        .grid>div {
+            z-index: 10;
+            /* Ensure product cards are below the dropdown */
+        }
+    </style>
+
     <div class="container p-4 mx-auto">
         <span class="absolute text-3xl text-white cursor-pointer top-5 left-4 lg:hidden" onclick="toggleSidebar()">
             <i class="px-2 bg-gray-900 rounded-md bi bi-filter-left"></i>
@@ -10,8 +27,8 @@
                 <div class="block">
                     <a href="{{ route('distributors.products.history') }}"
                         class="flex items-center px-2 py-1 text-xs font-medium text-white transition duration-200 bg-purple-500 rounded-lg hover:bg-purple-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:mr-1" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:mr-1" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -103,7 +120,7 @@
             @endif
 
             <!-- Products Grid -->
-            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 relative z-[10]">
                 @foreach ($products as $product)
                     <div class="overflow-hidden bg-white rounded-lg shadow-md">
                         <div class="relative h-48 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">

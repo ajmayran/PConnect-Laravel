@@ -78,7 +78,7 @@
 
     <x-dist_navbar />
     <!-- Page Content -->
-    <span class="absolute text-4xl text-white cursor-pointer top-5 left-4" onclick="toggleSidebar()">
+    <span class="absolute text-4xl text-white cursor-pointer top-5 left-4 z-[50]" onclick="toggleSidebar()">
         <i class="px-2 bg-gray-900 rounded-md bi bi-filter-left"></i>
     </span>
 

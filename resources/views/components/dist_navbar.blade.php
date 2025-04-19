@@ -1,4 +1,4 @@
-<nav id="navbar" class="sticky top-0 w-full transition-transform duration-300 bg-white border-b border-gray-200">
+<nav id="navbar" class="sticky top-0 w-full transition-transform duration-300 bg-white border-b border-gray-200 z-50">
     <!-- Your existing navbar HTML -->
     <div class="px-4 py-3 lg:px-6">
         <div class="flex items-center justify-between">
@@ -27,7 +27,7 @@
 
                     <!-- Notifications Dropdown -->
                     <div id="notificationsPopup"
-                        class="absolute z-[100] mt-2 origin-top-right bg-white rounded-lg shadow-xl w-80 border overflow-hidden max-h-[480px] right-0 hidden">
+                        class="absolute z-[1050] mt-2 origin-top-right bg-white rounded-lg shadow-xl w-80 border overflow-hidden max-h-[480px] right-0 hidden">
                         <div class="flex items-center justify-between p-4 border-b border-gray-200">
                             <h3 class="font-semibold text-gray-800">Notifications</h3>
                             <button id="mark-all-notifications-read" class="text-xs text-blue-600 hover:text-blue-800">
@@ -66,7 +66,7 @@
                     <!-- Dropdown menu -->
                     <div id="profile-dropdown"
                         class="absolute right-0 hidden w-48 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5"
-                        style="z-index: 1500;>
+                        style="z-index: 1500;">
                         <div class="py-1">
                             <div class="px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
                                 <p class="font-medium">{{ Auth::user()->distributor->company_name }}</p>
