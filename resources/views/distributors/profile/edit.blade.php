@@ -1,11 +1,24 @@
 <x-distributor-layout>
-    <div class="py-12">
+    <div class="py-2">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-            <div class="px-4 mb-6">
-                <h1 class="text-2xl font-semibold text-gray-800">Company Profile</h1>
-                <div>
-                    <span class="text-sm text-gray-500">Edit your company profile</span>
-                </div>
+            <div class="mb-4 border-b border-gray-200">
+                <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
+                    <li class="mr-2">
+                        <a href="{{ route('distributors.profile.edit') }}"
+                            class="inline-block p-4 text-green-600 border-b-2 border-green-500 rounded-t-lg active"
+                            aria-current="page">Company Profile</a>
+                    </li>
+                    <li class="mr-2">
+                             <a href="{{ route('distributors.profile.orders-settings') }}"
+                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300">
+                            Orders</a>
+                    </li>
+                    <li class="mr-2">
+                        <a href=""
+                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300">
+                            Notifications</a>
+                    </li>
+                </ul>
             </div>
             <div class="p-4 bg-white shadow sm:p-8 sm:rounded-lg">
                 <header>

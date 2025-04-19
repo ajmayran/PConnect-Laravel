@@ -22,6 +22,7 @@ class Distributors extends Model
         'barangay',
         'street',
         'company_profile_image',
+        'cut_off_time',
     ];
 
 
@@ -86,5 +87,14 @@ class Distributors extends Model
     public function getFollowersCountAttribute()
     {
         return $this->followers->count();
+    }
+
+    public function getFormattedCutOffTimeAttribute()
+    {
+        if (!$this->cut_off_time) {
+            return 'Not set';
+        }
+
+        return date('h:i A', strtotime($this->cut_off_time));
     }
 }

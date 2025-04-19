@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers\Distributors;
 
+use view;
 use App\Models\User;
 use App\Models\Distributors;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
-use view;
 
 class DistributorProfileController extends Controller
 {
@@ -175,7 +176,7 @@ class DistributorProfileController extends Controller
             if ($distributorProfile->company_profile_image) {
                 Storage::disk('public')->delete($distributorProfile->company_profile_image);
             }
-         
+
             $fileName = time() . $request->user()->id . '.' . $request->file('company_profile_image')->getClientOriginalExtension();
             // Store the file in the "distributors" folder in the "public" disk
             $path = Storage::disk('public')->putFileAs('distributors_profile', $request->file('company_profile_image'), $fileName);
@@ -228,5 +229,99 @@ class DistributorProfileController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+
+    public function ordersSettings()
+    {
+        $user = Auth::user();
+        return view('distributors.profile.orders-settings', compact('user'));
+    }
+
+    public function updateOrdersSettings(Request $request)
+    {
+        $request->validate([
+            'cut_off_time' => 'nullable|string',
+            'cut_off_hour' => 'nullable|string',
+            'cut_off_minute' => 'nullable|string',
+            'cut_off_period' => 'nullable|string|in:AM,PM',
+            'remove_cut_off_time' => 'nullable|string',
+        ]);
+
+        $distributor = Auth::user()->distributor;
+
+        // Debug information before saving
+        Log::info('Updating distributor settings - BEFORE', [
+            'current_cut_off_time' => $distributor->cut_off_time,
+            'remove_cut_off_time' => $request->has('remove_cut_off_time'),
+        ]);
+
+        // Check if we should remove the cut-off time
+        if ($request->has('remove_cut_off_time')) {
+            // Set cut_off_time to NULL
+            DB::table('distributors')
+                ->where('id', $distributor->id)
+                ->update(['cut_off_time' => null]);
+
+            // Refresh the model to get the updated value
+            $distributor->refresh();
+
+            Log::info('Cut-off time removed', [
+                'updated_cut_off_time' => $distributor->cut_off_time
+            ]);
+        }
+        // Otherwise update the cut-off time if provided
+        else if ($request->filled('cut_off_hour') && $request->filled('cut_off_minute') && $request->filled('cut_off_period')) {
+            try {
+                // Convert hour to 24-hour format
+                $hour = (int)$request->cut_off_hour;
+                if ($request->cut_off_period === 'PM' && $hour !== 12) {
+                    $hour += 12;
+                } else if ($request->cut_off_period === 'AM' && $hour === 12) {
+                    $hour = 0;
+                }
+
+                // Format time string in 24-hour format (HH:MM:SS)
+                $timeString = sprintf('%02d:%02d:00', $hour, (int)$request->cut_off_minute);
+
+                Log::info('Constructed time string', [
+                    'timeString' => $timeString
+                ]);
+
+                // Direct SQL update to ensure proper time format is stored
+                DB::table('distributors')
+                    ->where('id', $distributor->id)
+                    ->update(['cut_off_time' => $timeString]);
+
+                // Refresh the model to get the updated value
+                $distributor->refresh();
+
+                Log::info('Time parsed and saved successfully', [
+                    'hour' => $hour,
+                    'minute' => $request->cut_off_minute,
+                    'period' => $request->cut_off_period,
+                    'formatted' => $timeString,
+                    'from_db' => $distributor->cut_off_time
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Error parsing time value', [
+                    'hour' => $request->cut_off_hour,
+                    'minute' => $request->cut_off_minute,
+                    'period' => $request->cut_off_period,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        // Update accepting_orders status
+        $distributor->accepting_orders = $request->has('accepting_orders') ? true : false;
+        $distributor->save();
+
+        // Debug information after saving
+        Log::info('Updating distributor settings - AFTER', [
+            'updated_cut_off_time' => $distributor->cut_off_time
+        ]);
+
+        return redirect()->route('distributors.profile.orders-settings')->with('status', 'orders-settings-updated');
     }
 }

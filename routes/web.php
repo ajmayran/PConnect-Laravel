@@ -170,9 +170,7 @@ Route::middleware(['auth', 'verified', 'checkRole:retailer', 'check.distributor.
     Route::get('/messages/show/{user}', [RetailerMessageController::class, 'show'])->name('messages.show');
 
     // Product Routes
-    Route::get('/products', [RetailerProductController::class, 'index'])->name('products.index');
     Route::get('/distributors/{id}', [DistributorPageController::class, 'show'])->name('distributor-page');
-    Route::post('/products', [RetailerProductController::class, 'store'])->name('products.store');
     Route::get('/products/{product}', [ProductDescController::class, 'show'])->name('products.show');
     Route::get('/all-products', [AllProductController::class, 'index'])->name('all-product');
     Route::get('/products/{product}', [ProductDescController::class, 'show'])->name('products.show');
@@ -244,6 +242,8 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::put('/profile/update-distributor', [DistributorProfileController::class, 'updateDistributorProfile'])->name('distributors.profile.update.distributor');
     Route::delete('/profile', [DistributorProfileController::class, 'destroy'])->name('distributors.profile.destroy');
     Route::post('/profile/update-password', [DistributorProfileController::class, 'updatePassword'])->name('distributors.profile.update-password');
+    Route::get('/profile/orders-settings', [DistributorProfileController::class, 'ordersSettings'])->name('distributors.profile.orders-settings');
+    Route::put('/profile/orders-settings', [DistributorProfileController::class, 'updateOrdersSettings'])->name('distributors.profile.update.orders');
 
     Route::get('/distributors', [DistributorDashboardController::class, 'index'])->name('distributors.index');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('distributors.dashboard');
@@ -258,7 +258,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::delete('/products/{id}', [DistributorProductController::class, 'destroy'])->name('distributors.products.destroy');
     Route::put('/products/{id}/update-price', [DistributorProductController::class, 'updatePrice'])->name('distributors.products.updatePrice');
     Route::get('/products/list', [DistributorProductController::class, 'getProductsList'])->name('distributors.products.list');
-  
+
     // Order Routes
     Route::get('/orders', [OrderController::class, 'index'])->name('distributors.orders.index');
     Route::post('/orders/{order}/accept', [OrderController::class, 'acceptOrder'])->name('orders.accept');
@@ -309,7 +309,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::put('/inventory/{id}/update-stock', [InventoryController::class, 'updateStock'])->name('distributors.inventory.updateStock');
     Route::get('/inventory/{productId}/batches', [InventoryController::class, 'getBatches'])->name('distributors.inventory.batches');
     Route::get('inventory/history', [InventoryController::class, 'history'])->name('distributors.inventory.history');
-    
+
     // Message Routes
     Route::get('/messages', [DistributorMessageController::class, 'index'])->name('distributors.messages.index');
     Route::post('/messages/send', [DistributorMessageController::class, 'sendMessage'])->name('distributors.messages.send');

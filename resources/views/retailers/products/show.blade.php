@@ -196,6 +196,14 @@
                                         <p class="text-sm font-medium text-gray-600">Products</p>
                                         <p class="text-lg font-bold text-gray-800">{{ $productsCount ?? 0 }}</p>
                                     </div>
+
+                                    <div class="px-3 py-2 text-center rounded-lg ">
+                                        <p class="text-sm font-medium text-gray-600">Cut-off Time</p>
+                                        <p class="text-lg font-bold text-gray-800">
+                                            {{ $product->distributor->cut_off_time ? $product->distributor->formatted_cut_off_time : 'No limit' }}
+                                        </p>
+                                    </div>
+
                                     <div class="px-3 py-2 text-center rounded-lg ">
                                         <p class="text-sm font-medium text-gray-600">Joined</p>
                                         <p class="text-lg font-bold text-gray-800">
@@ -454,7 +462,7 @@
             }
 
             // ---------------------- EVENT LISTENERS ----------------------
-            
+
             if (addToCartBtn && maxStock > 0) {
                 addToCartBtn.addEventListener('click', addToCart);
             }
