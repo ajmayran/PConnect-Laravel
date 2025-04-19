@@ -5,7 +5,6 @@
             position: sticky;
             z-index: 40;
         }
-
         .container {
             position: relative;
             z-index: 30;
@@ -159,7 +158,6 @@
         @endif
     </div>
 
-
     <!-- Main Order Modal -->
     <div id="orderModal"
         class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
@@ -197,6 +195,10 @@
                     class="px-4 py-2 font-medium text-white transition-colors bg-blue-500 rounded-lg hover:bg-blue-600">
                     QR Code
                 </a>
+                <button onclick="openEditOrderModal()"
+                    class="px-4 py-2 font-medium text-white transition-colors bg-yellow-500 rounded-lg hover:bg-yellow-600">
+                    Edit Order
+                </button>
                 <button onclick="closeModal()"
                     class="px-4 py-2 font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">
                     Close
@@ -207,7 +209,7 @@
 
     <!-- Reject Reason Modal -->
     <div id="rejectModal"
-        class="fixed inset-0 flex items-center justify-center hidden bg-black bg-opacity-50 z-60 backdrop-blur-sm">
+        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
         <div class="w-11/12 max-w-md bg-white rounded-lg shadow-xl">
             <div class="p-4 border-b">
                 <h2 class="text-xl font-bold text-gray-800">Reject Order</h2>
@@ -302,6 +304,33 @@
                         </button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Order Modal -->
+    <div id="editOrderModal"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="w-11/12 max-w-2xl bg-white rounded-lg shadow-xl">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-bold text-gray-800">Edit Order</h2>
+            </div>
+            <div class="p-4">
+                <form id="editOrderForm">
+                    <div id="editOrderItems" class="space-y-4">
+                        <!-- Order items will be dynamically populated here -->
+                    </div>
+                    <div class="flex justify-end gap-2 mt-4">
+                        <button type="button" onclick="submitEditOrder()"
+                            class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
+                            Save Changes
+                        </button>
+                        <button type="button" onclick="closeEditOrderModal()"
+                            class="px-4 py-2 text-white bg-gray-600 rounded hover:bg-gray-700">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -464,23 +493,57 @@
                 confirmButtonText: 'Yes, accept it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    document.getElementById('acceptForm').action = "/orders/" + currentOrderId +
-                        "/accept";
-                    document.getElementById('acceptForm').submit();
+                    fetch(`/orders/${currentOrderId}/accept`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    title: 'Success!',
+                                    text: 'Order accepted successfully.',
+                                    icon: 'success',
+                                    confirmButtonColor: '#3085d6'
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                // Show validation error in alert
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: data.message ||
+                                        'An error occurred while accepting the order.',
+                                    icon: 'error',
+                                    confirmButtonColor: '#d33'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: error.message || 'An unexpected error occurred.',
+                                icon: 'error',
+                                confirmButtonColor: '#d33'
+                            });
+                        });
                 }
             });
         }
 
-        // Updated: Hide order modal before opening reject modal
         function openRejectModal() {
             document.getElementById('orderModal').classList.add('hidden');
             document.getElementById('rejectModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
         }
 
-        // Updated: When closing reject modal, restore order modal
         function closeRejectModal() {
             document.getElementById('rejectModal').classList.add('hidden');
             document.getElementById('orderModal').classList.remove('hidden');
+            document.body.style.overflow = ''; // Restore background scrolling
         }
 
         function checkRejectOther(radio) {
@@ -491,6 +554,127 @@
                 otherReasonInput.classList.add('hidden');
                 otherReasonInput.value = '';
             }
+        }
+
+        function openEditOrderModal() {
+            const modal = document.getElementById('editOrderModal');
+            const orderItemsContainer = document.getElementById('editOrderItems');
+            orderItemsContainer.innerHTML = '';
+
+            // Fetch order details and stock availability
+            fetch(`/orders/${currentOrderId}/detail`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        data.orderDetails.forEach(detail => {
+                            const stockLeft = detail.product.stockLeft;
+
+                            orderItemsContainer.innerHTML += `
+                        <div class="flex items-center gap-4">
+                            <div class="flex-1">
+                                <p class="font-medium text-gray-800">${detail.product.product_name}</p>
+                                <p class="text-sm text-gray-600">Stock Left: ${stockLeft}</p>
+                            </div>
+                            <div>
+                                <input type="number" name="order_details[${detail.id}][quantity]"
+                                    value="${detail.quantity}" min="1" max="${stockLeft}"
+                                    class="w-20 px-2 py-1 border rounded">
+                            </div>
+                        </div>
+                    `;
+                        });
+
+                        modal.classList.remove('hidden');
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: data.message || 'Failed to load order details.',
+                            icon: 'error',
+                            confirmButtonColor: '#d33'
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: error.message || 'An unexpected error occurred.',
+                        icon: 'error',
+                        confirmButtonColor: '#d33'
+                    });
+                });
+        }
+
+        function submitEditOrder() {
+            const form = document.getElementById('editOrderForm');
+            const formData = new FormData(form);
+
+            // Convert FormData to JSON object
+            const orderDetails = [];
+            formData.forEach((value, key) => {
+                const match = key.match(
+                /^order_details\[(\d+)\]\[quantity\]$/); // Match keys like "order_details[1][quantity]"
+                if (match) {
+                    const detailId = match[1];
+                    orderDetails.push({
+                        id: detailId,
+                        quantity: parseInt(value),
+                    });
+                }
+            });
+
+            // Ensure orderDetails is not empty
+            if (orderDetails.length === 0) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'No order details found to update.',
+                    icon: 'error',
+                    confirmButtonColor: '#d33'
+                });
+                return;
+            }
+
+            fetch(`/orders/${currentOrderId}/edit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({
+                        order_details: orderDetails
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonColor: '#3085d6'
+                        }).then(() => {
+                            location.reload(); // Refresh the page on success
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: data.message || 'Failed to update order.',
+                            icon: 'error',
+                            confirmButtonColor: '#d33'
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: error.message || 'An unexpected error occurred.',
+                        icon: 'error',
+                        confirmButtonColor: '#d33'
+                    });
+                });
+        }
+
+        function closeEditOrderModal() {
+            document.getElementById('editOrderModal').classList.add('hidden');
         }
 
         function submitRejectOrder() {

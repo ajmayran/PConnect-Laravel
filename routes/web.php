@@ -267,6 +267,8 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::post('/orders/{order}/reject', [OrderController::class, 'rejectOrder'])->name('orders.reject');
     Route::get('/orders/{id}/details', [OrderController::class, 'getOrderDetails'])->name('orders.details');
     Route::post('/toggle-order-acceptance', [OrderController::class, 'toggleOrderAcceptance'])->name('distributors.toggle-order-acceptance');
+    Route::post('/orders/{order}/edit', [OrderController::class, 'editOrderQuantity'])->name('distributors.orders.edit');
+    Route::get('/orders/{order}/detail', [OrderController::class, 'getOrderDetail'])->name('orders.detail');
 
     // Order QR Routes
     Route::get('/orders/{order}/qrcode', [OrderQrController::class, 'showQrCode'])->name('distributors.orders.qrcode');
