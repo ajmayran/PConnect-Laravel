@@ -1,10 +1,23 @@
 <x-distributor-layout>
+    <style>
+        /* This ensures toggle stays within its container during scroll */
+        #navbar {
+            position: sticky;
+            z-index: 40;
+        }
+
+        .container {
+            position: relative;
+            z-index: 30;
+        }
+    </style>
+
     <span class="absolute text-3xl text-white cursor-pointer top-5 left-4 lg:hidden" onclick="toggleSidebar()">
         <i class="px-2 bg-gray-900 rounded-md bi bi-filter-left"></i>
     </span>
 
     <div class="container p-4 mx-auto">
-        <div class="flex items-center justify-between mb-6">
+        <div class="relative flex items-center justify-between mb-6">
             <h1 class="text-2xl font-bold text-left text-gray-800 sm:text-3xl">Orders Management</h1>
 
             <!-- Order Acceptance Toggle -->

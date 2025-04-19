@@ -28,6 +28,8 @@ class AllProductController extends Controller
             $query->where('category_id', $selectedCategory);
         }
 
+        $query->where('price', '>', 0);
+
         // Exclude products from distributors who blocked this retailer
         $query->whereDoesntHave('distributor', function ($query) use ($blockingDistributorIds) {
             $query->whereIn('user_id', $blockingDistributorIds);

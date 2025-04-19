@@ -39,7 +39,7 @@ class DistributorPageController extends Controller
         // Only get products if not blocked
         if (!$isBlocked) {
             $productsQuery = Product::where('distributor_id', $id)
-                ->where('stock_quantity', '>', 0);
+                ->where('price', '>', 0);
 
             if ($selectedCategory !== 'all') {
                 $productsQuery->where('category_id', $selectedCategory);

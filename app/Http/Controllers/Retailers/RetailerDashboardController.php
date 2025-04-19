@@ -34,6 +34,7 @@ class RetailerDashboardController extends Controller
         $products = Product::whereDoesntHave('distributor', function ($query) use ($blockingDistributorIds) {
             $query->whereIn('user_id', $blockingDistributorIds);
         })
+            ->where('price', '>', 0)  // Only show products with a price greater than 0
             ->with('distributor:id,company_name,user_id')  // Optimize queries with eager loading
             ->paginate(15);
 

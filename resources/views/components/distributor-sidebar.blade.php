@@ -1,4 +1,4 @@
-<div id="sidebar" class="fixed top-0 bottom-0 p-2 overflow-y-auto text-center transform bg-gray-900 lg:left-0">
+<div id="sidebar" class="fixed top-0 bottom-0 z-50 p-2 overflow-y-auto text-center transform bg-gray-900 lg:left-0">
     <!-- Sidebar content here -->
     <div class="text-xl text-gray-100">
         <div class="flex items-center px-1 py-2 mt-1">
@@ -60,7 +60,7 @@
     </a>
 
     <a href="{{ route('distributors.inventory.index') }}"
-        class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.inventory.*') ? 'bg-green-600' : 'hover:bg-green-600' }}">
+        class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.inventory.*  ') ? 'bg-green-600' : 'hover:bg-green-600' }}">
         <div class="flex items-center">
             <iconify-icon icon="ic:baseline-inventory-2" class="text-xl icon"></iconify-icon>
             <span class="ml-4 font-normal text-gray-200">Inventory</span>
