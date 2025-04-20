@@ -13,12 +13,12 @@ use Illuminate\Support\Facades\Auth;
 class RetailerActionsController extends Controller
 {
     protected $notificationService;
-    
+
     public function __construct(NotificationService $notificationService)
     {
         $this->notificationService = $notificationService;
     }
-    
+
     public function reportRetailer(Request $request, User $retailer)
     {
         $request->validate([
@@ -51,11 +51,11 @@ class RetailerActionsController extends Controller
     public function toggleBlockRetailer(User $retailer)
     {
         $distributorId = Auth::id();
-        
+
         $existingBlock = BlockedRetailer::where('distributor_id', $distributorId)
             ->where('retailer_id', $retailer->id)
             ->first();
-        
+
         if ($existingBlock) {
             // Unblock
             $existingBlock->delete();
@@ -69,7 +69,18 @@ class RetailerActionsController extends Controller
             ]);
             $message = "Retailer {$retailer->first_name} {$retailer->last_name} has been blocked.";
         }
-        
+
         return redirect()->back()->with('success', $message);
+    }
+
+    public function blockedRetailers()
+    {
+        $distributorId = Auth::id();
+    
+        $blockedRetailers = BlockedRetailer::where('distributor_id', $distributorId)
+            ->with('retailer.retailerProfile')
+            ->paginate(10);
+    
+        return view('distributors.blocking.blocked-retailers', compact('blockedRetailers'));
     }
 }

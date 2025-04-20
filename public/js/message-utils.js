@@ -103,7 +103,7 @@ function setupPusherForMessages() {
 
         // Use Echo to listen on the private channel
         window.Echo.private(`chat.${window.userId}`)
-            .listen('MessageSent', function (data) {
+            .listen('.message.sent', function (data) {
                 console.log('New message received via Echo:', data);
 
                 // Update unread count

@@ -168,6 +168,7 @@ Route::middleware(['auth', 'verified', 'checkRole:retailer', 'check.distributor.
     Route::post('/messages/mark-read', [RetailerMessageController::class, 'markAsRead'])->name('messages.mark-read');
     Route::get('/messages/preview', [RetailerMessageController::class, 'getMessagePreviews'])->name('retailers.messages.preview');
     Route::get('/messages/show/{user}', [RetailerMessageController::class, 'show'])->name('messages.show');
+    Route::post('/messages/delete-conversation', [RetailerMessageController::class, 'deleteConversation'])->name('messages.delete-conversation');
 
     // Product Routes
     Route::get('/distributors/{id}', [DistributorPageController::class, 'show'])->name('distributor-page');
@@ -350,11 +351,12 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::get('/trucks/{truck}/delivery-history', [TruckController::class, 'deliveryHistory'])->name('distributors.trucks.delivery-history');
     Route::post('/move-to-truck', [TruckController::class, 'moveDeliveryToTruck'])->name('distributors.deliveries.move-to-truck');
 
-
-    // Route::get('/distributors/create', [DistributorController::class, 'create'])->name('distributors.create');
-    // Route::post('/distributors', [DistributorController::class, 'store'])->name('distributors.store');
-
-    // Route::get('/approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])->name('auth.approval-waiting');
+    // Blocking routes
+    Route::get('/blocking/blocked-retailers', [RetailerActionsController::class, 'blockedRetailers'])->name('distributors.blocking.blocked-retailers');
+    Route::post('/retailers/{retailer}/block', [RetailerActionsController::class, 'toggleBlockRetailer'])->name('distributors.retailers.block');
+    Route::get('/blocking/blocked-messages', [DistributorMessageController::class, 'blockedMessages'])->name('distributors.blocking.blocked-messages');
+    Route::post('/messages/{retailerId}/block', [DistributorMessageController::class, 'toggleBlockMessages'])->name('distributors.messages.block');
+    Route::delete('/messages/{blockId}/unblock', [DistributorMessageController::class, 'unblockMessages'])->name('distributors.messages.unblock');
 
     // Ticket Routes
     Route::get('/tickets/create', [DistributorTicketController::class, 'create'])->name('distributors.tickets.create');

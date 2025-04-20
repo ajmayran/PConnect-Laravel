@@ -144,4 +144,24 @@ class User extends Authenticatable implements MustVerifyEmail
             ->where('distributor_id', $distributorId)
             ->exists();
     }
+
+    public function blockedRetailers()
+    {
+        return $this->hasMany(BlockedRetailer::class, 'distributor_id');
+    }
+
+    public function blockedByDistributors()
+    {
+        return $this->hasMany(BlockedRetailer::class, 'retailer_id');
+    }
+
+    public function blockedMessages()
+    {
+        return $this->hasMany(BlockedMessage::class, 'retailer_id');
+    }
+
+    public function blockedMessagesBy()
+    {
+        return $this->hasMany(BlockedMessage::class, 'distributor_id');
+    }
 }

@@ -234,4 +234,26 @@ class RetailerMessageController extends Controller
     {
         return redirect()->route('retailers.messages.index', ['distributor' => $userId]);
     }
+
+    public function deleteConversation(Request $request)
+    {
+        $request->validate([
+            'distributor_id' => 'required|exists:users,id', // Changed from distributors,id to users,id
+        ]);
+
+        $retailerId = Auth::id();
+        $distributorId = $request->distributor_id;
+
+        // Delete all messages between these users
+        Message::where(function ($query) use ($retailerId, $distributorId) {
+            $query->where('sender_id', $retailerId)
+                ->where('receiver_id', $distributorId);
+        })->orWhere(function ($query) use ($retailerId, $distributorId) {
+            $query->where('sender_id', $distributorId)
+                ->where('receiver_id', $retailerId);
+        })->delete();
+
+        return redirect()->route('retailers.messages.index')
+            ->with('success', 'Conversation deleted successfully');
+    }
 }

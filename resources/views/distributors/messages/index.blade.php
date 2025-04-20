@@ -1,5 +1,13 @@
 <x-distributor-layout>
-    
+    @php
+        // Define $isBlocked at the template level so it's available everywhere
+$isBlocked = isset($currentRetailer)
+    ? App\Models\BlockedMessage::where('distributor_id', Auth::id())
+        ->where('retailer_id', $currentRetailer->id)
+                ->exists()
+            : false;
+    @endphp
+
     <div class="py-6">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
@@ -64,29 +72,58 @@
                         <div class="flex flex-col w-3/4 bg-gray-50">
                             @if ($currentRetailer)
                                 <!-- Chat Header -->
-                                <div class="flex items-center p-4 bg-white border-b border-gray-200">
-                                    <div class="flex-shrink-0">
-                                        @if ($currentRetailer->retailerProfile->profile_picture)
-                                            <img src="{{ Storage::url($currentRetailer->retailerProfile->profile_picture) }}"
-                                                alt="{{ $currentRetailer->first_name }}"
-                                                class="object-cover w-10 h-10 rounded-full">
-                                        @else
-                                            <div
-                                                class="flex items-center justify-center w-10 h-10 text-gray-600 bg-gray-200 rounded-full">
-                                                {{ strtoupper(substr($currentRetailer->first_name, 0, 2)) }}
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="ml-3">
-                                        <p class="text-sm font-medium text-gray-900">
-                                            {{ $currentRetailer->first_name }} {{ $currentRetailer->last_name }}
-                                        </p>
-                                        <p class="text-xs text-gray-500">
-                                            {{ $currentRetailer->retailerProfile->business_name }}
-                                            @if ($currentRetailer->retailerProfile->phone)
-                                                • {{ $currentRetailer->retailerProfile->phone }}
+                                <div class="flex items-center justify-between p-4 bg-white border-b border-gray-200">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0">
+                                            @if ($currentRetailer->retailerProfile->profile_picture)
+                                                <img src="{{ Storage::url($currentRetailer->retailerProfile->profile_picture) }}"
+                                                    alt="{{ $currentRetailer->first_name }}"
+                                                    class="object-cover w-10 h-10 rounded-full">
+                                            @else
+                                                <div
+                                                    class="flex items-center justify-center w-10 h-10 text-gray-600 bg-gray-200 rounded-full">
+                                                    {{ strtoupper(substr($currentRetailer->first_name, 0, 2)) }}
+                                                </div>
                                             @endif
-                                        </p>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm font-medium text-gray-900">
+                                                {{ $currentRetailer->first_name }} {{ $currentRetailer->last_name }}
+                                            </p>
+                                            <p class="text-xs text-gray-500">
+                                                {{ $currentRetailer->retailerProfile->business_name }}
+                                                @if ($currentRetailer->retailerProfile->phone)
+                                                    • {{ $currentRetailer->retailerProfile->phone }}
+                                                @endif
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- More Options Menu -->
+                                    <div x-data="{ open: false }">
+                                        <button @click="open = !open"
+                                            class="p-2 text-gray-500 hover:text-gray-700 focus:outline-none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20"
+                                                fill="currentColor">
+                                                <path
+                                                    d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                            </svg>
+                                        </button>
+
+                                        <!-- Dropdown Menu -->
+                                        <div x-show="open" @click.away="open = false"
+                                            class="absolute right-0 z-10 w-48 py-1 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+
+                                            <a href="{{ route('distributors.retailers.show', $currentRetailer->id) }}"
+                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                View Profile
+                                            </a>
+
+                                            <button type="button" onclick="confirmBlockMessages()"
+                                                class="block w-full px-4 py-2 text-sm text-left {{ $isBlocked ? 'text-green-600' : 'text-red-600' }} hover:bg-gray-100">
+                                                {{ $isBlocked ? 'Unblock Messages' : 'Block Messages' }}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -153,7 +190,8 @@
                                             d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                     </svg>
                                     <h3 class="mb-1 text-lg font-medium text-gray-900">No conversation selected</h3>
-                                    <p class="text-gray-500">Select a retailer from the list or search for new retailers
+                                    <p class="text-gray-500">Select a retailer from the list or search for new
+                                        retailers
                                     </p>
                                 </div>
                             @endif
@@ -240,7 +278,7 @@
                     console.log('Setting up Echo listener in distributor messages view');
 
                     window.Echo.private(`chat.{{ Auth::id() }}`)
-                        .listen('MessageSent', function(data) {
+                        .listen('.message.sent', function(data) {
                             console.log('Received message event via Echo:', data);
 
                             if (messagesContainer) {
@@ -347,6 +385,96 @@
                     setTimeout(checkEcho, 1000);
                 }
             }, 500);
+
+            function confirmBlockMessages() {
+                const retailerName =
+                    "{{ isset($currentRetailer) ? $currentRetailer->first_name . ' ' . $currentRetailer->last_name : '' }}";
+                const retailerId = {{ isset($currentRetailer) ? $currentRetailer->id : 0 }};
+                const isBlocked = {{ $isBlocked ? 'true' : 'false' }};
+
+                if (isBlocked) {
+                    // Confirmation for unblocking
+                    Swal.fire({
+                        title: 'Unblock Messages',
+                        html: `Are you sure you want to unblock messages from <strong>${retailerName}</strong>?<br><br>
+            You will start receiving messages from this retailer again.`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#10B981',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Yes, unblock messages',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Create a form and submit it
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = `/messages/${retailerId}/block`; // <-- Fix the URL format
+
+                            // Add CSRF token
+                            const csrfToken = document.createElement('input');
+                            csrfToken.type = 'hidden';
+                            csrfToken.name = '_token';
+                            csrfToken.value = '{{ csrf_token() }}';
+                            form.appendChild(csrfToken);
+
+                            document.body.appendChild(form);
+                            form.submit();
+
+                            // Redirect to messages index without the retailer parameter
+                            setTimeout(function() {
+                                window.location.href = "{{ route('distributors.messages.index') }}";
+                            }, 300);
+                        }
+                    });
+                } else {
+                    // Confirmation for blocking
+                    Swal.fire({
+                        title: 'Block Messages',
+                        html: `Are you sure you want to block messages from <strong>${retailerName}</strong>?<br><br>
+            You will no longer receive messages from this retailer.`,
+                        icon: 'warning',
+                        input: 'text',
+                        inputPlaceholder: 'Reason for blocking (optional)',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Block Messages',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Create a form and submit it
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = `/messages/${retailerId}/block`; // <-- Fix the URL format
+
+                            // Add CSRF token
+                            const csrfToken = document.createElement('input');
+                            csrfToken.type = 'hidden';
+                            csrfToken.name = '_token';
+                            csrfToken.value = '{{ csrf_token() }}';
+                            form.appendChild(csrfToken);
+
+                            // Add reason if provided
+                            if (result.value) {
+                                const reasonInput = document.createElement('input');
+                                reasonInput.type = 'hidden';
+                                reasonInput.name = 'reason';
+                                reasonInput.value = result.value;
+                                form.appendChild(reasonInput);
+                            }
+
+                            document.body.appendChild(form);
+                            form.submit();
+
+                            // Important: Redirect to the messages index without any retailer parameter
+                            setTimeout(function() {
+                                window.location.href = "{{ route('distributors.messages.index') }}";
+                            }, 300);
+                        }
+                    });
+                }
+            }
         </script>
     @endpush
 </x-distributor-layout>

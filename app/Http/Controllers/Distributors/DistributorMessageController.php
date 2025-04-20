@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Distributors;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\Message;
+use App\Models\BlockedMessage;
 use App\Events\MessageSent;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -20,6 +21,9 @@ class DistributorMessageController extends Controller
         // Get retailers who have exchanged messages with this distributor
         $retailers = User::where('user_type', 'retailer')
             ->whereHas('retailerProfile')
+            ->whereDoesntHave('blockedMessages', function ($query) use ($authUserId) {
+                $query->where('distributor_id', $authUserId);
+            })
             ->where(function ($query) use ($authUserId) {
                 // Either sent messages to this distributor
                 $query->whereHas('sentMessages', function ($q) use ($authUserId) {
@@ -30,7 +34,6 @@ class DistributorMessageController extends Controller
                         $q->where('sender_id', $authUserId);
                     });
             })
-            ->with('retailerProfile')
             ->get();
 
         // Add unread message count for each retailer
@@ -114,6 +117,21 @@ class DistributorMessageController extends Controller
             'message' => 'required|string'
         ]);
 
+        $senderId = Auth::id();
+        $receiverId = $request->receiver_id;
+
+        // Check if messages from this retailer are blocked
+        $isBlocked = BlockedMessage::where('distributor_id', $senderId)
+            ->where('retailer_id', $receiverId)
+            ->exists();
+
+        if ($isBlocked) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have blocked messages from this retailer. Please unblock them to send messages.'
+            ], 403);
+        }
+
         $message = Message::create([
             'sender_id' => Auth::id(),
             'receiver_id' => $request->receiver_id,
@@ -167,5 +185,52 @@ class DistributorMessageController extends Controller
 
         // Redirect to messages index with retailer parameter
         return redirect()->route('distributors.messages.index', ['retailer' => $retailerId]);
+    }
+
+    public function blockedMessages()
+    {
+        $distributorId = Auth::id();
+
+        $blockedMessages = BlockedMessage::where('distributor_id', $distributorId)
+            ->with('retailer.retailerProfile')
+            ->paginate(10);
+
+        return view('distributors.blocking.blocked-messages', compact('blockedMessages'));
+    }
+
+    public function toggleBlockMessages(Request $request, $retailerId)
+    {
+        $distributorId = Auth::id();
+
+        $existingBlock = BlockedMessage::where('distributor_id', $distributorId)
+            ->where('retailer_id', $retailerId)
+            ->first();
+
+        if ($existingBlock) {
+            // Unblock
+            $existingBlock->delete();
+            $message = "Messages from this retailer have been unblocked.";
+        } else {
+            // Block
+            BlockedMessage::create([
+                'distributor_id' => $distributorId,
+                'retailer_id' => $retailerId,
+                'reason' => $request->input('reason', 'Blocked by distributor')
+            ]);
+            $message = "Messages from this retailer have been blocked.";
+        }
+
+        return redirect()->back()->with('success', $message);
+    }
+
+    public function unblockMessages($blockId)
+    {
+        $block = BlockedMessage::where('id', $blockId)
+            ->where('distributor_id', Auth::id())
+            ->firstOrFail();
+
+        $block->delete();
+
+        return redirect()->back()->with('success', 'Messages from this retailer have been unblocked.');
     }
 }
