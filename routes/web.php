@@ -25,6 +25,7 @@ use App\Http\Controllers\Distributors\OrderController;
 use App\Http\Controllers\Distributors\TruckController;
 use App\Http\Controllers\Retailers\CheckoutController;
 use App\Http\Controllers\Retailers\RetailerController;
+use App\Http\Controllers\Admin\AdminRetailerController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Distributors\ReturnController;
 use App\Http\Controllers\Admin\AdminDashboardController;
@@ -54,6 +55,7 @@ use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Distributors\RetailerActionsController;
 use App\Http\Controllers\Distributors\RetailerProfileController;
 use App\Http\Controllers\Distributors\DistributorNotifController;
+use App\Http\Controllers\Retailers\RetailerCredentialsController;
 use App\Http\Controllers\Distributors\DistributorTicketController;
 use App\Http\Controllers\Distributors\DistributorMessageController;
 use App\Http\Controllers\Distributors\DistributorProductController;
@@ -101,6 +103,11 @@ Route::get('/', function () {
     return view('index');
 });
 
+Route::middleware(['auth', 'verified', 'checkRole:retailer'])->name('retailers.')->prefix('retailers')->group(function () {
+    Route::get('/credentials/reupload', [RetailerCredentialsController::class, 'showReuploadForm'])->name('credentials.reupload');
+    Route::post('/credentials/reupload', [RetailerCredentialsController::class, 'processReupload'])->name('credentials.process-reupload');
+});
+
 
 // Admin Routes
 Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function () {
@@ -139,12 +146,18 @@ Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function (
 
     // Retailer Routes
     Route::delete('/admin/product/{id}/remove', [AdminProductController::class, 'removeProduct'])->name('removeProduct');
+    Route::get('/admin/dashboard/chart-data', [AdminDashboardController::class, 'getChartData'])->name('dashboard.chart-data');
+
+    Route::get('admin/retailers/credentials', [AdminRetailerController::class, 'retailerCredentials'])->name('retailers.credentials');
+    Route::post('admin/retailers/{id}/approve-credentials', [AdminRetailerController::class, 'approveCredentials'])->name('retailers.approve-credentials');
+    Route::post('admin/retailers/{id}/reject-credentials', [AdminRetailerController::class, 'rejectCredentials'])->name('retailers.reject-credentials');
+    Route::post('admin/retailers/{id}/reject-credentials', [AdminRetailerController::class, 'rejectCredential'])->name('retailers.reject-credentials');
 });
 
 
 
 // Retailer Routes
-Route::middleware(['auth', 'verified', 'checkRole:retailer', 'check.distributor.block'])->name('retailers.')->prefix('retailers')->group(function () {
+Route::middleware(['auth', 'verified', 'checkRole:retailer', 'check.distributor.block', 'check.retailer.credentials'])->name('retailers.')->prefix('retailers')->group(function () {
     Route::get('/dashboard', [RetailerDashboardController::class, 'index'])->name('dashboard');
 
     // Ticket Routes
