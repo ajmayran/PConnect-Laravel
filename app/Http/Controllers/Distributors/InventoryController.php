@@ -14,10 +14,13 @@ class InventoryController extends Controller
 {
     public function index(Request $request)
     {
+
+        session()->forget('restock_alert_dismissed');
+        
         $search = $request->input('search');
         $query = Product::where('distributor_id', Auth::user()->distributor->id)
             ->select('id', 'product_name', 'image', 'category_id',   DB::raw('(SELECT MAX(stock_updated_at) FROM stocks WHERE stocks.product_id = products.id) as stock_updated_at'))
-            
+
             ->withCount(['stocks as stock_in' => function ($query) {
                 $query->where('type', 'in');
             }])
@@ -326,5 +329,53 @@ class InventoryController extends Controller
         }
 
         return view('distributors.inventory.history', compact('stockMovements', 'products'));
+    }
+
+    public function toggleRestockAlert(Request $request)
+    {
+        $enabled = $request->input('enabled', true);
+        session(['restock_alert_enabled' => $enabled]);
+
+        return response()->json([
+            'success' => true,
+            'enabled' => $enabled
+        ]);
+    }
+
+    public function dismissRestockAlert()
+    {
+        session(['restock_alert_dismissed' => true]);
+
+        return response()->json([
+            'success' => true
+        ]);
+    }
+
+    public function checkLowStock()
+    {
+        $distributorId = Auth::user()->distributor->id;
+
+        // Define low stock threshold (e.g., 10 units)
+        $threshold = 10;
+
+        // Get products with low stock
+        $lowStockProducts = Product::where('distributor_id', $distributorId)
+            ->where(function ($query) use ($threshold) {
+                // For non-batch products - include products with exactly 0 quantity
+                $query->whereRaw('(SELECT COALESCE(SUM(CASE WHEN type = "in" THEN quantity ELSE -quantity END), 0) FROM stocks WHERE stocks.product_id = products.id) <= ?', [$threshold]);
+            })
+            ->orWhere(function ($query) use ($threshold, $distributorId) {
+                // For batch-managed products - include products with empty batches or low quantity batches
+                $query->where('distributor_id', $distributorId)
+                    ->where(function ($q) use ($threshold) {
+                        $q->doesntHave('batches') // Products with no batches at all (0 quantity)
+                            ->orWhereHas('batches', function ($bq) use ($threshold) {
+                                $bq->havingRaw('SUM(quantity) <= ?', [$threshold]);
+                            });
+                    });
+            })
+            ->count();
+
+        return $lowStockProducts;
     }
 }

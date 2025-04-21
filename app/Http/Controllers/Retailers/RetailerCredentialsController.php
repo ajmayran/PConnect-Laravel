@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Retailers;
 
-use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Models\Credential;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -21,13 +22,15 @@ class RetailerCredentialsController extends Controller
 
     public function processReupload(Request $request)
     {
-        $user = \App\Models\User::find(Auth::id());
-        
+        // Get a fresh instance of the user from database
+        $user = User::find(Auth::id());
+
         // Check if user is already in pending status
         if ($user->status === 'pending') {
-            return redirect()->back()->with('warning', 'Your credentials are already submitted and awaiting approval. Please wait for admin review.');
+            return redirect()->route('retailers.credentials.reupload')
+                ->with('warning', 'Your credentials are already submitted and awaiting approval. Please wait for admin review.');
         }
-        
+
         $request->validate([
             'credentials' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120', // 5MB max
         ]);
@@ -48,13 +51,13 @@ class RetailerCredentialsController extends Controller
             ]);
 
             // Set credentials status to pending for admin review
-            $user->fill([
+            $user->update([
                 'status' => 'pending',
                 'rejection_reason' => null // Clear previous rejection reason
             ]);
-            $user->save();
         }
 
-        return redirect()->back()->with('success', 'Your credentials have been submitted and are pending verification. You will be notified once they are approved.');
+        return redirect()->route('retailers.credentials.reupload')
+            ->with('success', 'Your credentials have been submitted and are pending verification. You will be notified once they are approved.');
     }
 }

@@ -66,20 +66,16 @@ use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 
 Route::middleware('auth')->group(function () {
     // Email verification routes - these are already in your file
-    Route::get('verify-email', EmailVerificationPromptController::class)
-        ->name('verification.notice');
+    Route::get('verify-email', EmailVerificationPromptController::class)->name('verification.notice');
 
-    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
-        ->middleware(['signed', 'throttle:6,1'])
-        ->name('verification.verify');
+    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
 
-    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
-        ->middleware('throttle:6,1')
-        ->name('verification.send');
+    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])->middleware('throttle:6,1')->name('verification.send');
 
     // Also add the approval-waiting route for authenticated users
-    Route::get('approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])
-        ->name('auth.approval-waiting');
+    Route::get('approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])->name('auth.approval-waiting');
+
+    Route::get('application-rejected', [RegisteredUserController::class, 'applicationRejected'])->name('auth.application-rejected');
 });
 
 Route::post('/broadcasting/auth', [BroadcastAuthController::class, 'authenticate'])
@@ -327,6 +323,8 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::put('/inventory/{id}/update-stock', [InventoryController::class, 'updateStock'])->name('distributors.inventory.updateStock');
     Route::get('/inventory/{productId}/batches', [InventoryController::class, 'getBatches'])->name('distributors.inventory.batches');
     Route::get('inventory/history', [InventoryController::class, 'history'])->name('distributors.inventory.history');
+    Route::post('/inventory/toggle-restock-alert', [InventoryController::class, 'toggleRestockAlert'])->name('distributors.inventory.toggle-restock-alert');
+    Route::post('/inventory/dismiss-restock-alert', [InventoryController::class, 'dismissRestockAlert'])->name('distributors.inventory.dismiss-restock-alert');
 
     // Message Routes
     Route::get('/messages', [DistributorMessageController::class, 'index'])->name('distributors.messages.index');

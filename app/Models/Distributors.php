@@ -31,14 +31,25 @@ class Distributors extends Model
         if (!$this->barangay) {
             return 'N/A';
         }
-
+    
         static $barangays = [];
-
+    
         if (!isset($barangays[$this->barangay])) {
+         
             $barangay = DB::table('barangays')->where('code', $this->barangay)->first();
-            $barangays[$this->barangay] = $barangay ? $barangay->name : 'Unknown';
+            if (!$barangay) {
+                $barangay = DB::table('barangays')->where('name', $this->barangay)->first();
+                
+                // If found by name, we should update the record to use the code instead
+                if ($barangay) {
+                    \Illuminate\Support\Facades\Log::info("Barangay found by name: {$this->barangay}, code should be: {$barangay->code}");
+                    // You could update the record here if needed
+                }
+            }
+            
+            $barangays[$this->barangay] = $barangay ? $barangay->name : $this->barangay;
         }
-
+    
         return $barangays[$this->barangay];
     }
 

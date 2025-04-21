@@ -21,7 +21,23 @@
                     </div>
                 </form>
             </div>
-            <div>
+            <div class="flex items-center gap-3">
+                <!-- Restock Alert Toggle Switch -->
+                <div class="flex items-center gap-2">
+                    <label for="restockAlert" class="flex items-center cursor-pointer">
+                        <div class="relative">
+                            <input type="checkbox" id="restockAlert" class="sr-only"
+                                {{ session('restock_alert_enabled', true) ? 'checked' : '' }}
+                                onchange="toggleRestockAlert(this.checked)">
+                            <div class="block w-10 h-6 bg-gray-300 rounded-full"></div>
+                            <div class="absolute w-4 h-4 transition bg-white rounded-full dot left-1 top-1"></div>
+                        </div>
+                        <div class="ml-2 text-sm font-medium text-gray-700">
+                            <span id="restockAlertLabel">Restock Alerts</span>
+                        </div>
+                    </label>
+                </div>
+
                 <a href="{{ route('distributors.inventory.history') }}"
                     class="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
@@ -539,8 +555,8 @@
                     // For Stock In: show fields for new batch details and set required
                     batchInFields.classList.remove('hidden');
                     if (expiryDateField) expiryDateField.setAttribute('required', '');
-                    
-                    batchNumberContainer.innerHTML = ''; 
+
+                    batchNumberContainer.innerHTML = '';
 
                 } else {
                     // For Stock Out: hide batch creation fields and remove required
@@ -593,13 +609,13 @@
                 <select name="batch_number" id="batchNumber" class="w-full px-3 py-2 border rounded-md" required>
             `;
 
-                                data.batches.forEach(batch => {
-                        batchOptions += `
+                        data.batches.forEach(batch => {
+                            batchOptions += `
                             <option value="${batch.batch_number}" data-quantity="${batch.quantity}">
                                 Batch ${batch.batch_number} - Qty: ${batch.quantity} - Exp: ${batch.formatted_expiry_date}
                             </option>
                         `;
-                    });
+                        });
 
                         batchOptions += '</select>';
                         batchNumberContainer.innerHTML = batchOptions;
@@ -803,6 +819,64 @@
                 } else {
                     console.error(`Last updated cell not found for product ${productId}`);
                 }
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                // Setup the toggle switch styling
+                const toggle = document.getElementById('restockAlert');
+                const dot = document.querySelector('.dot');
+
+                function updateToggleStyle(checked) {
+                    if (checked) {
+                        toggle.parentElement.querySelector('.block').classList.remove('bg-gray-300');
+                        toggle.parentElement.querySelector('.block').classList.add('bg-green-500');
+                        dot.classList.add('transform', 'translate-x-4');
+                    } else {
+                        toggle.parentElement.querySelector('.block').classList.add('bg-gray-300');
+                        toggle.parentElement.querySelector('.block').classList.remove('bg-green-500');
+                        dot.classList.remove('transform', 'translate-x-4');
+                    }
+                }
+
+                // Initial style based on checked state
+                updateToggleStyle(toggle.checked);
+
+                // Update style on change
+                toggle.addEventListener('change', function() {
+                    updateToggleStyle(this.checked);
+                });
+            });
+
+            function toggleRestockAlert(enabled) {
+                fetch('{{ route("distributors.inventory.toggle-restock-alert") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            enabled
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Notification that the setting was saved
+                            const message = enabled ? 'Restock alerts enabled' : 'Restock alerts disabled';
+
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: message,
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true
+                            });
+                        }
+                    })
+                    .catch(error => console.error('Error updating restock alert setting:', error));
             }
         </script>
     @endpush

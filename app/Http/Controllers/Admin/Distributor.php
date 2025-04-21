@@ -120,4 +120,5 @@ class Distributor extends Controller
 
         return view('admin.distributors.view-information', compact('distributor'));
     }
+    
 }
