@@ -9,6 +9,25 @@
             position: relative;
             z-index: 30;
         }
+        /* Mobile responsive adjustments */
+        @media (max-width: 640px) {
+            .orders-table th, .orders-table td {
+                font-size: 0.75rem;
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+            }
+            .mobile-small-text {
+                font-size: 0.75rem;
+            }
+        }
+        /* Fix for scroll issues on status tabs */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 
     <span class="absolute text-3xl text-white cursor-pointer top-5 left-4 lg:hidden" onclick="toggleSidebar()">
@@ -17,24 +36,24 @@
 
     <div class="container p-4 mx-auto">
         <div class="relative flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-bold text-left text-gray-800 sm:text-3xl">Orders Management</h1>
+            <h1 class="text-xl font-bold text-left text-gray-800 sm:text-2xl md:text-3xl">Orders Management</h1>
 
             <!-- Order Acceptance Toggle -->
-            <div class="flex items-center gap-3">
-                <span class="text-sm font-medium text-gray-700">Accept New Orders:</span>
+            <div class="flex items-center gap-1 sm:gap-3">
+                <span class="text-xs sm:text-sm font-medium text-gray-700">Accept Orders:</span>
                 <label class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" id="orderToggle" class="sr-only peer"
                         {{ Auth::user()->distributor->accepting_orders ? 'checked' : '' }}>
                     <div
-                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 
+                        class="w-9 h-5 sm:w-11 sm:h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 
                                peer-focus:ring-blue-300 rounded-full peer 
                                peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full 
                                peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] 
                                after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full 
-                               after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600">
+                               after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-green-600">
                     </div>
                 </label>
-                <div id="statusIndicator" class="text-sm font-medium"></div>
+                <div id="statusIndicator" class="text-xs sm:text-sm font-medium"></div>
             </div>
         </div>
 
@@ -46,10 +65,10 @@
                     <div class="relative flex">
                         <input type="text" name="search" value="{{ request('search') }}"
                             placeholder="Search orders..."
-                            class="w-full py-2 pl-4 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none">
+                            class="w-full py-1.5 sm:py-2 pl-3 sm:pl-4 pr-8 sm:pr-10 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none">
                         <button type="submit"
-                            class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-green-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                            class="absolute inset-y-0 right-0 flex items-center px-2 sm:px-3 text-gray-500 hover:text-green-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -61,58 +80,60 @@
         </div>
 
         @if (request('status') === 'processing')
-            <div class="flex justify-end">
+            <div class="flex justify-end mb-2">
                 <button onclick="openBatchQrModal()"
-                    class="flex gap-2 px-4 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-600">
-                    <iconify-icon icon="mdi:qrcode" class="text-2xl icon"></iconify-icon> Generate QR Codes
+                    class="flex gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white bg-blue-500 rounded-lg hover:bg-blue-600">
+                    <iconify-icon icon="mdi:qrcode" class="text-xl sm:text-2xl icon"></iconify-icon> Generate QR Codes
                 </button>
             </div>
         @endif
 
         @if (request('search'))
-            <div class="mb-4">
+            <div class="mb-3">
                 <div class="flex items-center">
-                    <p class="text-gray-600">Search results for: <span
+                    <p class="text-xs sm:text-sm text-gray-600">Search results for: <span
                             class="font-bold">"{{ request('search') }}"</span></p>
                     <a href="{{ route('distributors.orders.index', ['status' => request('status', 'pending')]) }}"
-                        class="ml-3 text-sm text-red-500 hover:underline">
-                        Clear search
+                        class="ml-2 text-xs text-red-500 hover:underline">
+                        Clear
                     </a>
                 </div>
             </div>
         @endif
 
         <!-- Order Status Tabs -->
-        <div class="flex mb-4 border-b">
-            <a href="?status=pending{{ request('search') ? '&search=' . request('search') : '' }}"
-                class="px-4 py-2 -mb-px font-semibold 
-                      @if (request('status') === 'pending' || !request('status')) text-green-500 border-green-500 
-                      @else text-gray-600 border-transparent @endif 
-                      border-b-2">
-                Pending
-            </a>
-            <a href="?status=processing{{ request('search') ? '&search=' . request('search') : '' }}"
-                class="px-4 py-2 -mb-px font-semibold 
-                      @if (request('status') === 'processing') text-green-500 border-green-500
-                      @else text-gray-600 border-transparent @endif  
-                      border-b-2">
-                Processing
-            </a>
+        <div class="mb-4 overflow-x-auto border-b scrollbar-hide">
+            <div class="flex min-w-max">
+                <a href="?status=pending{{ request('search') ? '&search=' . request('search') : '' }}"
+                    class="px-2 sm:px-4 py-1.5 sm:py-2 -mb-px text-xs sm:text-sm font-semibold 
+                          @if (request('status') === 'pending' || !request('status')) text-green-500 border-green-500 
+                          @else text-gray-600 border-transparent @endif 
+                          border-b-2">
+                    Pending
+                </a>
+                <a href="?status=processing{{ request('search') ? '&search=' . request('search') : '' }}"
+                    class="px-2 sm:px-4 py-1.5 sm:py-2 -mb-px text-xs sm:text-sm font-semibold 
+                          @if (request('status') === 'processing') text-green-500 border-green-500
+                          @else text-gray-600 border-transparent @endif  
+                          border-b-2">
+                    Processing
+                </a>
+            </div>
         </div>
 
         @if ($orders->isEmpty())
-            <div class="p-8 text-center bg-white rounded-lg shadow-sm">
-                <p class="text-gray-600 sm:text-lg">No orders found.</p>
+            <div class="p-6 text-center bg-white rounded-lg shadow-sm">
+                <p class="text-sm sm:text-base text-gray-600">No orders found.</p>
             </div>
         @else
             <div class="overflow-x-auto bg-white rounded-lg shadow-sm">
-                <table class="min-w-full text-sm divide-y divide-gray-200">
+                <table class="min-w-full text-xs sm:text-sm divide-y divide-gray-200 orders-table">
                     <thead>
                         <tr class="bg-gray-50">
-                            <th class="px-4 py-3 font-medium text-left text-gray-700">Order ID</th>
-                            <th class="px-4 py-3 font-medium text-left text-gray-700">Retailer Name</th>
-                            <th class="px-4 py-3 font-medium text-left text-gray-700">Total Amount</th>
-                            <th class="px-4 py-3 font-medium text-left text-gray-700">Order Date</th>
+                            <th class="px-2 sm:px-4 py-2 sm:py-3 font-medium text-left text-gray-700">Order ID</th>
+                            <th class="px-2 sm:px-4 py-2 sm:py-3 font-medium text-left text-gray-700">Retailer</th>
+                            <th class="px-2 sm:px-4 py-2 sm:py-3 font-medium text-left text-gray-700">Amount</th>
+                            <th class="px-2 sm:px-4 py-2 sm:py-3 font-medium text-left text-gray-700">Date</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
@@ -123,26 +144,25 @@
                                 data-delivery-address="{{ $order->orderDetails->first()->delivery_address ?? '' }}"
                                 data-created-at="{{ $order->created_at->setTimezone('Asia/Manila')->format('F d, Y h:i A') }}"
                                 class="transition-colors cursor-pointer hover:bg-gray-50">
-                                <td class="px-4 py-3">{{ $order->formatted_order_id }}</td>
-                                <td class="px-4 py-3">
+                                <td class="px-2 sm:px-4 py-2 sm:py-3">{{ $order->formatted_order_id }}</td>
+                                <td class="px-2 sm:px-4 py-2 sm:py-3">
                                     {{ $order->user->first_name }} {{ $order->user->last_name }}
                                 </td>
-                                <td class="px-4 py-3 font-medium text-blue-600">
+                                <td class="px-2 sm:px-4 py-2 sm:py-3 font-medium text-blue-600">
                                     ₱{{ number_format(optional($order->orderDetails)->sum('subtotal') ?: 0, 2) }}
                                 </td>
-                                <td class="px-4 py-3">
-                                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                                        <span
-                                            class="font-medium text-gray-700">{{ $order->created_at->format('F d, Y') }}</span>
-                                        <span
-                                            class="px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
+                                <td class="px-2 sm:px-4 py-2 sm:py-3">
+                                    <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+                                        <span class="font-medium text-gray-700 mobile-small-text">
+                                            {{ $order->created_at->format('M d, Y') }}
+                                        </span>
+                                        <span class="px-1.5 py-0.5 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
                                             {{ $order->created_at->setTimezone('Asia/Manila')->format('h:i A') }}
                                         </span>
 
                                         @if (request('status') === 'processing' && $order->status_updated_at)
-                                            <span
-                                                class="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full">
-                                                Accepted: {{ $order->status_updated_at->format('M d, Y') }}
+                                            <span class="px-1.5 py-0.5 text-xs font-medium text-green-800 bg-green-100 rounded-full">
+                                                Accepted: {{ $order->status_updated_at->format('M d') }}
                                             </span>
                                         @endif
                                     </div>
@@ -152,7 +172,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="flex justify-end mt-6">
+            <div class="flex justify-end mt-4">
                 {{ $orders->links() }}
             </div>
         @endif
@@ -163,44 +183,43 @@
         class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
         <div class="w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl md:w-3/4 sm:w-3/4">
             <!-- Modal Header -->
-            <div class="sticky top-0 z-10 flex items-center justify-between p-4 bg-white border-b">
-                <h2 class="text-xl font-bold text-gray-800" id="modalTitle">Order Details</h2>
+            <div class="sticky top-0 z-10 flex items-center justify-between p-3 sm:p-4 bg-white border-b">
+                <h2 class="text-lg sm:text-xl font-bold text-gray-800" id="modalTitle">Order Details</h2>
                 <button onclick="closeModal()"
-                    class="p-2 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                        </path>
+                    class="p-1 sm:p-2 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
 
-            <div id="modalContent" class="p-6">
+            <div id="modalContent" class="p-4 sm:p-6">
                 <!-- Modal Content (Products and retailer profile) is generated dynamically -->
             </div>
 
             <!-- Modal Footer with Accept, Reject, and Close buttons -->
-            <div class="sticky bottom-0 flex justify-end gap-4 p-4 bg-white border-t">
-                <div id="actionButtons">
+            <div class="sticky bottom-0 flex flex-wrap justify-end gap-2 sm:gap-4 p-3 sm:p-4 bg-white border-t">
+                <div id="actionButtons" class="flex gap-2">
                     <button onclick="acceptOrder()"
-                        class="px-4 py-2 font-medium text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700">
+                        class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700">
                         Accept
                     </button>
                     <button onclick="openRejectModal()"
-                        class="px-4 py-2 font-medium text-white transition-colors bg-red-600 rounded-lg hover:bg-red-700">
+                        class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-white transition-colors bg-red-600 rounded-lg hover:bg-red-700">
                         Reject
                     </button>
                 </div>
                 <!-- Add QR Code Button -->
                 <a id="qrCodeButton" href="#"
-                    class="px-4 py-2 font-medium text-white transition-colors bg-blue-500 rounded-lg hover:bg-blue-600">
+                    class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-white transition-colors bg-blue-500 rounded-lg hover:bg-blue-600">
                     QR Code
                 </a>
                 <button onclick="openEditOrderModal()"
-                    class="px-4 py-2 font-medium text-white transition-colors bg-yellow-500 rounded-lg hover:bg-yellow-600">
+                    class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-white transition-colors bg-yellow-500 rounded-lg hover:bg-yellow-600">
                     Edit Order
                 </button>
                 <button onclick="closeModal()"
-                    class="px-4 py-2 font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">
+                    class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">
                     Close
                 </button>
             </div>
@@ -211,53 +230,54 @@
     <div id="rejectModal"
         class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
         <div class="w-11/12 max-w-md bg-white rounded-lg shadow-xl">
-            <div class="p-4 border-b">
-                <h2 class="text-xl font-bold text-gray-800">Reject Order</h2>
+            <div class="p-3 sm:p-4 border-b">
+                <h2 class="text-base sm:text-xl font-bold text-gray-800">Reject Order</h2>
             </div>
-            <div class="p-4">
-                <p class="mb-2 text-gray-700">Select a rejection reason:</p>
+            <div class="p-3 sm:p-4">
+                <p class="mb-2 text-xs sm:text-sm text-gray-700">Select a rejection reason:</p>
                 <div>
-                    <label class="flex items-center mb-2">
+                    <label class="flex items-center mb-2 text-xs sm:text-sm">
                         <input type="radio" name="reject_reason_option" value="Out of stock" class="mr-2"
                             onchange="checkRejectOther(this)">
                         Out of stock
                     </label>
-                    <label class="flex items-center mb-2">
+                    <label class="flex items-center mb-2 text-xs sm:text-sm">
                         <input type="radio" name="reject_reason_option" value="Price mismatch" class="mr-2"
                             onchange="checkRejectOther(this)">
                         Price mismatch
                     </label>
-                    <label class="flex items-center">
+                    <label class="flex items-center text-xs sm:text-sm">
                         <input type="radio" name="reject_reason_option" value="Other" class="mr-2"
                             onchange="checkRejectOther(this)">
                         Other
                     </label>
                 </div>
-                <textarea id="rejectOtherReason" class="hidden w-full p-2 mt-2 border rounded"
+                <textarea id="rejectOtherReason" class="hidden w-full p-2 mt-2 text-xs sm:text-sm border rounded"
                     placeholder="Enter custom rejection reason..."></textarea>
             </div>
-            <div class="flex justify-end gap-2 p-4 border-t">
+            <div class="flex justify-end gap-2 p-3 sm:p-4 border-t">
                 <button onclick="submitRejectOrder()"
-                    class="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700">
+                    class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white bg-red-600 rounded hover:bg-red-700">
                     Submit
                 </button>
                 <button onclick="closeRejectModal()"
-                    class="px-4 py-2 text-white bg-gray-600 rounded hover:bg-gray-700">
+                    class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white bg-gray-600 rounded hover:bg-gray-700">
                     Cancel
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- Batch QR Modal -->
     <div id="batchQrModal"
         class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
         <div class="w-11/12 max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl md:w-2/3">
             <!-- Modal Header -->
-            <div class="sticky top-0 z-10 flex items-center justify-between p-4 bg-white border-b">
-                <h2 class="text-xl font-bold text-gray-800">Generate Batch QR Codes</h2>
+            <div class="sticky top-0 z-10 flex items-center justify-between p-3 sm:p-4 bg-white border-b">
+                <h2 class="text-lg sm:text-xl font-bold text-gray-800">Generate Batch QR Codes</h2>
                 <button onclick="closeBatchQrModal()"
-                    class="p-2 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="p-1 sm:p-2 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -265,23 +285,23 @@
             </div>
 
             <!-- Modal Content -->
-            <div class="p-6">
-                <div class="mb-4">
-                    <p class="mb-2 text-gray-700">Select the orders you want to generate QR codes for:</p>
+            <div class="p-3 sm:p-6">
+                <div class="mb-3 sm:mb-4">
+                    <p class="mb-2 text-xs sm:text-sm text-gray-700">Select the orders you want to generate QR codes for:</p>
                     <div class="overflow-y-auto max-h-[40vh] border rounded-lg">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="sticky top-0 bg-gray-50">
                                 <tr>
-                                    <th class="w-10 px-4 py-3">
+                                    <th class="w-8 sm:w-10 px-2 sm:px-4 py-2 sm:py-3">
                                         <input type="checkbox" id="selectAll"
                                             class="border-gray-300 rounded cursor-pointer"
                                             onchange="toggleAllCheckboxes()">
                                     </th>
-                                    <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">Order
+                                    <th class="px-2 sm:px-4 py-2 sm:py-3 text-xs font-medium text-left text-gray-500 uppercase">Order
                                         ID</th>
-                                    <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">
+                                    <th class="px-2 sm:px-4 py-2 sm:py-3 text-xs font-medium text-left text-gray-500 uppercase">
                                         Retailer</th>
-                                    <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">Date
+                                    <th class="px-2 sm:px-4 py-2 sm:py-3 text-xs font-medium text-left text-gray-500 uppercase">Date
                                     </th>
                                 </tr>
                             </thead>
@@ -291,15 +311,15 @@
                         </table>
                     </div>
                 </div>
-                <div class="flex justify-between mt-6">
-                    <p class="text-sm text-gray-600"><span id="selectedCount">0</span> orders selected</p>
+                <div class="flex justify-between mt-4 sm:mt-6">
+                    <p class="text-xs sm:text-sm text-gray-600"><span id="selectedCount">0</span> orders selected</p>
                     <div class="space-x-2">
                         <button onclick="generateSelectedQrCodes()" id="generateQrButton" disabled
-                            class="px-4 py-2 font-medium text-white transition-colors bg-blue-500 rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-600">
+                            class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-white transition-colors bg-blue-500 rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-600">
                             Generate QR Codes
                         </button>
                         <button onclick="closeBatchQrModal()"
-                            class="px-4 py-2 font-medium text-gray-700 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50">
+                            class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50">
                             Cancel
                         </button>
                     </div>
@@ -312,21 +332,21 @@
     <div id="editOrderModal"
         class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
         <div class="w-11/12 max-w-2xl bg-white rounded-lg shadow-xl">
-            <div class="p-4 border-b">
-                <h2 class="text-xl font-bold text-gray-800">Edit Order</h2>
+            <div class="p-3 sm:p-4 border-b">
+                <h2 class="text-lg sm:text-xl font-bold text-gray-800">Edit Order</h2>
             </div>
-            <div class="p-4">
+            <div class="p-3 sm:p-4">
                 <form id="editOrderForm">
-                    <div id="editOrderItems" class="space-y-4">
+                    <div id="editOrderItems" class="space-y-3 sm:space-y-4">
                         <!-- Order items will be dynamically populated here -->
                     </div>
                     <div class="flex justify-end gap-2 mt-4">
                         <button type="button" onclick="submitEditOrder()"
-                            class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
+                            class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white bg-green-600 rounded hover:bg-green-700">
                             Save Changes
                         </button>
                         <button type="button" onclick="closeEditOrderModal()"
-                            class="px-4 py-2 text-white bg-gray-600 rounded hover:bg-gray-700">
+                            class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white bg-gray-600 rounded hover:bg-gray-700">
                             Cancel
                         </button>
                     </div>
@@ -361,37 +381,37 @@
 
             document.getElementById('modalTitle').innerText = 'Order ' + formattedOrderId;
 
-            var modalHtml = '<div class="space-y-6">';
+            var modalHtml = '<div class="space-y-4 sm:space-y-6">';
 
             // Products Section
             modalHtml += '<div class="overflow-hidden bg-white rounded-lg shadow">';
             modalHtml +=
-                '<div class="p-4 border-b bg-gray-50"><h3 class="text-lg font-semibold text-gray-800">Products Ordered</h3></div>';
+                '<div class="p-3 sm:p-4 border-b bg-gray-50"><h3 class="text-base sm:text-lg font-semibold text-gray-800">Products Ordered</h3></div>';
             modalHtml += '<div class="overflow-x-auto">';
             modalHtml += '<table class="min-w-full divide-y divide-gray-200">';
             modalHtml += '<thead class="bg-gray-50"><tr>';
-            modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Product</th>';
-            modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Price</th>';
-            modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Quantity</th>';
-            modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Subtotal</th>';
+            modalHtml += '<th class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-left text-gray-700">Product</th>';
+            modalHtml += '<th class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-left text-gray-700">Price</th>';
+            modalHtml += '<th class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-left text-gray-700">Qty</th>';
+            modalHtml += '<th class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-left text-gray-700">Subtotal</th>';
             modalHtml += '</tr></thead><tbody class="divide-y divide-gray-200">';
 
             let totalAmount = 0;
             details.forEach(function(detail) {
                 modalHtml += '<tr class="hover:bg-gray-50">';
-                modalHtml += '<td class="px-4 py-3">';
-                modalHtml += '<div class="flex items-center gap-3">';
+                modalHtml += '<td class="px-2 sm:px-4 py-2 sm:py-3">';
+                modalHtml += '<div class="flex items-center gap-2 sm:gap-3">';
                 if (detail.product.image) {
                     modalHtml += '<img src="' + storageBaseUrl + '/' + detail.product.image + '" alt="' + detail
-                        .product.product_name + '" class="object-cover w-16 h-16 rounded-lg" />';
+                        .product.product_name + '" class="object-cover w-10 h-10 sm:w-16 sm:h-16 rounded-lg" />';
                 } else {
-                    modalHtml += '<img src="img/default-product.jpg" class="object-cover w-16 h-16 rounded-lg" />';
+                    modalHtml += '<img src="img/default-product.jpg" class="object-cover w-10 h-10 sm:w-16 sm:h-16 rounded-lg" />';
                 }
-                modalHtml += '<span class="font-medium text-gray-800">' + detail.product.product_name + '</span>';
+                modalHtml += '<span class="font-medium text-xs sm:text-sm text-gray-800">' + detail.product.product_name + '</span>';
                 modalHtml += '</div></td>';
-                modalHtml += '<td class="px-4 py-3">₱' + parseFloat(detail.product.price).toFixed(2) + '</td>';
-                modalHtml += '<td class="px-4 py-3">' + detail.quantity + '</td>';
-                modalHtml += '<td class="px-4 py-3 font-medium text-blue-600">₱' + parseFloat(detail.subtotal)
+                modalHtml += '<td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm">₱' + parseFloat(detail.product.price).toFixed(2) + '</td>';
+                modalHtml += '<td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm">' + detail.quantity + '</td>';
+                modalHtml += '<td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-blue-600">₱' + parseFloat(detail.subtotal)
                     .toFixed(2) + '</td>';
                 modalHtml += '</tr>';
                 totalAmount += parseFloat(detail.subtotal);
@@ -399,51 +419,51 @@
 
             modalHtml += '</tbody>';
             modalHtml += '<tfoot class="bg-gray-50"><tr>';
-            modalHtml += '<td colspan="3" class="px-4 py-3 font-medium text-right text-gray-700">Total Amount:</td>';
-            modalHtml += '<td class="px-4 py-3 font-bold text-blue-600">₱' + totalAmount.toFixed(2) + '</td>';
+            modalHtml += '<td colspan="3" class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-right text-gray-700">Total Amount:</td>';
+            modalHtml += '<td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-bold text-blue-600">₱' + totalAmount.toFixed(2) + '</td>';
             modalHtml += '</tr></tfoot>';
             modalHtml += '</table></div></div>';
 
             // Retailer Profile Card - Compact Design
-            modalHtml += '<div class="p-4 bg-white rounded-lg shadow">';
-            modalHtml += '<div class="flex items-start space-x-4">';
+            modalHtml += '<div class="p-3 sm:p-4 bg-white rounded-lg shadow">';
+            modalHtml += '<div class="flex items-start space-x-3 sm:space-x-4">';
             // Profile picture and name section with clickable elements
             modalHtml += '<div class="flex items-center">';
             modalHtml += '<a href="' + '{{ route('distributors.retailers.show', ':id') }}'.replace(':id', retailer.id) +
                 '" class="block">';
             if (retailer.retailer_profile && retailer.retailer_profile.profile_picture) {
                 modalHtml += '<img src="' + storageBaseUrl + '/' + retailer.retailer_profile.profile_picture +
-                    '" alt="Profile" class="object-cover w-12 h-12 rounded-full shadow hover:ring-2 hover:ring-green-500" />';
+                    '" alt="Profile" class="object-cover w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow hover:ring-2 hover:ring-green-500" />';
             } else {
                 modalHtml +=
-                    '<div class="flex items-center justify-center w-12 h-12 bg-gray-200 rounded-full hover:ring-2 hover:ring-green-500">' +
-                    '<span class="text-xl font-medium text-gray-600">' + retailer.first_name.charAt(0) + '</span></div>';
+                    '<div class="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-full hover:ring-2 hover:ring-green-500">' +
+                    '<span class="text-lg sm:text-xl font-medium text-gray-600">' + retailer.first_name.charAt(0) + '</span></div>';
             }
             modalHtml += '</a>';
             modalHtml += '</div>';
             // Retailer information container
             modalHtml += '<div class="flex-1">';
-            modalHtml += '<div class="flex items-center mb-2">';
+            modalHtml += '<div class="flex items-center mb-1 sm:mb-2">';
             modalHtml += '<a href="/retailers/' + retailer.id + '" class="hover:text-green-600">';
-            modalHtml += '<h4 class="text-lg font-medium text-gray-800">' + retailer.first_name + ' ' + retailer.last_name +
+            modalHtml += '<h4 class="text-base sm:text-lg font-medium text-gray-800">' + retailer.first_name + ' ' + retailer.last_name +
                 '</h4>';
             modalHtml += '</a>';
             modalHtml += '</div>';
-            modalHtml += '<div class="grid grid-cols-1 gap-2 text-sm">';
+            modalHtml += '<div class="grid grid-cols-1 gap-1 sm:gap-2 text-xs sm:text-sm">';
             if (retailer.email) {
                 modalHtml +=
-                    '<p class="flex items-center text-gray-600"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>' +
+                    '<p class="flex items-center text-gray-600"><svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>' +
                     retailer.email + '</p>';
             }
             if (retailer.retailer_profile) {
                 if (retailer.retailer_profile.phone) {
                     modalHtml +=
-                        '<p class="flex items-center text-gray-600"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>' +
+                        '<p class="flex items-center text-gray-600"><svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>' +
                         retailer.retailer_profile.phone + '</p>';
                 }
                 if (deliveryAddress) {
                     modalHtml +=
-                        '<p class="flex items-center text-gray-600"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>' +
+                        '<p class="flex items-center text-gray-600"><svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>' +
                         deliveryAddress + '</p>';
                 }
             }
@@ -455,12 +475,6 @@
 
             document.getElementById('modalContent').innerHTML = modalHtml;
             document.getElementById('orderModal').classList.remove('hidden');
-
-            if (orderStatus !== 'pending') {
-                document.getElementById('actionButtons').classList.add('hidden');
-            } else {
-                document.getElementById('actionButtons').classList.remove('hidden');
-            }
 
             if (orderStatus !== 'pending') {
                 document.getElementById('actionButtons').classList.add('hidden');
