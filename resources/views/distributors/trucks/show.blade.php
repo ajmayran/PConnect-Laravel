@@ -1,47 +1,88 @@
 <x-distributor-layout>
-    <div class="py-12">
-        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+    <style>
+        /* Mobile responsive adjustments */
+        @media (max-width: 640px) {
+            .table-container {
+                overflow-x: auto;
+            }
+            .mobile-text-sm {
+                font-size: 0.75rem;
+            }
+            .mobile-padding {
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+            }
+            .mobile-hidden {
+                display: none;
+            }
+            .mobile-flex-col {
+                flex-direction: column;
+            }
+            .mobile-w-full {
+                width: 100%;
+            }
+            .mobile-mt-2 {
+                margin-top: 0.5rem;
+            }
+        }
+        /* Fix for scroll issues */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+
+    <div class="p-3 sm:py-12">
+        <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
+            <span class="absolute text-3xl text-white cursor-pointer top-5 left-4 lg:hidden" onclick="toggleSidebar()">
+                <i class="px-2 bg-gray-900 rounded-md bi bi-filter-left"></i>
+            </span>
+            
             <a href="{{ route('distributors.trucks.index') }}"
-                class="inline-block px-4 py-2 mb-4 text-sm font-medium text-gray-700 hover:text-green-400">← Back to
-                Trucks</a>
+                class="inline-block px-3 py-1.5 sm:px-4 sm:py-2 mb-4 text-xs sm:text-sm font-medium text-gray-700 hover:text-green-400">
+                ← Back to Trucks
+            </a>
 
             <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
+                <div class="p-3 sm:p-6 bg-white border-b border-gray-200">
                     <!-- Truck Info Header -->
-                    <div class="flex items-center justify-between mb-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-0">
                         <div>
-                            <h2 class="text-2xl font-bold">Truck Details</h2>
-                            <p class="mt-1 text-gray-600">Plate Number: {{ $truck->plate_number }}</p>
-                            <div class="mt-4 mb-6">
-                                <h3 class="mb-3 text-lg font-medium text-gray-700">Delivery Locations:</h3>
+                            <h2 class="text-lg sm:text-xl md:text-2xl font-bold">Truck Details</h2>
+                            <p class="mt-1 text-xs sm:text-sm text-gray-600">Plate Number: {{ $truck->plate_number }}</p>
+                            <div class="mt-3 sm:mt-4 mb-4 sm:mb-6">
+                                <h3 class="mb-2 sm:mb-3 text-base sm:text-lg font-medium text-gray-700">Delivery Locations:</h3>
 
                                 @if ($truck->deliveryLocations && $truck->deliveryLocations->count() > 0)
                                     <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
                                         @foreach ($truck->deliveryLocations as $index => $location)
                                             <div
-                                                class="p-3 border {{ $index === 0 ? 'border-blue-300 bg-blue-50' : 'border-gray-200' }} rounded-md">
+                                                class="p-2 sm:p-3 border {{ $index === 0 ? 'border-blue-300 bg-blue-50' : 'border-gray-200' }} rounded-md">
                                                 <div class="flex justify-between">
                                                     <div
-                                                        class="font-medium {{ $index === 0 ? 'text-blue-700' : 'text-gray-700' }}">
+                                                        class="text-xs sm:text-sm font-medium {{ $index === 0 ? 'text-blue-700' : 'text-gray-700' }}">
                                                         {{ $index === 0 ? 'Primary Location' : 'Location #' . ($index + 1) }}
                                                     </div>
                                                 </div>
-                                                <div class="mt-1 font-semibold">
+                                                <div class="mt-1 text-xs sm:text-sm font-semibold">
                                                     {{ $location->barangayName ?? 'Unknown Barangay' }}</div>
                                                 @if ($location->street)
-                                                    <div class="text-sm text-gray-600">{{ $location->street }}</div>
+                                                    <div class="text-xs sm:text-sm text-gray-600">{{ $location->street }}</div>
                                                 @endif
                                             </div>
                                         @endforeach
                                     </div>
                                 @else
-                                    <div class="p-3 mt-2 border border-gray-200 rounded-md">
-                                        <span class="text-gray-500">No locations assigned to this truck</span>
+                                    <div class="p-2 sm:p-3 mt-2 border border-gray-200 rounded-md">
+                                        <span class="text-xs sm:text-sm text-gray-500">No locations assigned to this truck</span>
                                     </div>
                                 @endif
                             </div>
                             <span
-                                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                class="inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-semibold rounded-full 
                                 {{ $truck->status === 'available'
                                     ? 'bg-green-100 text-green-800'
                                     : ($truck->status === 'on_delivery'
@@ -50,10 +91,10 @@
                                 {{ ucfirst(str_replace('_', ' ', $truck->status)) }}
                             </span>
                         </div>
-                        <div>
+                        <div class="mt-2 sm:mt-0">
                             <a href="{{ route('distributors.trucks.delivery-history', $truck) }}"
-                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none"
+                                class="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -64,34 +105,29 @@
                     </div>
 
                     <!-- Deliveries Table -->
-                    <div class="mt-8">
-                        <div class="mb-4">
-                            <h3 class="text-xl font-semibold">Delivery</h3>
+                    <div class="mt-6 sm:mt-8">
+                        <div class="mb-3 sm:mb-4">
+                            <h3 class="text-base sm:text-xl font-semibold">Delivery</h3>
                         </div>
 
                         @if ($deliveries->isEmpty())
-                            <div class="p-4 text-center bg-gray-50">
-                                <p class="text-gray-600">No deliveries found for this truck.</p>
+                            <div class="p-3 sm:p-4 text-center bg-gray-50">
+                                <p class="text-xs sm:text-sm text-gray-600">No deliveries found for this truck.</p>
                             </div>
                         @else
-                            <div class="overflow-x-auto">
+                            <div class="overflow-x-auto table-container">
                                 <table class="min-w-full divide-y divide-gray-200">
                                     <thead class="bg-gray-50">
                                         <tr>
-                                            <th
-                                                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                            <th class="px-2 sm:px-6 py-2 sm:py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                                 Order ID</th>
-                                            <th
-                                                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                            <th class="px-2 sm:px-6 py-2 sm:py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase mobile-hidden">
                                                 Customer</th>
-                                            <th
-                                                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                                                Delivery Address</th>
-                                            <th
-                                                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                            <th class="px-2 sm:px-6 py-2 sm:py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                                Address</th>
+                                            <th class="px-2 sm:px-6 py-2 sm:py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                                 Status</th>
-                                            <th
-                                                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                            <th class="px-2 sm:px-6 py-2 sm:py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase mobile-hidden">
                                                 Started At</th>
                                         </tr>
                                     </thead>
@@ -99,21 +135,21 @@
                                         @foreach ($deliveries as $delivery)
                                             <tr class="cursor-pointer hover:bg-gray-50"
                                                 onclick="openDeliveryModal({{ json_encode($delivery) }}, {{ json_encode($delivery->order) }}, {{ json_encode($delivery->order->orderDetails) }})">
-                                                <td class="px-6 py-4">{{ $delivery->order->formatted_order_id }}</td>
-                                                <td class="px-6 py-4">
+                                                <td class="px-2 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm">{{ $delivery->order->formatted_order_id }}</td>
+                                                <td class="px-2 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm mobile-hidden">
                                                     {{ $delivery->order->user->first_name }}
                                                     {{ $delivery->order->user->last_name }}
                                                 </td>
-                                                <td class="px-6 py-4">
+                                                <td class="px-2 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm">
                                                     @if ($delivery->order->orderDetails->isNotEmpty())
-                                                        {{ $delivery->order->orderDetails->first()->delivery_address }}
+                                                        {{ Str::limit($delivery->order->orderDetails->first()->delivery_address, 25) }}
                                                     @else
-                                                        <span class="text-gray-400">No address provided</span>
+                                                        <span class="text-gray-400">No address</span>
                                                     @endif
                                                 </td>
-                                                <td class="px-6 py-4">
+                                                <td class="px-2 sm:px-6 py-2 sm:py-4">
                                                     <span
-                                                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                                        class="inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-semibold rounded-full
                                                         {{ $delivery->status === 'pending'
                                                             ? 'bg-yellow-100 text-yellow-800'
                                                             : ($delivery->status === 'in_transit'
@@ -126,7 +162,7 @@
                                                         {{ ucfirst(str_replace('_', ' ', $delivery->status)) }}
                                                     </span>
                                                 </td>
-                                                <td class="px-6 py-4 text-sm text-gray-500">
+                                                <td class="px-2 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-500 mobile-hidden">
                                                     @if ($delivery->pivot && $delivery->pivot->started_at)
                                                         {{ \Carbon\Carbon::parse($delivery->pivot->started_at)->format('M d, Y H:i') }}
                                                     @else
@@ -139,11 +175,9 @@
                                 </table>
                             </div>
 
-                            <div
-                                class="flex flex-col items-center justify-end mt-6 space-y-4 md:flex-row md:justify-end md:space-y-0">
-
+                            <div class="flex flex-col sm:flex-row items-center justify-end mt-4 sm:mt-6 space-y-3 sm:space-y-0">
                                 <!-- Pagination -->
-                                <div class="mt-2 md:mt-0">
+                                <div class="w-full sm:w-auto">
                                     {{ $deliveries->links() }}
                                 </div>
                             </div>
@@ -151,10 +185,10 @@
                     </div>
 
                     <!-- Out for Delivery Button -->
-                    <div class="flex justify-end pt-4 mt-6 border-t border-gray-200">
+                    <div class="flex justify-end pt-3 sm:pt-4 mt-4 sm:mt-6 border-t border-gray-200">
                         @if (!$deliveries->isEmpty() && $truck->status === 'available')
                             <button type="button" onclick="openEstimatedDeliveryModal()"
-                                class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                                 Out for Delivery
                             </button>
                         @endif
@@ -164,14 +198,15 @@
         </div>
     </div>
 
+    <!-- Estimated Delivery Modal -->
     <div id="estimatedDeliveryModal"
         class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
         <div class="w-11/12 max-w-md bg-white rounded-lg shadow-xl md:w-1/3 sm:w-2/3">
-            <div class="flex items-center justify-between p-4 border-b">
-                <h2 class="text-lg font-semibold text-gray-800">Set Estimated Delivery Date</h2>
+            <div class="flex items-center justify-between p-3 sm:p-4 border-b">
+                <h2 class="text-base sm:text-lg font-semibold text-gray-800">Set Estimated Delivery Date</h2>
                 <button onclick="closeEstimatedDeliveryModal()"
                     class="p-1 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
                         </path>
                     </svg>
@@ -180,25 +215,25 @@
 
             <form action="{{ route('distributors.trucks.out-for-delivery', $truck) }}" method="POST">
                 @csrf
-                <div class="p-6">
+                <div class="p-3 sm:p-6">
                     <div class="mb-4">
-                        <label for="estimated_delivery" class="block mb-2 text-sm font-medium text-gray-700">
+                        <label for="estimated_delivery" class="block mb-1 sm:mb-2 text-xs sm:text-sm font-medium text-gray-700">
                             Estimated Delivery Date <span class="text-red-500">*</span>
                         </label>
                         <input type="date" id="estimated_delivery" name="estimated_delivery"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             min="{{ date('Y-m-d') }}" required>
-                        <p class="mt-1 text-sm text-gray-500">Select the expected delivery date</p>
+                        <p class="mt-1 text-xs text-gray-500">Select the expected delivery date</p>
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-3 p-4 rounded-b-lg bg-gray-50">
+                <div class="flex justify-end gap-2 sm:gap-3 p-3 sm:p-4 rounded-b-lg bg-gray-50">
                     <button type="button" onclick="closeEstimatedDeliveryModal()"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         Cancel
                     </button>
                     <button type="submit"
-                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         Confirm
                     </button>
                 </div>
@@ -211,11 +246,11 @@
         class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
         <div class="w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl md:w-3/4 sm:w-3/4">
             <!-- Modal Header -->
-            <div class="sticky top-0 z-10 flex items-center justify-between p-4 bg-white border-b">
-                <h2 class="text-xl font-bold text-gray-800" id="deliveryModalTitle">Delivery Details</h2>
+            <div class="sticky top-0 z-10 flex items-center justify-between p-3 sm:p-4 bg-white border-b">
+                <h2 class="text-base sm:text-xl font-bold text-gray-800" id="deliveryModalTitle">Delivery Details</h2>
                 <button onclick="closeDeliveryModal()"
-                    class="p-2 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="p-1 sm:p-2 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M6 18L18 6M6 6l12 12">
                         </path>
@@ -223,13 +258,13 @@
                 </button>
             </div>
 
-            <div id="deliveryModalContent" class="p-6">
+            <div id="deliveryModalContent" class="p-3 sm:p-6">
                 <!-- Modal Content will be dynamically generated -->
             </div>
 
             <!-- Modal Footer -->
-            <div class="sticky bottom-0 flex justify-end gap-4 p-4 bg-white border-t">
-                <div id="deliveryActionButtons">
+            <div class="sticky bottom-0 flex flex-wrap justify-end gap-2 sm:gap-4 p-3 sm:p-4 bg-white border-t">
+                <div id="deliveryActionButtons" class="flex flex-wrap gap-2 sm:gap-4">
                     @php
                         $availableTrucks = optional(Auth::user()->distributor)->trucks ?? collect();
                         $availableTrucksCount = 0;
@@ -245,17 +280,17 @@
 
                     @if ($availableTrucksCount > 0)
                         <button id="moveDeliveryBtn" onclick="openMoveDeliveryModal()"
-                            class="px-4 py-2 mr-2 font-medium text-white transition-colors bg-yellow-600 rounded-lg hover:bg-yellow-700">
+                            class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-yellow-600 rounded-lg hover:bg-yellow-700">
                             Move to Another Truck
                         </button>
                     @endif
                     <button id="markDeliveredBtn" onclick="markAsDelivered()"
-                        class="px-4 py-2 font-medium text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700">
+                        class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700">
                         Mark as Delivered
                     </button>
                 </div>
                 <button onclick="closeDeliveryModal()"
-                    class="px-4 py-2 font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">
+                    class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
                     Close
                 </button>
             </div>
@@ -266,11 +301,11 @@
     <div id="moveDeliveryModal"
         class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
         <div class="w-11/12 max-w-md bg-white rounded-lg shadow-xl md:w-1/3 sm:w-2/3">
-            <div class="flex items-center justify-between p-4 border-b">
-                <h2 class="text-lg font-semibold text-gray-800">Move Delivery to Another Truck</h2>
+            <div class="flex items-center justify-between p-3 sm:p-4 border-b">
+                <h2 class="text-base sm:text-lg font-semibold text-gray-800">Move Delivery to Another Truck</h2>
                 <button onclick="closeMoveDeliveryModal()"
                     class="p-1 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M6 18L18 6M6 6l12 12">
                         </path>
@@ -283,13 +318,13 @@
                 @csrf
                 <input type="hidden" id="delivery_id_to_move" name="delivery_id">
 
-                <div class="p-6">
+                <div class="p-3 sm:p-6">
                     <div class="mb-4">
-                        <label for="new_truck_id" class="block mb-2 text-sm font-medium text-gray-700">
+                        <label for="new_truck_id" class="block mb-1 sm:mb-2 text-xs sm:text-sm font-medium text-gray-700">
                             Select Truck <span class="text-red-500">*</span>
                         </label>
                         <select id="new_truck_id" name="truck_id"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             required>
                             <option value="">Select a truck...</option>
                             @foreach (Auth::user()->distributor->trucks->where('status', 'available')->where('id', '!=', $truck->id) as $availableTruck)
@@ -304,17 +339,17 @@
                                 </option>
                             @endforeach
                         </select>
-                        <p class="mt-1 text-sm text-gray-500">Only available trucks are shown</p>
+                        <p class="mt-1 text-xs text-gray-500">Only available trucks are shown</p>
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-3 p-4 rounded-b-lg bg-gray-50">
+                <div class="flex justify-end gap-2 sm:gap-3 p-3 sm:p-4 rounded-b-lg bg-gray-50">
                     <button type="button" onclick="closeMoveDeliveryModal()"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         Cancel
                     </button>
                     <button type="submit"
-                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         Move Delivery
                     </button>
                 </div>
@@ -326,11 +361,11 @@
     <div id="paymentModal"
         class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
         <div class="w-11/12 max-w-md bg-white rounded-lg shadow-xl md:w-1/3 sm:w-2/3">
-            <div class="flex items-center justify-between p-4 border-b">
-                <h2 class="text-lg font-semibold text-gray-800">Payment Information</h2>
+            <div class="flex items-center justify-between p-3 sm:p-4 border-b">
+                <h2 class="text-base sm:text-lg font-semibold text-gray-800">Payment Information</h2>
                 <button onclick="closePaymentModal()"
                     class="p-1 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -339,43 +374,42 @@
 
             <form id="paymentForm" method="POST">
                 @csrf
-                <div class="p-6 space-y-4">
+                <div class="p-3 sm:p-6 space-y-4">
                     <div>
-                        <h3 class="mb-3 font-medium text-gray-800 text-md">Record payment details upon delivery</h3>
+                        <h3 class="mb-3 text-xs sm:text-sm font-medium text-gray-800">Record payment details upon delivery</h3>
 
-                        <label class="block mb-2 text-sm font-medium text-gray-700">Payment Status</label>
-                        <div class="flex gap-4">
-                            <label class="flex items-center px-3 py-2 border rounded-md hover:bg-gray-50">
+                        <label class="block mb-1 sm:mb-2 text-xs sm:text-sm font-medium text-gray-700">Payment Status</label>
+                        <div class="flex gap-3 sm:gap-4">
+                            <label class="flex items-center px-2 sm:px-3 py-1.5 sm:py-2 border rounded-md hover:bg-gray-50">
                                 <input type="radio" name="payment_status" value="paid"
-                                    class="w-4 h-4 text-green-600" checked>
-                                <span class="ml-2 font-medium text-green-700">Paid</span>
+                                    class="w-3 h-3 sm:w-4 sm:h-4 text-green-600" checked>
+                                <span class="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-green-700">Paid</span>
                             </label>
-                            <label class="flex items-center px-3 py-2 border rounded-md hover:bg-gray-50">
+                            <label class="flex items-center px-2 sm:px-3 py-1.5 sm:py-2 border rounded-md hover:bg-gray-50">
                                 <input type="radio" name="payment_status" value="unpaid"
-                                    class="w-4 h-4 text-red-600">
-                                <span class="ml-2 font-medium text-red-700">Unpaid</span>
+                                    class="w-3 h-3 sm:w-4 sm:h-4 text-red-600">
+                                <span class="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-red-700">Unpaid</span>
                             </label>
                         </div>
-                        <p class="mt-1 text-xs text-gray-500">This will update both delivery status and payment record
-                        </p>
+                        <p class="mt-1 text-xs text-gray-500">This will update both delivery status and payment record</p>
                     </div>
 
                     <div>
-                        <label for="payment_note" class="block mb-2 text-sm font-medium text-gray-700">Payment Notes
+                        <label for="payment_note" class="block mb-1 sm:mb-2 text-xs sm:text-sm font-medium text-gray-700">Payment Notes
                             (Optional)</label>
                         <textarea id="payment_note" name="payment_note" rows="3"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Add notes about this payment (e.g., paid with cash, promised to pay next week, etc.)"></textarea>
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-3 p-4 rounded-b-lg bg-gray-50">
+                <div class="flex justify-end gap-2 sm:gap-3 p-3 sm:p-4 rounded-b-lg bg-gray-50">
                     <button type="button" onclick="closePaymentModal()"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         Cancel
                     </button>
                     <button type="submit"
-                        class="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-green-600 border border-transparent rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                         Complete Delivery
                     </button>
                 </div>
@@ -412,7 +446,6 @@
                     return;
                 }
 
-
                 currentDeliveryId = delivery.id;
 
                 // Create order ID even if formatted_order_id is missing
@@ -426,19 +459,19 @@
 
                 document.getElementById('deliveryModalTitle').innerText = 'Order ID: ' + orderId;
 
-                let modalHtml = '<div class="space-y-6">';
+                let modalHtml = '<div class="space-y-4 sm:space-y-6">';
 
                 // Order Status Card
-                modalHtml += '<div class="p-3 rounded-lg ' +
+                modalHtml += '<div class="p-2 sm:p-3 rounded-lg ' +
                     (delivery.status === 'delivered' ? 'bg-green-50 border border-green-200' :
                         (delivery.status === 'out_for_delivery' ? 'bg-purple-50 border border-purple-200' :
                             'bg-blue-50 border border-blue-200')) + '">';
                 modalHtml += '<div class="flex items-center justify-between">';
-                modalHtml += '<h3 class="text-lg font-semibold ' +
+                modalHtml += '<h3 class="text-base sm:text-lg font-semibold ' +
                     (delivery.status === 'delivered' ? 'text-green-700' :
                         (delivery.status === 'out_for_delivery' ? 'text-purple-700' :
                             'text-blue-700')) + '">Delivery Status</h3>';
-                modalHtml += '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ' +
+                modalHtml += '<span class="inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-semibold rounded-full ' +
                     (delivery.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                         (delivery.status === 'in_transit' ? 'bg-blue-100 text-blue-800' :
                             (delivery.status === 'delivered' ? 'bg-green-100 text-green-800' :
@@ -447,7 +480,7 @@
                     (delivery.status || '').replace(/_/g, ' ').replace(/(^\w{1})|(\s+\w{1})/g, letter => letter
                         .toUpperCase()) + '</span>';
                 modalHtml += '</div>';
-                modalHtml += '<div class="mt-1 text-sm ' +
+                modalHtml += '<div class="mt-1 text-xs sm:text-sm ' +
                     (delivery.status === 'delivered' ? 'text-green-600' :
                         (delivery.status === 'out_for_delivery' ? 'text-purple-600' :
                             'text-blue-600')) + '">';
@@ -459,14 +492,14 @@
                 if (orderDetails && Array.isArray(orderDetails) && orderDetails.length > 0) {
                     modalHtml += '<div class="overflow-hidden bg-white rounded-lg shadow">';
                     modalHtml +=
-                        '<div class="p-4 border-b bg-gray-50"><h3 class="text-lg font-semibold text-gray-800">Products Ordered</h3></div>';
+                        '<div class="p-3 sm:p-4 border-b bg-gray-50"><h3 class="text-base sm:text-lg font-semibold text-gray-800">Products Ordered</h3></div>';
                     modalHtml += '<div class="overflow-x-auto">';
                     modalHtml += '<table class="min-w-full divide-y divide-gray-200">';
                     modalHtml += '<thead class="bg-gray-50"><tr>';
-                    modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Product</th>';
-                    modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Price</th>';
-                    modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Quantity</th>';
-                    modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Subtotal</th>';
+                    modalHtml += '<th class="px-2 sm:px-4 py-2 sm:py-3 text-xs font-medium text-left text-gray-700">Product</th>';
+                    modalHtml += '<th class="px-2 sm:px-4 py-2 sm:py-3 text-xs font-medium text-left text-gray-700">Price</th>';
+                    modalHtml += '<th class="px-2 sm:px-4 py-2 sm:py-3 text-xs font-medium text-left text-gray-700">Quantity</th>';
+                    modalHtml += '<th class="px-2 sm:px-4 py-2 sm:py-3 text-xs font-medium text-left text-gray-700">Subtotal</th>';
                     modalHtml += '</tr></thead><tbody class="divide-y divide-gray-200">';
 
                     let totalAmount = 0;
@@ -475,24 +508,24 @@
                         if (!detail) return;
 
                         modalHtml += '<tr class="hover:bg-gray-50">';
-                        modalHtml += '<td class="px-4 py-3">';
-                        modalHtml += '<div class="flex items-center gap-3">';
+                        modalHtml += '<td class="px-2 sm:px-4 py-2 sm:py-3">';
+                        modalHtml += '<div class="flex items-center gap-2 sm:gap-3">';
 
                         // Check if product exists before accessing properties
                         if (detail.product && detail.product.image) {
                             modalHtml += '<img src="' + storageBaseUrl + '/' + detail.product.image + '" alt="' +
-                                detail.product.product_name + '" class="object-cover w-16 h-16 rounded-lg" />';
+                                detail.product.product_name + '" class="object-cover w-8 h-8 sm:w-16 sm:h-16 rounded-lg" />';
                         } else {
                             modalHtml +=
-                                '<div class="flex items-center justify-center w-16 h-16 text-gray-400 bg-gray-100 rounded-lg">No image</div>';
+                                '<div class="flex items-center justify-center w-8 h-8 sm:w-16 sm:h-16 text-gray-400 bg-gray-100 rounded-lg">No image</div>';
                         }
 
-                        modalHtml += '<span class="font-medium text-gray-800">' + (detail.product ? detail.product
+                        modalHtml += '<span class="font-medium text-xs sm:text-sm text-gray-800">' + (detail.product ? detail.product
                             .product_name : 'Unknown Product') + '</span>';
                         modalHtml += '</div></td>';
-                        modalHtml += '<td class="px-4 py-3">₱' + parseFloat(detail.price || 0).toFixed(2) + '</td>';
-                        modalHtml += '<td class="px-4 py-3">' + (detail.quantity || 0) + '</td>';
-                        modalHtml += '<td class="px-4 py-3 font-medium text-blue-600">₱' + parseFloat(detail
+                        modalHtml += '<td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm">₱' + parseFloat(detail.price || 0).toFixed(2) + '</td>';
+                        modalHtml += '<td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm">' + (detail.quantity || 0) + '</td>';
+                        modalHtml += '<td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-blue-600">₱' + parseFloat(detail
                             .subtotal || 0).toFixed(2) + '</td>';
                         modalHtml += '</tr>';
 
@@ -502,27 +535,27 @@
                     modalHtml += '</tbody>';
                     modalHtml += '<tfoot class="bg-gray-50"><tr>';
                     modalHtml +=
-                        '<td colspan="3" class="px-4 py-3 font-medium text-right text-gray-700">Total Amount:</td>';
-                    modalHtml += '<td class="px-4 py-3 font-bold text-blue-600">₱' + totalAmount.toFixed(2) + '</td>';
+                        '<td colspan="3" class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-right text-gray-700">Total Amount:</td>';
+                    modalHtml += '<td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-bold text-blue-600">₱' + totalAmount.toFixed(2) + '</td>';
                     modalHtml += '</tr></tfoot>';
                     modalHtml += '</table></div></div>';
                 } else {
                     // Display a message if no order details available
-                    modalHtml += '<div class="p-4 border rounded-lg bg-gray-50">';
-                    modalHtml += '<p class="text-center text-gray-500">No product details available for this order</p>';
+                    modalHtml += '<div class="p-3 sm:p-4 border rounded-lg bg-gray-50">';
+                    modalHtml += '<p class="text-center text-xs sm:text-sm text-gray-500">No product details available for this order</p>';
                     modalHtml += '</div>';
                 }
 
                 // Delivery Information - Only show if order has user information
                 if (order && order.user) {
-                    modalHtml += '<div class="p-4 mt-4 bg-white rounded-lg shadow">';
-                    modalHtml += '<h3 class="mb-3 text-lg font-semibold text-gray-800">Delivery Information</h3>';
-                    modalHtml += '<div class="grid grid-cols-1 gap-4 md:grid-cols-2">';
+                    modalHtml += '<div class="p-3 sm:p-4 mt-3 sm:mt-4 bg-white rounded-lg shadow">';
+                    modalHtml += '<h3 class="mb-2 sm:mb-3 text-base sm:text-lg font-semibold text-gray-800">Delivery Information</h3>';
+                    modalHtml += '<div class="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">';
 
                     // Customer details
-                    modalHtml += '<div class="p-3 border rounded-lg">';
-                    modalHtml += '<h4 class="font-medium text-gray-700">Customer Details</h4>';
-                    modalHtml += '<div class="mt-2 space-y-1 text-sm">';
+                    modalHtml += '<div class="p-2 sm:p-3 border rounded-lg">';
+                    modalHtml += '<h4 class="text-xs sm:text-sm font-medium text-gray-700">Customer Details</h4>';
+                    modalHtml += '<div class="mt-1 sm:mt-2 space-y-1 text-xs sm:text-sm">';
                     modalHtml += '<p><span class="font-medium">Name:</span> ' +
                         (order.user.first_name || '') + ' ' + (order.user.last_name || '') + '</p>';
 
@@ -538,9 +571,9 @@
                     modalHtml += '</div>';
 
                     // Delivery address
-                    modalHtml += '<div class="p-3 border rounded-lg">';
-                    modalHtml += '<h4 class="font-medium text-gray-700">Delivery Address</h4>';
-                    modalHtml += '<div class="mt-2 text-sm">';
+                    modalHtml += '<div class="p-2 sm:p-3 border rounded-lg">';
+                    modalHtml += '<h4 class="text-xs sm:text-sm font-medium text-gray-700">Delivery Address</h4>';
+                    modalHtml += '<div class="mt-1 sm:mt-2 text-xs sm:text-sm">';
 
                     // Safely check if orderDetails has elements and if the first element has a delivery_address
                     if (orderDetails && Array.isArray(orderDetails) && orderDetails.length > 0 && orderDetails[0]
@@ -608,18 +641,22 @@
 
             const form = this;
             const paymentStatus = form.querySelector('input[name="payment_status"]:checked').value;
+            
+            // Adjust SweetAlert size for mobile
+            const width = window.innerWidth < 640 ? '90%' : '500px';
 
             Swal.fire({
                 title: 'Confirm Delivery & Payment',
                 html: `
-            <p>Are you sure this order has been delivered?</p>
-            <p class="mt-2">Payment will be marked as <strong>${paymentStatus === 'paid' ? 'PAID' : 'UNPAID'}</strong>.</p>
-        `,
+                <p>Are you sure this order has been delivered?</p>
+                <p class="mt-2">Payment will be marked as <strong>${paymentStatus === 'paid' ? 'PAID' : 'UNPAID'}</strong>.</p>
+                `,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#4CAF50',
                 cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, confirm'
+                confirmButtonText: 'Yes, confirm',
+                width: width
             }).then((result) => {
                 if (result.isConfirmed) {
                     form.submit(); // Actually submit the form
@@ -660,5 +697,18 @@
         function closeMoveDeliveryModal() {
             document.getElementById('moveDeliveryModal').classList.add('hidden');
         }
+
+        // Add touchstart event handler for better mobile performance
+        document.addEventListener('DOMContentLoaded', function() {
+            const clickableRows = document.querySelectorAll('tr.cursor-pointer');
+            clickableRows.forEach(row => {
+                row.addEventListener('touchstart', function() {
+                    this.classList.add('bg-gray-100');
+                });
+                row.addEventListener('touchend', function() {
+                    this.classList.remove('bg-gray-100');
+                });
+            });
+        });
     </script>
 </x-distributor-layout>
