@@ -16,7 +16,7 @@ class InventoryController extends Controller
     {
 
         session()->forget('restock_alert_dismissed');
-        
+
         $search = $request->input('search');
         $query = Product::where('distributor_id', Auth::user()->distributor->id)
             ->select('id', 'product_name', 'image', 'category_id',   DB::raw('(SELECT MAX(stock_updated_at) FROM stocks WHERE stocks.product_id = products.id) as stock_updated_at'))
@@ -61,8 +61,9 @@ class InventoryController extends Controller
 
             if ($isBatchManaged) {
                 if ($stockType === 'in') {
-                    // For stock in with auto-generated batch number
+                    // For stock in with user-provided batch number
                     $validated = $request->validate([
+                        'batch_number' => 'required|string',
                         'quantity' => 'required|integer|min:1',
                         'expiry_date' => 'required|date|after:today',
                         'manufacturing_date' => 'nullable|date|before_or_equal:today',
@@ -70,24 +71,29 @@ class InventoryController extends Controller
                         'notes' => 'nullable|string',
                     ]);
 
-                    // Create new batch with a temporary number
-                    $batch = new ProductBatch([
-                        'product_id' => $product->id,
-                        'batch_number' => 'new', // Temporary batch number
-                        'quantity' => $validated['quantity'],
-                        'expiry_date' => $validated['expiry_date'],
-                        'manufacturing_date' => $validated['manufacturing_date'] ?? null,
-                        'supplier' => $validated['supplier'] ?? null,
-                        'notes' => $validated['notes'] ?? null,
-                        'received_at' => now()
-                    ]);
-                    $batch->save();
+                    // Check if batch number already exists for this product
+                    $batch = ProductBatch::where('product_id', $product->id)
+                        ->where('batch_number', $validated['batch_number'])
+                        ->first();
 
-                    // Resequence all batches based on expiry date
-                    $this->resequenceBatchesByExpiryDate($product->id);
-
-                    // Get the updated batch with the correct sequence number
-                    $batch = ProductBatch::find($batch->id);
+                    if ($batch) {
+                        // If batch exists, update its quantity
+                        $batch->quantity += $validated['quantity'];
+                        $batch->save();
+                    } else {
+                        // Create new batch with user-provided batch number
+                        $batch = new ProductBatch([
+                            'product_id' => $product->id,
+                            'batch_number' => $validated['batch_number'],
+                            'quantity' => $validated['quantity'],
+                            'expiry_date' => $validated['expiry_date'],
+                            'manufacturing_date' => $validated['manufacturing_date'] ?? null,
+                            'supplier' => $validated['supplier'] ?? null,
+                            'notes' => $validated['notes'] ?? null,
+                            'received_at' => now()
+                        ]);
+                        $batch->save();
+                    }
 
                     // Record stock movement
                     Stock::create([
@@ -127,13 +133,9 @@ class InventoryController extends Controller
                     $batch->quantity -= $validated['quantity'];
                     $batch->save();
 
-                    // If batch is now empty, delete it and resequence remaining batches
+                    // If batch is now empty, delete it
                     if ($batch->quantity <= 0) {
-                        // Delete the empty batch first
                         $batch->delete();
-
-                        // Resequence the remaining batches based on expiry date
-                        $this->resequenceBatchesByExpiryDate($product->id);
                     }
 
                     // Record stock movement
@@ -231,45 +233,6 @@ class InventoryController extends Controller
         ]);
     }
 
-
-    public function resequenceBatchesByExpiryDate($productId)
-    {
-        DB::beginTransaction();
-        try {
-            $product = Product::findOrFail($productId);
-
-            // Get all batches ordered by expiry date (soonest expiration first)
-            $batches = $product->batches()
-                ->orderBy('expiry_date')
-                ->get();
-
-            if ($batches->count() > 0) {
-                // First, apply a temporary prefix to avoid unique constraint conflicts
-                foreach ($batches as $index => $batch) {
-                    DB::table('product_batches')
-                        ->where('id', $batch->id)
-                        ->update(['batch_number' => 'temp_' . ($index + 1)]);
-                }
-
-                // Then do the final renumbering with the actual numeric sequence
-                // Batch number 1 will be the one expiring soonest
-                $counter = 1;
-                foreach ($batches as $batch) {
-                    DB::table('product_batches')
-                        ->where('id', $batch->id)
-                        ->update(['batch_number' => (string)$counter]);
-
-                    $counter++;
-                }
-            }
-
-            DB::commit();
-            return true;
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return false;
-        }
-    }
 
     private function getBatchStatus($batch)
     {

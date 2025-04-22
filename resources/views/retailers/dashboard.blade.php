@@ -199,11 +199,21 @@
                                 <p class="mt-1 text-xs text-gray-500 sm:text-sm line-clamp-1">
                                     {{ $product->distributor->company_name }}
                                 </p>
-                                <div class="flex items-center justify-between pt-2 mt-auto sm:pt-4">
-                                    <span
-                                        class="text-sm font-bold text-green-600 sm:text-lg">₱{{ number_format($product->price, 2) }}</span>
-                                    <span class="text-xs text-gray-500 sm:text-sm">View Details →</span>
+                                <div class="flex items-center justify-start gap-2 pt-2 mt-auto sm:pt-4">
+                                    @if ($product->activeDiscount)
+                                        <span class="text-sm font-bold text-gray-500 sm:text-base" style="text-decoration:line-through">
+                                            ₱{{ number_format($product->price, 2) }}
+                                        </span>
+                                        <span class="text-sm font-bold text-green-600 sm:text-lg">
+                                            ₱{{ number_format($product->price - $product->activeDiscount->calculatePercentageDiscount($product->price), 2) }}
+                                        </span>
+                                    @else
+                                        <span class="text-sm font-bold text-green-600 sm:text-lg">
+                                            ₱{{ number_format($product->price, 2) }}
+                                        </span>
+                                    @endif
                                 </div>
+                                <span class="text-xs text-right text-gray-500 sm:text-sm">View Details →</span>
                             </div>
                         </a>
                     @empty

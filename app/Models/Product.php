@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Product extends Model
 {
     use HasFactory, SoftDeletes;
-    
+
 
     protected $fillable = [
         'distributor_id',
@@ -66,6 +66,11 @@ class Product extends Model
         return $this->hasMany(Stock::class);
     }
 
+    public function discounts()
+    {
+        return $this->belongsToMany(Discount::class, 'discount_product');
+    }
+
     // this method is for dynamically calculate stock based on batches
     public function getStockQuantityAttribute($value)
     {
@@ -97,5 +102,35 @@ class Product extends Model
 
         // Get category name through the relationship
         return $this->category && in_array($this->category->name, $batchCategories);
+    }
+
+    public function hasActiveDiscount()
+    {
+        return $this->discounts()
+            ->where('is_active', true)
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->exists();
+    }
+
+    public function getActiveDiscountAttribute()
+    {
+        return $this->discounts()
+            ->where('is_active', true)
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->first();
+    }
+
+    public function getDisplayPriceAttribute()
+    {
+        $activeDiscount = $this->activeDiscount;
+
+        if ($activeDiscount && $activeDiscount->type === 'percentage') {
+            $discountAmount = $this->price * $activeDiscount->percentage / 100;
+            return $this->price - $discountAmount;
+        }
+
+        return $this->price;
     }
 }

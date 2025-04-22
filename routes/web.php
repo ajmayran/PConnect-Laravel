@@ -33,9 +33,11 @@ use App\Http\Controllers\Distributors\OrderQrController;
 use App\Http\Controllers\Distributors\PaymentController;
 use App\Http\Controllers\Retailers\AllProductController;
 use App\Http\Controllers\Distributors\DeliveryController;
+use App\Http\Controllers\Distributors\DiscountController;
 use App\Http\Controllers\Distributors\InsightsController;
 use App\Http\Controllers\Retailers\ProductDescController;
 use App\Http\Controllers\Distributors\DashboardController;
+use App\Http\Controllers\Distributors\DiscountsController;
 use App\Http\Controllers\Distributors\InventoryController;
 use App\Http\Controllers\Retailers\RetailerNotifController;
 use App\Http\Controllers\Distributors\DistributorController;
@@ -62,6 +64,7 @@ use App\Http\Controllers\Distributors\DistributorProductController;
 use App\Http\Controllers\Distributors\DistributorProfileController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+
 
 
 Route::middleware('auth')->group(function () {
@@ -343,6 +346,17 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     // Insights Routes
     Route::get('/insights', [InsightsController::class, 'index'])->name('distributors.insights.index');
     Route::get('/insights/data', [InsightsController::class, 'getInsightsData'])->name('distributors.insights.data');
+
+    // Discount Routes
+    Route::resource('discounts', DiscountsController::class);
+    Route::patch('discounts/{discount}/toggle', [DiscountsController::class, 'toggle'])->name('distributors.discounts.toggle');
+    Route::get('/discounts', [DiscountsController::class, 'index'])->name('distributors.discounts.index');
+    Route::get('/discounts/create', [DiscountsController::class, 'create'])->name('distributors.discounts.create');
+    Route::post('/discounts', [DiscountsController::class, 'store'])->name('distributors.discounts.store');
+    Route::get('/discounts/{id}/edit', [DiscountsController::class, 'edit'])->name('distributors.discounts.edit');
+    Route::put('/discounts/{id}', [DiscountsController::class, 'update'])->name('distributors.discounts.update');
+    Route::delete('/discounts/{id}', [DiscountsController::class, 'destroy'])->name('distributors.discounts.destroy');
+
 
     // Payment Routes
     Route::get('/payments', [PaymentController::class, 'index'])->name('distributors.payments.index');

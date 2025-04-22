@@ -15,6 +15,9 @@ class Order extends Model
         'status_updated_at',
         'reject_reason',
         'cancel_reason',
+        'discount_amount',
+        'free_items',
+        'applied_discount'
     ];
 
     protected $casts = [

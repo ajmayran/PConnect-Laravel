@@ -556,7 +556,11 @@
                     batchInFields.classList.remove('hidden');
                     if (expiryDateField) expiryDateField.setAttribute('required', '');
 
-                    batchNumberContainer.innerHTML = '';
+                    // Add batch number input field for Stock In
+                    batchNumberContainer.innerHTML = `
+                    <label for="batch_number" class="block mb-2 text-sm font-medium">Batch Number</label>
+                    <input type="text" name="batch_number" id="batchNumberInput" class="w-full px-3 py-2 border rounded-md" required>
+                `;
 
                 } else {
                     // For Stock Out: hide batch creation fields and remove required
@@ -848,7 +852,7 @@
             });
 
             function toggleRestockAlert(enabled) {
-                fetch('{{ route("distributors.inventory.toggle-restock-alert") }}', {
+                fetch('{{ route('distributors.inventory.toggle-restock-alert') }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

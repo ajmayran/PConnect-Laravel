@@ -15,17 +15,82 @@ class CartController extends Controller
 {
     public function index()
     {
-        // Get all carts for the current user with their details
-        $carts = Cart::with(['details.product.distributor'])
+        $carts = Cart::with([
+            'details.product.distributor',
+            'details.product.discounts'
+        ])
             ->where('user_id', Auth::id())
             ->get();
 
-        // Group cart items by cart (which is already separated by distributor)
         $groupedItems = collect();
 
         foreach ($carts as $cart) {
             if ($cart->details->isNotEmpty()) {
-                $groupedItems[$cart->distributor_id] = $cart->details;
+                $groupedItems[$cart->distributor_id] = $cart->details->map(function ($detail) {
+                    $product = $detail->product;
+                    $quantity = $detail->quantity;
+
+                    // If we have saved discount details, use them
+                    if ($detail->discount_amount > 0) {
+                        // Ensure subtotal is correct with the applied discount
+                        $detail->subtotal = ($product->price * $quantity) - $detail->discount_amount;
+                    } else {
+                        // Calculate discount fresh - this code path will rarely be used
+                        // since discounts are calculated when items are added to cart
+                        $discountAmount = 0;
+                        $freeItems = 0;
+                        $appliedDiscount = null;
+
+                        // Get applicable discounts for this product
+                        $discounts = \App\Models\Discount::where('distributor_id', $product->distributor_id)
+                            ->where('is_active', true)
+                            ->where('start_date', '<=', now())
+                            ->where('end_date', '>=', now())
+                            ->whereHas('products', function ($query) use ($product) {
+                                $query->where('product_id', $product->id);
+                            })
+                            ->get();
+
+                        // Calculate best discount for current quantity
+                        foreach ($discounts as $discount) {
+                            if ($discount->type === 'percentage') {
+                                $potentialDiscount = $discount->calculatePercentageDiscount($product->price) * $quantity;
+                                if ($potentialDiscount > $discountAmount) {
+                                    $discountAmount = $potentialDiscount;
+                                    $freeItems = 0;
+                                    $appliedDiscount = $discount->name;
+                                }
+                            } else if ($discount->type === 'freebie') {
+                                $potentialFreeItems = $discount->calculateFreeItems($quantity);
+                                $potentialDiscount = $potentialFreeItems * $product->price;
+
+                                if ($potentialDiscount > $discountAmount) {
+                                    $discountAmount = $potentialDiscount;
+                                    $freeItems = $potentialFreeItems;
+                                    $appliedDiscount = $discount->name;
+                                }
+                            }
+                        }
+
+                        // Update cart detail with calculated discount
+                        if ($discountAmount > 0) {
+                            $subtotal = $quantity * $product->price;
+                            $finalSubtotal = $subtotal - $discountAmount;
+
+                            $detail->update([
+                                'discount_amount' => $discountAmount,
+                                'free_items' => $freeItems,
+                                'subtotal' => $finalSubtotal,
+                                'applied_discount' => $appliedDiscount
+                            ]);
+                        } else {
+                            // No discount applicable
+                            $detail->subtotal = $product->price * $quantity;
+                        }
+                    }
+
+                    return $detail;
+                });
             }
         }
 
@@ -33,6 +98,7 @@ class CartController extends Controller
             'groupedItems' => $groupedItems,
         ]);
     }
+
 
     public function add(Request $request)
     {
@@ -43,19 +109,11 @@ class CartController extends Controller
                 'product_id' => 'required|exists:products,id',
                 'price' => 'required|numeric',
                 'quantity' => 'required|integer|min:1',
-                'buy_now' => 'sometimes|boolean',
                 'minimum_purchase_qty' => 'sometimes|integer|min:1'
             ]);
 
             $product = Product::findOrFail($validated['product_id']);
-            $availableStock = $product->stock_quantity; 
-
-            Log::info("🛒 Adding Product to Cart:", [
-                'Request Product ID' => $validated['product_id'],
-                'Product Name' => $product->product_name,
-                'Stock Available' => $availableStock,
-                'Min Purchase Qty' => $product->minimum_purchase_qty,
-            ]);
+            $availableStock = $product->stock_quantity;
 
             // Validate quantity rules
             $minQty = $validated['minimum_purchase_qty'] ?? $product->minimum_purchase_qty;
@@ -81,14 +139,47 @@ class CartController extends Controller
                 ->first();
 
             if (!$cart) {
-                Log::info("🛒 Creating new cart for distributor: {$product->distributor_id}");
                 $cart = Cart::create([
                     'user_id' => Auth::id(),
                     'distributor_id' => $product->distributor_id,
                 ]);
             }
 
-            Log::info("🛒 Using Cart ID: {$cart->id}");
+            // Check for applicable discounts
+            $discountAmount = 0;
+            $freeItems = 0;
+            $appliedDiscount = null;
+
+            // Get applicable discounts for this product
+            $discounts = \App\Models\Discount::where('distributor_id', $product->distributor_id)
+                ->where('is_active', true)
+                ->where('start_date', '<=', now())
+                ->where('end_date', '>=', now())
+                ->whereHas('products', function ($query) use ($product) {
+                    $query->where('product_id', $product->id);
+                })
+                ->get();
+
+            // Calculate discount for the requested quantity
+            foreach ($discounts as $discount) {
+                if ($discount->type === 'percentage') {
+                    $potentialDiscount = $discount->calculatePercentageDiscount($product->price) * $validated['quantity'];
+                    if ($potentialDiscount > $discountAmount) {
+                        $discountAmount = $potentialDiscount;
+                        $freeItems = 0;
+                        $appliedDiscount = $discount->name;
+                    }
+                } else if ($discount->type === 'freebie') {
+                    $potentialFreeItems = $discount->calculateFreeItems($validated['quantity']);
+                    $potentialDiscount = $potentialFreeItems * $product->price;
+
+                    if ($potentialDiscount > $discountAmount) {
+                        $discountAmount = $potentialDiscount;
+                        $freeItems = $potentialFreeItems;
+                        $appliedDiscount = $discount->name;
+                    }
+                }
+            }
 
             // Check if the exact product exists in the cart
             $cartDetail = CartDetail::where('cart_id', $cart->id)
@@ -96,7 +187,6 @@ class CartController extends Controller
                 ->first();
 
             if ($cartDetail) {
-                Log::info("🔄 Updating existing cart detail for Product ID {$product->id}");
                 $newQuantity = $cartDetail->quantity + $validated['quantity'];
 
                 if ($newQuantity < $product->minimum_purchase_qty) {
@@ -115,18 +205,54 @@ class CartController extends Controller
                     ], 422);
                 }
 
+                // Recalculate discount for the new quantity
+                $discountAmount = 0;
+                $freeItems = 0;
+                $appliedDiscount = null;
+
+                foreach ($discounts as $discount) {
+                    if ($discount->type === 'percentage') {
+                        $potentialDiscount = $discount->calculatePercentageDiscount($product->price) * $newQuantity;
+                        if ($potentialDiscount > $discountAmount) {
+                            $discountAmount = $potentialDiscount;
+                            $freeItems = 0;
+                            $appliedDiscount = $discount->name;
+                        }
+                    } else if ($discount->type === 'freebie') {
+                        $potentialFreeItems = $discount->calculateFreeItems($newQuantity);
+                        $potentialDiscount = $potentialFreeItems * $product->price;
+
+                        if ($potentialDiscount > $discountAmount) {
+                            $discountAmount = $potentialDiscount;
+                            $freeItems = $potentialFreeItems;
+                            $appliedDiscount = $discount->name;
+                        }
+                    }
+                }
+
+                $subtotal = $newQuantity * $product->price;
+                $finalSubtotal = $subtotal - $discountAmount;
+
                 $cartDetail->update([
                     'quantity' => $newQuantity,
-                    'subtotal' => $newQuantity * $product->price
+                    'subtotal' => $finalSubtotal,
+                    'discount_amount' => $discountAmount,
+                    'free_items' => $freeItems,
+                    'applied_discount' => $appliedDiscount
                 ]);
             } else {
-                Log::info("🆕 Creating new cart detail for Product ID {$product->id}");
+                $subtotal = $validated['quantity'] * $product->price;
+                $finalSubtotal = $subtotal - $discountAmount;
+
                 CartDetail::create([
                     'cart_id' => $cart->id,
                     'product_id' => $product->id,
                     'price' => $product->price,
                     'quantity' => $validated['quantity'],
-                    'subtotal' => $product->price * $validated['quantity']
+                    'subtotal' => $finalSubtotal,
+                    'discount_amount' => $discountAmount,
+                    'free_items' => $freeItems,
+                    'applied_discount' => $appliedDiscount
                 ]);
             }
 
@@ -215,7 +341,7 @@ class CartController extends Controller
             foreach ($validated['items'] as $item) {
                 $cartDetail = CartDetail::findOrFail($item['cart_detail_id']);
                 $product = $cartDetail->product;
-                $availableStock = $product->stock_quantity; 
+                $availableStock = $product->stock_quantity;
 
                 // Validate minimum purchase quantity
                 if ($item['quantity'] < $product->minimum_purchase_qty) {
@@ -227,9 +353,51 @@ class CartController extends Controller
                     throw new \Exception("Only {$availableStock} items available in stock for {$product->product_name}");
                 }
 
+                // Check for applicable discounts
+                $discountAmount = 0;
+                $freeItems = 0;
+                $appliedDiscount = null;
+
+                // Get applicable discounts for this product
+                $discounts = \App\Models\Discount::where('distributor_id', $product->distributor_id)
+                    ->where('is_active', true)
+                    ->where('start_date', '<=', now())
+                    ->where('end_date', '>=', now())
+                    ->whereHas('products', function ($query) use ($product) {
+                        $query->where('product_id', $product->id);
+                    })
+                    ->get();
+
+                // Calculate discount for the updated quantity
+                foreach ($discounts as $discount) {
+                    if ($discount->type === 'percentage') {
+                        $potentialDiscount = $discount->calculatePercentageDiscount($product->price) * $item['quantity'];
+                        if ($potentialDiscount > $discountAmount) {
+                            $discountAmount = $potentialDiscount;
+                            $freeItems = 0;
+                            $appliedDiscount = $discount->name;
+                        }
+                    } else if ($discount->type === 'freebie') {
+                        $potentialFreeItems = $discount->calculateFreeItems($item['quantity']);
+                        $potentialDiscount = $potentialFreeItems * $product->price;
+
+                        if ($potentialDiscount > $discountAmount) {
+                            $discountAmount = $potentialDiscount;
+                            $freeItems = $potentialFreeItems;
+                            $appliedDiscount = $discount->name;
+                        }
+                    }
+                }
+
+                $subtotal = $item['quantity'] * $product->price;
+                $finalSubtotal = $subtotal - $discountAmount;
+
                 $cartDetail->update([
                     'quantity' => $item['quantity'],
-                    'subtotal' => $item['quantity'] * $product->price
+                    'subtotal' => $finalSubtotal,
+                    'discount_amount' => $discountAmount,
+                    'free_items' => $freeItems,
+                    'applied_discount' => $appliedDiscount
                 ]);
             }
 

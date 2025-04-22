@@ -56,8 +56,24 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="px-4 py-2 text-center" data-price="{{ $item->product->price }}">
-                                            ₱{{ number_format($item->product->price, 2) }}
+                                        <td class="px-4 py-2 text-center">
+                                            @if($item->discount_amount > 0)
+                                                <div class="flex flex-col">
+                                                    <span class="text-gray-500 line-through">₱{{ number_format($item->product->price, 2) }}</span>
+                                                    <span class="text-green-600" 
+                                                          data-price="{{ $item->product->price }}" 
+                                                          data-discount="{{ $item->discount_amount / $item->quantity }}">
+                                                        ₱{{ number_format(($item->product->price * $item->quantity - $item->discount_amount) / $item->quantity, 2) }}
+                                                    </span>
+                                                    <span class="text-xs text-green-500">
+                                                        {{ $item->applied_discount ?? 'Discount Applied' }}
+                                                    </span>
+                                                </div>
+                                            @else
+                                                <span data-price="{{ $item->product->price }}" data-discount="0">
+                                                    ₱{{ number_format($item->product->price, 2) }}
+                                                </span>
+                                            @endif
                                         </td>
                                         <td class="px-4 py-4">
                                             <div class="flex items-center justify-center">
@@ -78,7 +94,7 @@
                                             </div>
                                         </td>
                                         <td class="px-4 py-2 text-center item-subtotal">
-                                            ₱{{ number_format($item->product->price * $item->quantity, 2) }}
+                                            ₱{{ number_format($item->subtotal, 2) }}
                                         </td>
                                         <td class="px-4 py-4 text-center">
                                             <button onclick="removeItem('{{ $item->id }}')"
@@ -101,12 +117,7 @@
                                         Total Amount:
                                     </td>
                                     <td class="px-4 py-4 font-semibold text-center distributor-subtotal">
-                                        ₱{{ number_format(
-                                            $items->sum(function ($item) {
-                                                return $item->product->price * $item->quantity;
-                                            }),
-                                            2,
-                                        ) }}
+                                        ₱{{ number_format($items->sum('subtotal'), 2) }}
                                     </td>
                                     <td class="px-4 py-4">
                                         <button onclick="proceedToCheckout('{{ $distributorId }}')"
@@ -141,10 +152,23 @@
                                 <div class="flex-1">
                                     <h4 class="font-medium text-gray-800">{{ $item->product->product_name }}</h4>
                                     <p class="text-xs text-gray-500">SKU: {{ $item->product->sku }}</p>
-                                    <p class="mt-1 text-sm font-semibold text-gray-800"
-                                        data-price="{{ $item->product->price }}">
-                                        ₱{{ number_format($item->product->price, 2) }}
-                                    </p>
+                                    
+                                    @if($item->discount_amount > 0)
+                                        <p class="mt-1 text-sm text-gray-500 line-through">
+                                            ₱{{ number_format($item->product->price, 2) }}
+                                        </p>
+                                        <p class="text-sm font-semibold text-green-600"
+                                           data-price="{{ $item->product->price }}" 
+                                           data-discount="{{ $item->discount_amount / $item->quantity }}">
+                                            ₱{{ number_format(($item->product->price * $item->quantity - $item->discount_amount) / $item->quantity, 2) }}
+                                            <span class="text-xs">{{ $item->applied_discount ?? 'Discount Applied' }}</span>
+                                        </p>
+                                    @else
+                                        <p class="mt-1 text-sm font-semibold text-gray-800"
+                                           data-price="{{ $item->product->price }}" data-discount="0">
+                                            ₱{{ number_format($item->product->price, 2) }}
+                                        </p>
+                                    @endif
                                 </div>
 
                                 <!-- Remove button -->
@@ -182,7 +206,7 @@
                                 <div class="text-right">
                                     <div class="text-xs text-gray-500">Subtotal</div>
                                     <div class="font-semibold text-gray-800 item-subtotal">
-                                        ₱{{ number_format($item->product->price * $item->quantity, 2) }}
+                                        ₱{{ number_format($item->subtotal, 2) }}
                                     </div>
                                 </div>
                             </div>
@@ -194,12 +218,7 @@
                         <div class="flex items-center justify-between mb-4">
                             <span class="font-semibold text-gray-700">Total Amount:</span>
                             <span class="font-bold text-gray-900 distributor-subtotal">
-                                ₱{{ number_format(
-                                    $items->sum(function ($item) {
-                                        return $item->product->price * $item->quantity;
-                                    }),
-                                    2,
-                                ) }}
+                                ₱{{ number_format($items->sum('subtotal'), 2) }}
                             </span>
                         </div>
                         <button onclick="proceedToCheckout('{{ $distributorId }}')"
@@ -238,10 +257,10 @@
                         <span class="text-lg font-bold text-gray-900 sm:text-xl" id="globalCartTotal">
                             ₱{{ number_format(
                                 $groupedItems->flatMap(function ($items) {
-                                        return $items->map(function ($item) {
-                                            return $item->product->price * $item->quantity;
-                                        });
-                                    })->sum(),
+                                    return $items->map(function ($item) {
+                                        return $item->subtotal;
+                                    });
+                                })->sum(),
                                 2,
                             ) }}
                         </span>
@@ -260,7 +279,7 @@
             </div>
         @endif
     </div>
-    </div>
+
     <script>
         let cartChanges = {};
 
@@ -268,7 +287,11 @@
             const cartContainer = document.getElementById('cartContainer');
             if (!document.querySelector('.cart-group')) {
                 cartContainer.innerHTML = `
-                    <h2 class="mb-6 text-3xl font-bold text-gray-800">Shopping Cart</h2>
+                    <div class="px-4 py-6 mx-auto center">
+                        <h2 class="mb-6 text-3xl font-bold text-gray-800">Shopping Cart</h2>
+                        <a href="{{ route('retailers.profile.my-purchase') }}"
+                            class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">My Purchases</a>
+                    </div>
                     <div class="flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-md sm:p-12">
                         <svg class="w-12 h-12 mb-4 text-gray-400 sm:w-16 sm:h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -276,7 +299,7 @@
                             </path>
                         </svg>
                         <p class="mb-4 text-base text-gray-600 sm:text-lg">Your cart is empty</p>
-                        <a href="{{ route('retailers.dashboard') }}"
+                        <a href="{{ route('retailers.all-product') }}"
                             class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
                             Continue Shopping
                         </a>
@@ -295,117 +318,66 @@
                 cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Deleting cart...',
-                        allowOutsideClick: false,
-                        showConfirmButton: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
+                    showProcessingAlert('Deleting cart...');
 
                     fetch(`/retailers/cart/delete/${cartId}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            }
-                        })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data.success) {
-                                const cartGroup = document.querySelector(`[data-cart-id="${cartId}"]`);
-                                if (cartGroup) {
-                                    cartGroup.remove();
-                                }
-                                updateCartTotal();
-                                updateCartEmptyState();
-                                Swal.fire({
-                                    title: 'Deleted!',
-                                    text: 'Your cart has been cleared.',
-                                    icon: 'success',
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                });
-                            } else {
-                                throw new Error(data.message || 'Failed to delete cart');
-                            }
-                        })
-                        .catch(error => {
-                            Swal.fire({
-                                title: 'Error!',
-                                text: error.message || 'Failed to delete cart',
-                                icon: 'error',
-                                confirmButtonText: 'Ok'
-                            });
-                        });
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        }
+                    })
+                    .then(handleApiResponse)
+                    .then(data => {
+                        if (data.success) {
+                            const cartGroup = document.querySelector(`[data-cart-id="${cartId}"]`);
+                            if (cartGroup) cartGroup.remove();
+                            updateCartTotal();
+                            updateCartEmptyState();
+                            showSuccessAlert('Deleted!', 'Your cart has been cleared.');
+                        } else {
+                            throw new Error(data.message || 'Failed to delete cart');
+                        }
+                    })
+                    .catch(error => showErrorAlert('Error!', error.message || 'Failed to delete cart'));
                 }
             });
         }
 
         function removeItem(itemId) {
-            Swal.fire({
-                title: 'Removing item...',
-                text: 'Please wait',
-                allowOutsideClick: false,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
+            showProcessingAlert('Removing item...');
 
             fetch(`/retailers/cart/remove/${itemId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
-                        if (itemElement) {
-                            const cartGroup = itemElement.closest('.cart-group');
-                            itemElement.remove();
-                            // If no items remain in the group, remove the entire group
-                            if (!cartGroup.querySelector('[data-item-id]')) {
-                                cartGroup.remove();
-                            } else {
-                                updateDistributorSubtotal(cartGroup.querySelector('tr'));
-                            }
-                            updateCartTotal();
-                            updateCartEmptyState();
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                }
+            })
+            .then(handleApiResponse)
+            .then(data => {
+                if (data.success) {
+                    const itemElements = document.querySelectorAll(`[data-item-id="${itemId}"]`);
+                    itemElements.forEach(itemElement => {
+                        const cartGroup = itemElement.closest('.cart-group');
+                        itemElement.remove();
+                        
+                        // If no items remain in the group, remove the entire group
+                        if (!cartGroup.querySelector('[data-item-id]')) {
+                            cartGroup.remove();
+                        } else {
+                            updateDistributorSubtotal(cartGroup.dataset.distributorId);
                         }
-                        Swal.fire({
-                            title: 'Success!',
-                            text: 'Item removed from cart',
-                            icon: 'success',
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-                    } else {
-                        throw new Error(data.message || 'Failed to remove item');
-                    }
-                })
-                .catch(error => {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: error.message || 'Failed to remove item',
-                        icon: 'error',
-                        confirmButtonText: 'Ok'
                     });
-                });
+                    
+                    updateCartTotal();
+                    updateCartEmptyState();
+                    showSuccessAlert('Success!', 'Item removed from cart');
+                } else {
+                    throw new Error(data.message || 'Failed to remove item');
+                }
+            })
+            .catch(error => showErrorAlert('Error!', error.message || 'Failed to remove item'));
         }
 
         function updateQuantity(button, action) {
@@ -425,37 +397,50 @@
             input.value = newQty;
             cartChanges[itemId] = newQty;
 
-            // Update both mobile and desktop versions if they exist
-            const allItemContainers = document.querySelectorAll(`[data-item-id="${itemId}"]`);
-            allItemContainers.forEach(item => {
-                const itemInput = item.querySelector('input[type="number"]');
-                if (itemInput && itemInput !== input) {
-                    itemInput.value = newQty;
-                }
-                updateItemSubtotal(item, newQty);
-            });
-
-            // Find the correct distributor group and update its subtotal
-            const distributorId = container.dataset.distributorId;
-            updateDistributorSubtotal(distributorId);
+            // Update all instances of this item (both mobile and desktop views)
+            updateAllItemInstances(itemId, newQty);
 
             // Update the global cart total
             updateCartTotal();
         }
 
+        function updateAllItemInstances(itemId, newQty) {
+            // Find all DOM elements for this cart item (mobile and desktop views)
+            const allItemContainers = document.querySelectorAll(`[data-item-id="${itemId}"]`);
+            let distributorId = null;
+            
+            allItemContainers.forEach(container => {
+                // Update quantity input value
+                const itemInput = container.querySelector('input[type="number"]');
+                if (itemInput) itemInput.value = newQty;
+                
+                // Calculate and update subtotal based on price and discount
+                updateItemSubtotal(container, newQty);
+                
+                if (!distributorId) distributorId = container.dataset.distributorId;
+            });
+            
+            // Update distributor subtotal after updating all items
+            if (distributorId) updateDistributorSubtotal(distributorId);
+        }
+
         function updateItemSubtotal(container, quantity) {
-            // Get the price element which has the data-price attribute
             const priceElement = container.querySelector('[data-price]');
             if (!priceElement) return;
 
             const price = parseFloat(priceElement.dataset.price);
-            const subtotal = price * quantity;
+            const discountPerUnit = parseFloat(priceElement.dataset.discount) || 0;
+            
+            // Calculate subtotal with discount applied
+            const subtotal = (price - discountPerUnit) * quantity;
 
             // Update all subtotal elements within this container
             const subtotalElements = container.querySelectorAll('.item-subtotal');
             subtotalElements.forEach(element => {
-                element.textContent =
-                    `₱${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                element.textContent = `₱${subtotal.toLocaleString('en-US', { 
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                })}`;
             });
         }
 
@@ -478,30 +463,27 @@
                 if (processedItems.has(itemId)) return;
                 processedItems.add(itemId);
 
-                // Get the price and quantity
-                const priceElement = item.querySelector('[data-price]');
-                const inputElement = item.querySelector('input[type="number"]');
-
-                if (priceElement && inputElement) {
-                    const price = parseFloat(priceElement.dataset.price);
-                    const quantity = parseInt(inputElement.value);
-                    subtotal += price * quantity;
+                // Get subtotal from the item-subtotal element
+                const subtotalElement = item.querySelector('.item-subtotal');
+                if (subtotalElement) {
+                    const itemSubtotal = parseFloat(subtotalElement.textContent.replace('₱', '').replace(/,/g, ''));
+                    if (!isNaN(itemSubtotal)) subtotal += itemSubtotal;
                 }
             });
 
             // Update all distributor subtotal elements in this cart group
             const subtotalElements = cartGroup.querySelectorAll('.distributor-subtotal');
             subtotalElements.forEach(element => {
-                element.textContent =
-                    `₱${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                element.textContent = `₱${subtotal.toLocaleString('en-US', { 
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                })}`;
             });
         }
 
         function updateCartTotal() {
             // Calculate the total from all distributor subtotals
             const subtotalElements = document.querySelectorAll('.distributor-subtotal');
-
-            // Each distributor appears twice (mobile and desktop view), so we need to count each one only once
             const processedDistributors = new Set();
             let total = 0;
 
@@ -519,18 +501,16 @@
                 // Add this distributor's subtotal to the total
                 const subtotalText = element.textContent.replace('₱', '').replace(/,/g, '');
                 const subtotal = parseFloat(subtotalText);
-                if (!isNaN(subtotal)) {
-                    total += subtotal;
-                }
+                if (!isNaN(subtotal)) total += subtotal;
             });
 
             // Update the global cart total
             const globalTotalElement = document.getElementById('globalCartTotal');
             if (globalTotalElement) {
                 globalTotalElement.textContent = `₱${total.toLocaleString('en-US', { 
-            minimumFractionDigits: 2, 
-            maximumFractionDigits: 2 
-        })}`;
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                })}`;
             }
         }
 
@@ -548,25 +528,29 @@
                 if (result.isConfirmed) {
                     removeItem(itemId);
                 } else {
-                    const input = document.querySelector(`input[data-item-id="${itemId}"]`);
-                    if (input) {
-                        input.value = minQty;
-                        const row = input.closest('tr');
-                        updateItemSubtotal(row, minQty);
-                        updateDistributorSubtotal(row);
-                        updateCartTotal();
-                    }
+                    resetItemToMinimum(itemId, minQty);
                 }
             });
         }
 
+        function resetItemToMinimum(itemId, minQty) {
+            updateAllItemInstances(itemId, minQty);
+            updateCartTotal();
+        }
+
         async function updateCartQuantities() {
             const items = [];
+            const processedItemIds = new Set();
+            
             document.querySelectorAll('input[type="number"][data-item-id]').forEach(input => {
-                items.push({
-                    cart_detail_id: input.dataset.itemId,
-                    quantity: parseInt(input.value)
-                });
+                const itemId = input.dataset.itemId;
+                if (!processedItemIds.has(itemId)) {
+                    processedItemIds.add(itemId);
+                    items.push({
+                        cart_detail_id: itemId,
+                        quantity: parseInt(input.value)
+                    });
+                }
             });
 
             try {
@@ -576,50 +560,52 @@
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     },
-                    body: JSON.stringify({
-                        items
-                    })
+                    body: JSON.stringify({ items })
                 });
-                return response.ok;
+                
+                const result = await response.json();
+                if (result.success) {
+                    return true;
+                } else {
+                    console.error('Error updating quantities:', result.message);
+                    return false;
+                }
             } catch (error) {
+                console.error('Error updating quantities:', error);
                 return false;
             }
         }
 
         async function proceedToCheckout(distributorId) {
-            await updateCartQuantities();
-            Swal.fire({
-                title: 'Processing...',
-                text: 'Preparing your checkout...',
-                allowOutsideClick: false,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            // Use the named route for checkout
+            showProcessingAlert('Preparing your checkout...');
+            
+            // First save any quantity changes
+            const updateSuccess = await updateCartQuantities();
+            if (!updateSuccess) {
+                showErrorAlert('Error', 'Could not update quantities. Please try again.');
+                return;
+            }
+            
+            // Redirect to checkout page
             setTimeout(() => {
                 window.location.href = `/retailers/checkout/${distributorId}`;
-            }, 1500);
+            }, 1000);
         }
 
         async function proceedToCheckoutAll() {
-            await updateCartQuantities();
-            Swal.fire({
-                title: 'Processing...',
-                text: 'Preparing your checkout...',
-                allowOutsideClick: false,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            // Use the named route for checkout all
+            showProcessingAlert('Preparing your checkout...');
+            
+            // First save any quantity changes
+            const updateSuccess = await updateCartQuantities();
+            if (!updateSuccess) {
+                showErrorAlert('Error', 'Could not update quantities. Please try again.');
+                return;
+            }
+            
+            // Redirect to checkout all page
             setTimeout(() => {
                 window.location.href = '/retailers/checkout-all';
-            }, 1500);
+            }, 1000);
         }
 
         function validateQuantity(input) {
@@ -634,39 +620,51 @@
                     icon: 'warning',
                     confirmButtonText: 'Ok'
                 }).then(() => {
-                    input.value = minQty;
-                    newQty = minQty;
-                    cartChanges[itemId] = newQty;
-
-                    // Update all instances of this item
-                    const allItemContainers = document.querySelectorAll(`[data-item-id="${itemId}"]`);
-                    allItemContainers.forEach(container => {
-                        updateItemSubtotal(container, newQty);
-                    });
-
-                    // Update the distributor subtotal
-                    const distributorId = input.closest('[data-distributor-id]').dataset.distributorId;
-                    updateDistributorSubtotal(distributorId);
-
-                    // Update the global cart total
-                    updateCartTotal();
+                    resetItemToMinimum(itemId, minQty);
                 });
             } else {
-                cartChanges[itemId] = newQty;
-
-                // Update all instances of this item
-                const allItemContainers = document.querySelectorAll(`[data-item-id="${itemId}"]`);
-                allItemContainers.forEach(container => {
-                    updateItemSubtotal(container, newQty);
-                });
-
-                // Update the distributor subtotal
-                const distributorId = input.closest('[data-distributor-id]').dataset.distributorId;
-                updateDistributorSubtotal(distributorId);
-
-                // Update the global cart total
+                updateAllItemInstances(itemId, newQty);
                 updateCartTotal();
             }
+        }
+        
+        // Helper functions for alerts
+        function showProcessingAlert(text) {
+            Swal.fire({
+                title: 'Processing...',
+                text: text || 'Please wait',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        }
+        
+        function showSuccessAlert(title, text) {
+            Swal.fire({
+                title: title || 'Success',
+                text: text || 'Operation completed successfully',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
+        
+        function showErrorAlert(title, text) {
+            Swal.fire({
+                title: title || 'Error',
+                text: text || 'Something went wrong',
+                icon: 'error',
+                confirmButtonText: 'Ok'
+            });
+        }
+        
+        function handleApiResponse(response) {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
         }
     </script>
 </x-app-layout>

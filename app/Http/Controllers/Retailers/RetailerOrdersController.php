@@ -211,7 +211,6 @@ class RetailerOrdersController extends Controller
         }
     }
 
-
     public function cancelOrder(Request $request, Order $order)
     {
         // Check if the order belongs to the authenticated user
@@ -219,7 +218,7 @@ class RetailerOrdersController extends Controller
             return redirect()->back()->with('error', 'You are not authorized to cancel this order.');
         }
 
-        // Check if the order status allows cancellation (usually only pending and processing orders can be cancelled)
+        // Check if the order status allows cancellation (only pending and processing orders can be cancelled)
         if (!in_array($order->status, ['pending', 'processing'])) {
             return redirect()->back()->with('error', 'This order cannot be cancelled.');
         }
@@ -228,6 +227,9 @@ class RetailerOrdersController extends Controller
         DB::beginTransaction();
 
         try {
+            // Store the original status before updating
+            $originalStatus = $order->status;
+
             $order->update([
                 'status' => 'cancelled',
                 'cancel_reason' => $request->input('cancel_reason') === 'other'
@@ -236,67 +238,238 @@ class RetailerOrdersController extends Controller
                 'status_updated_at' => now()
             ]);
 
-            // Return stock to inventory for each order detail
-            foreach ($order->orderDetails as $detail) {
-                $product = $detail->product;
+            // Return stock to inventory if the order status was 'processing'
+            if ($originalStatus === 'processing') {
+                foreach ($order->orderDetails as $detail) {
+                    $product = $detail->product;
 
-                // Handle batch-managed products differently
-                if ($product->isBatchManaged()) {
-                    // Find the stock out records related to this order detail
-                    $stockRecords = \App\Models\Stock::where('product_id', $detail->product_id)
-                        ->where('type', 'out')
-                        ->where('notes', 'like', '%Order #' . $order->id . '%')
-                        ->get();
+                    // Handle batch-managed products differently
+                    if ($product->isBatchManaged()) {
+                        // Find the stock out records related to this order detail
+                        $stockRecords = \App\Models\Stock::where('product_id', $detail->product_id)
+                            ->where('type', 'out')
+                            ->where('notes', 'like', '%Order ' . $order->formatted_order_id . '%')
+                            ->get();
 
-                    foreach ($stockRecords as $stockRecord) {
-                        if ($stockRecord->batch_id) {
-                            // Check if the batch still exists or was deleted (empty)
-                            $batch = \App\Models\ProductBatch::withTrashed()->find($stockRecord->batch_id);
+                        Log::info('Found stock records for batch product', [
+                            'product_id' => $detail->product_id,
+                            'order_id' => $order->id,
+                            'formatted_order_id' => $order->formatted_order_id,
+                            'records_count' => $stockRecords->count()
+                        ]);
 
-                            if ($batch) {
-                                if ($batch->trashed()) {
-                                    // If batch was deleted, restore it first
-                                    $batch->restore();
-                                    $batch->quantity = $stockRecord->quantity;
+                        // If no specific stock records found, we need to handle this specially
+                        if ($stockRecords->isEmpty()) {
+                            Log::info('No stock records found, checking for soft-deleted batches first');
+
+                            // Check for soft-deleted batches that were completely used by this order
+                            $deletedBatches = \App\Models\ProductBatch::withTrashed()
+                                ->where('product_id', $detail->product_id)
+                                ->whereNotNull('deleted_at')
+                                ->orderBy('expiry_date')
+                                ->get();
+
+                            Log::info('Found deleted batches count: ' . $deletedBatches->count());
+
+                            $remainingQuantity = $detail->quantity;
+                            $restoredDeletedBatches = false;
+
+                            // First attempt: Try to distribute quantities across all deleted batches
+                            // that might have been used for this order
+                            foreach ($deletedBatches as $deletedBatch) {
+                                if ($remainingQuantity <= 0) break;
+
+                                Log::info('Examining deleted batch for restoration', [
+                                    'batch_id' => $deletedBatch->id,
+                                    'batch_number' => $deletedBatch->batch_number,
+                                    'deleted_at' => $deletedBatch->deleted_at
+                                ]);
+
+                                // Get the original batch quantity from stock records if possible
+                                // Attempt to find a matching stock out record from before the batch was deleted
+                                $originalBatchQuantity = \App\Models\Stock::where('batch_id', $deletedBatch->id)
+                                    ->where('type', 'out')
+                                    ->where('notes', 'like', '%Order ' . $order->formatted_order_id . '%')
+                                    ->sum('quantity');
+
+                                // If we can't find the original quantity, make an educated guess
+                                if ($originalBatchQuantity <= 0) {
+                                    // This is a rough estimate - in a production app you might
+                                    // want to store the original batch quantity in a log or additional field
+                                    $originalBatchQuantity = min($remainingQuantity, 25); // Assume a reasonable default
+                                    Log::info('Could not determine original batch quantity, using estimate', [
+                                        'estimated_quantity' => $originalBatchQuantity
+                                    ]);
                                 } else {
-                                    // If batch exists, just add the quantity back
-                                    $batch->quantity += $stockRecord->quantity;
+                                    Log::info('Found original batch quantity from stock records', [
+                                        'original_quantity' => $originalBatchQuantity
+                                    ]);
                                 }
-                                $batch->save();
 
-                                // Create a stock in record to track the return
-                                \App\Models\Stock::create([
+                                // Restore the batch
+                                $deletedBatch->restore();
+
+                                // Use either the original quantity or remaining quantity, whichever is smaller
+                                $quantityToRestore = min($originalBatchQuantity, $remainingQuantity);
+                                $deletedBatch->quantity = $quantityToRestore;
+                                $deletedBatch->save();
+
+                                // Create stock record for the restoration
+                                $stockInRecord = \App\Models\Stock::create([
                                     'product_id' => $product->id,
-                                    'batch_id' => $batch->id,
+                                    'batch_id' => $deletedBatch->id,
                                     'type' => 'in',
-                                    'quantity' => $stockRecord->quantity,
+                                    'quantity' => $quantityToRestore,
                                     'user_id' => Auth::id(),
-                                    'notes' => 'Order #' . $order->id . ' cancelled - returned to batch #' . $batch->batch_number,
+                                    'notes' => 'Order ' . $order->formatted_order_id . ' cancelled - restored deleted batch #' . $deletedBatch->batch_number,
                                     'stock_updated_at' => now()
                                 ]);
+
+                                Log::info('Restored deleted batch', [
+                                    'batch_id' => $deletedBatch->id,
+                                    'batch_number' => $deletedBatch->batch_number,
+                                    'stock_record_id' => $stockInRecord->id,
+                                    'quantity' => $quantityToRestore
+                                ]);
+
+                                $remainingQuantity -= $quantityToRestore;
+                                $restoredDeletedBatches = true;
+                            }
+
+                            // If there's still remaining quantity or no batches were restored
+                            if ($remainingQuantity > 0) {
+                                // Find the existing batch to add remaining quantities
+                                $batch = \App\Models\ProductBatch::where('product_id', $detail->product_id)
+                                    ->orderBy('expiry_date')
+                                    ->first();
+
+                                if ($batch) {
+                                    $batch->quantity += $remainingQuantity;
+                                    $batch->save();
+
+                                    // Create a stock in record to track the return
+                                    $stockInRecord = \App\Models\Stock::create([
+                                        'product_id' => $product->id,
+                                        'batch_id' => $batch->id,
+                                        'type' => 'in',
+                                        'quantity' => $remainingQuantity,
+                                        'user_id' => Auth::id(),
+                                        'notes' => 'Order ' . $order->formatted_order_id . ' cancelled - returned to batch #' . $batch->batch_number,
+                                        'stock_updated_at' => now()
+                                    ]);
+
+                                    Log::info('Added remaining quantity to existing batch', [
+                                        'stock_record_id' => $stockInRecord->id,
+                                        'batch_id' => $batch->id,
+                                        'batch_number' => $batch->batch_number,
+                                        'quantity' => $remainingQuantity
+                                    ]);
+                                } else {
+                                    // Create a new batch if none exists
+                                    $batch = \App\Models\ProductBatch::create([
+                                        'product_id' => $detail->product_id,
+                                        'batch_number' => 'new-' . uniqid(),
+                                        'quantity' => $remainingQuantity,
+                                        'expiry_date' => now()->addMonths(6),
+                                        'received_at' => now()
+                                    ]);
+
+                                    $stockInRecord = \App\Models\Stock::create([
+                                        'product_id' => $product->id,
+                                        'batch_id' => $batch->id,
+                                        'type' => 'in',
+                                        'quantity' => $remainingQuantity,
+                                        'user_id' => Auth::id(),
+                                        'notes' => 'Order ' . $order->formatted_order_id . ' cancelled - returned to new batch #' . $batch->batch_number,
+                                        'stock_updated_at' => now()
+                                    ]);
+
+                                    Log::info('Created new batch and stock in record', [
+                                        'batch_id' => $batch->id,
+                                        'batch_number' => $batch->batch_number,
+                                        'stock_record_id' => $stockInRecord->id,
+                                        'quantity' => $remainingQuantity
+                                    ]);
+                                }
+                            }
+                        } else {
+                            // Process each stock record to properly return quantities to appropriate batches
+                            foreach ($stockRecords as $stockRecord) {
+                                if ($stockRecord->batch_id) {
+                                    // Check if the batch still exists or was deleted (empty)
+                                    $batch = \App\Models\ProductBatch::withTrashed()->find($stockRecord->batch_id);
+
+                                    if ($batch) {
+                                        Log::info('Processing batch from stock record', [
+                                            'batch_id' => $batch->id,
+                                            'batch_number' => $batch->batch_number,
+                                            'is_trashed' => $batch->trashed(),
+                                            'current_quantity' => $batch->quantity,
+                                            'adding_quantity' => $stockRecord->quantity
+                                        ]);
+
+                                        if ($batch->trashed()) {
+                                            // If batch was deleted, restore it first
+                                            $batch->restore();
+                                            $batch->quantity = $stockRecord->quantity;
+                                        } else {
+                                            // If batch exists, just add the quantity back
+                                            $batch->quantity += $stockRecord->quantity;
+                                        }
+
+                                        // Save the batch with updated quantity
+                                        $batch->save();
+
+                                        // Double check the quantity was actually updated
+                                        $updatedBatch = \App\Models\ProductBatch::find($batch->id);
+                                        Log::info('Batch after update', [
+                                            'batch_id' => $updatedBatch->id,
+                                            'new_quantity' => $updatedBatch->quantity
+                                        ]);
+
+                                        // Create a stock in record to track the return
+                                        $stockInRecord = \App\Models\Stock::create([
+                                            'product_id' => $product->id,
+                                            'batch_id' => $batch->id,
+                                            'type' => 'in',
+                                            'quantity' => $stockRecord->quantity,
+                                            'user_id' => Auth::id(),
+                                            'notes' => 'Order ' . $order->formatted_order_id . ' cancelled - returned to batch #' . $batch->batch_number,
+                                            'stock_updated_at' => now()
+                                        ]);
+
+                                        Log::info('Created stock in record', [
+                                            'stock_record_id' => $stockInRecord->id,
+                                            'product_id' => $product->id,
+                                            'batch_id' => $batch->id,
+                                            'quantity' => $stockRecord->quantity
+                                        ]);
+                                    }
+                                }
                             }
                         }
+                    } else {
+                        // Handle non-batch products
+                        $stockInRecord = \App\Models\Stock::create([
+                            'product_id' => $detail->product_id,
+                            'batch_id' => null,
+                            'type' => 'in',
+                            'quantity' => $detail->quantity,
+                            'user_id' => Auth::id(),
+                            'notes' => 'Order ' . $order->formatted_order_id . ' cancelled',
+                            'stock_updated_at' => now()
+                        ]);
+
+                        Log::info('Created non-batch stock in record', [
+                            'stock_record_id' => $stockInRecord->id,
+                            'product_id' => $detail->product_id,
+                            'quantity' => $detail->quantity
+                        ]);
                     }
 
-                    // Resequence batches to maintain proper order
-                    app(\App\Http\Controllers\Distributors\InventoryController::class)
-                        ->resequenceBatchesByExpiryDate($product->id);
+                    // Update product's stock_updated_at timestamp
+                    $product->update(['stock_updated_at' => now()]);
                 }
-                // Handle non-batch products (your existing code)
-                else {
-                    \App\Models\Stock::create([
-                        'product_id' => $detail->product_id,
-                        'batch_id' => null,
-                        'type' => 'in',
-                        'quantity' => $detail->quantity,
-                        'user_id' => Auth::id(),
-                        'notes' => 'Order #' . $order->id . ' cancelled',
-                        'stock_updated_at' => now()
-                    ]);
-                }
-
-                // Update product's stock_updated_at timestamp
-                $product->update(['stock_updated_at' => now()]);
             }
 
             // Send notification to both retailer and distributor
@@ -316,7 +489,6 @@ class RetailerOrdersController extends Controller
         }
     }
 
-
     public function placeOrder(Request $request, $distributorId)
     {
         try {
@@ -328,21 +500,17 @@ class RetailerOrdersController extends Controller
             $user = Auth::user();
 
             if ($request->input('delivery_option') === 'default') {
-                // Check if retailer profile and address details exist
                 if (!$user->retailerProfile || !$user->retailerProfile->barangay_name) {
                     return redirect()->back()->with('error', 'No default delivery address found. Please provide a new address.');
                 }
-                // Combine barangay name and street
                 $deliveryAddress = $user->retailerProfile->barangay_name .
                     ($user->retailerProfile->street ? ', ' . $user->retailerProfile->street : '');
             } else {
                 $deliveryAddress = $request->input('new_delivery_address');
             }
 
-            // Start a transaction
             DB::beginTransaction();
 
-            // Find the cart
             $cart = Cart::where('user_id', $user->id)
                 ->where('distributor_id', $distributorId)
                 ->first();
@@ -352,31 +520,65 @@ class RetailerOrdersController extends Controller
                 return redirect()->back()->with('error', 'Cart not found.');
             }
 
-            // Create new order
             $order = Order::create([
                 'user_id' => $user->id,
                 'distributor_id' => $distributorId,
                 'status' => 'pending',
                 'status_updated_at' => now(),
+                'total_amount' => 0, // Will be updated after processing cart details
             ]);
 
-            // Get cart details and create order details
-            $cartDetails = CartDetail::where('cart_id', $cart->id)->get();
+            // Get cart details with product information
+            $cartDetails = CartDetail::where('cart_id', $cart->id)->with('product')->get();
             $totalAmount = 0;
 
+            // Log the cart details being processed
+            Log::info('Processing cart details for order', [
+                'order_id' => $order->id,
+                'cart_id' => $cart->id,
+                'items_count' => $cartDetails->count()
+            ]);
+
             foreach ($cartDetails as $cartDetail) {
+                // Calculate the correct final subtotal after discount
+                $originalSubtotal = $cartDetail->price * $cartDetail->quantity;
+                $discountAmount = $cartDetail->discount_amount ?? 0;
+                $finalSubtotal = $originalSubtotal - $discountAmount;
+
+                // Debug each cart detail with calculated values
+                Log::info('Processing cart detail', [
+                    'product_id' => $cartDetail->product_id,
+                    'product_name' => $cartDetail->product->product_name,
+                    'quantity' => $cartDetail->quantity,
+                    'price' => $cartDetail->price,
+                    'original_subtotal' => $originalSubtotal,
+                    'discount_amount' => $discountAmount,
+                    'final_subtotal' => $finalSubtotal,
+                    'applied_discount' => $cartDetail->applied_discount
+                ]);
+
                 OrderDetails::create([
                     'order_id' => $order->id,
                     'product_id' => $cartDetail->product_id,
                     'quantity' => $cartDetail->quantity,
-                    'subtotal' => $cartDetail->subtotal,
                     'price' => $cartDetail->price,
+                    'subtotal' => $finalSubtotal, // Use calculated final subtotal
                     'delivery_address' => $deliveryAddress,
+                    'discount_amount' => $discountAmount,
+                    'free_items' => $cartDetail->free_items ?? 0,
+                    'applied_discount' => $cartDetail->applied_discount
                 ]);
 
-                // Calculate total amount
-                $totalAmount += $cartDetail->subtotal;
+                // Add this item's final subtotal to the order total
+                $totalAmount += $finalSubtotal;
             }
+
+            // Log the calculated order total
+            Log::info('Calculated order total', [
+                'order_id' => $order->id,
+                'total_amount' => $totalAmount,
+                'request_total' => $request->input('total_amount', 'N/A')
+            ]);
 
             // Update order with total amount
             $order->total_amount = $totalAmount;
@@ -386,7 +588,7 @@ class RetailerOrdersController extends Controller
             $cart->details()->delete();
             $cart->delete();
 
-            // Get distributor information for better notification
+            // Get distributor information for better notification message
             $distributor = Distributors::find($distributorId);
 
             // Send notification to distributor about new order
@@ -413,7 +615,7 @@ class RetailerOrdersController extends Controller
             DB::commit();
 
             return redirect()->route('retailers.orders.index')
-                ->with('success', 'Order placed successfully.');
+                ->with('success', 'Order placed successfully with discounts applied.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error placing order: ' . $e->getMessage(), [
@@ -479,6 +681,7 @@ class RetailerOrdersController extends Controller
                     'distributor_id' => $distributorId,
                     'status' => 'pending',
                     'status_updated_at' => now(),
+                    'total_amount' => 0,  // Initialize with zero, will update after calculating details
                 ]);
 
                 $createdOrders[] = $order;
@@ -487,30 +690,65 @@ class RetailerOrdersController extends Controller
                 // Process all cart items for this distributor
                 foreach ($distributorCarts as $cart) {
                     // Get all cart details for this cart
-                    $allCartDetails = CartDetail::where('cart_id', $cart->id)->get();
+                    $allCartDetails = CartDetail::where('cart_id', $cart->id)->with('product')->get();
+
+                    // Log the cart details being processed
+                    Log::info('Processing cart details for order', [
+                        'order_id' => $order->id,
+                        'cart_id' => $cart->id,
+                        'items_count' => $allCartDetails->count()
+                    ]);
 
                     // Add all cart details to the order
                     foreach ($allCartDetails as $cartDetail) {
+                        // Calculate the correct final subtotal after discount
+                        $originalSubtotal = $cartDetail->price * $cartDetail->quantity;
+                        $discountAmount = $cartDetail->discount_amount ?? 0;
+                        $finalSubtotal = $originalSubtotal - $discountAmount;
+
+                        // Debug each cart detail with calculated values
+                        Log::info('Processing cart detail', [
+                            'product_id' => $cartDetail->product_id,
+                            'product_name' => $cartDetail->product->product_name,
+                            'quantity' => $cartDetail->quantity,
+                            'price' => $cartDetail->price,
+                            'original_subtotal' => $originalSubtotal,
+                            'discount_amount' => $discountAmount,
+                            'final_subtotal' => $finalSubtotal,
+                            'applied_discount' => $cartDetail->applied_discount
+                        ]);
+
                         OrderDetails::create([
                             'order_id' => $order->id,
                             'product_id' => $cartDetail->product_id,
                             'quantity' => $cartDetail->quantity,
                             'price' => $cartDetail->price,
-                            'subtotal' => $cartDetail->subtotal,
+                            'subtotal' => $finalSubtotal, // Use calculated final subtotal
                             'delivery_address' => $deliveryAddress,
+                            'discount_amount' => $discountAmount,
+                            'free_items' => $cartDetail->free_items ?? 0,
+                            'applied_discount' => $cartDetail->applied_discount
                         ]);
 
-                        $totalAmount += $cartDetail->subtotal;
+                        // Add this item's final subtotal to the order total
+                        $totalAmount += $finalSubtotal;
                     }
 
-                    // Update order total
-                    $order->total_amount = $totalAmount;
-                    $order->save();
+                    // Log the calculated order total
+                    Log::info('Calculated order total', [
+                        'order_id' => $order->id,
+                        'total_amount' => $totalAmount,
+                        'request_total' => $request->input('total_amount', 'N/A')
+                    ]);
 
                     // Clear the processed cart
                     $cart->details()->delete();
                     $cart->delete();
                 }
+
+                // Update order total
+                $order->total_amount = $totalAmount;
+                $order->save();
 
                 // Get distributor information
                 $distributor = Distributors::find($distributorId);
@@ -540,7 +778,7 @@ class RetailerOrdersController extends Controller
             DB::commit();
 
             return redirect()->route('retailers.orders.index')
-                ->with('success', 'Orders placed successfully.');
+                ->with('success', 'Orders placed successfully with discounts applied.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error placing multiple orders: ' . $e->getMessage(), [

@@ -39,7 +39,12 @@ class DistributorPageController extends Controller
         // Only get products if not blocked
         if (!$isBlocked) {
             $productsQuery = Product::where('distributor_id', $id)
-                ->where('price', '>', 0);
+                ->where('price', '>', 0)
+                ->with(['discounts' => function ($query) {
+                    $query->where('is_active', true)
+                        ->where('start_date', '<=', now())
+                        ->where('end_date', '>=', now());
+                }]);
 
             if ($selectedCategory !== 'all') {
                 $productsQuery->where('category_id', $selectedCategory);
@@ -111,11 +116,11 @@ class DistributorPageController extends Controller
 
         $distributorId = $request->distributor_id;
         $retailerId = Auth::id();
-        
+
         $existingFollow = DistributorFollower::where('distributor_id', $distributorId)
             ->where('retailer_id', $retailerId)
             ->first();
-        
+
         if ($existingFollow) {
             // Already following, so unfollow
             $existingFollow->delete();
@@ -124,16 +129,16 @@ class DistributorPageController extends Controller
         } else {
             // Not following, so follow
             DistributorFollower::create([
-                'distributor_id' => $distributorId, 
+                'distributor_id' => $distributorId,
                 'retailer_id' => $retailerId
             ]);
             $isFollowing = true;
             $message = 'You are now following this distributor';
         }
-        
+
         // Get updated follower count
         $followerCount = DistributorFollower::where('distributor_id', $distributorId)->count();
-        
+
         return response()->json([
             'success' => true,
             'is_following' => $isFollowing,

@@ -14,15 +14,36 @@
                                 <div class="flex items-center justify-between p-4 border rounded">
                                     <div class="flex items-center space-x-4">
                                         <img class="object-cover w-16 h-16"
-                                            src="{{ asset('storage/' . $product->product->image) }}"
-                                            alt="{{ $product->product->product_name }}">
+                                            src="{{ asset('storage/' . $product['product']->image) }}"
+                                            alt="{{ $product['product']->product_name }}">
                                         <div>
-                                            <p class="font-semibold">{{ $product->product->product_name }}</p>
-                                            <p class="text-sm text-gray-600">Qty: {{ $product->quantity }}</p>
+                                            <p class="font-semibold">{{ $product['product']->product_name }}</p>
+                                            <p class="text-sm text-gray-600">Qty: {{ $product['quantity'] }}</p>
+
+                                            <!-- Display discount information -->
+                                            @if ($product['applied_discount'])
+                                                <p class="text-sm text-green-600">
+                                                    Discount: {{ $product['applied_discount'] }}
+                                                </p>
+                                                @if ($product['discount_amount'] > 0)
+                                                    <p class="text-sm text-green-600">
+                                                        -₱{{ number_format($product['discount_amount'], 2) }}
+                                                    </p>
+                                                @endif
+                                                @if ($product['free_items'] > 0)
+                                                    <p class="text-sm text-green-600">
+                                                        +{{ $product['free_items'] }} free item(s)
+                                                    </p>
+                                                @endif
+                                            @endif
                                         </div>
                                     </div>
                                     <div class="text-right">
-                                        <p class="font-bold">₱ {{ number_format($product->subtotal, 2) }}</p>
+                                        @if ($product['discount_amount'] > 0)
+                                            <p class="text-sm text-gray-500 line-through">
+                                                ₱{{ number_format($product['original_subtotal'], 2) }}</p>
+                                        @endif
+                                        <p class="font-bold">₱{{ number_format($product['final_subtotal'], 2) }}</p>
                                     </div>
                                 </div>
                             @endforeach
@@ -80,14 +101,12 @@
                 <!-- Delivery Address Card -->
                 <div class="p-6 bg-white rounded-lg shadow">
                     <h2 class="mb-4 text-xl font-semibold">Delivery Address</h2>
-                    @if (isset($checkoutProducts->first()->product->distributor_id))
+                    @if (isset($cart) && $cart)
                         <form id="orderForm"
                             action="{{ route('retailers.checkout.placeOrder', ['distributorId' => $cart->distributor_id]) }}"
                             method="POST">
                             @csrf
-                            @if (isset($cart))
-                                <input type="hidden" name="cart_id" value="{{ $cart->id }}">
-                            @endif
+                            <input type="hidden" name="cart_id" value="{{ $cart->id }}">
                             <input type="hidden" name="total_amount" value="{{ $grandTotal }}">
 
                             <div class="flex flex-col space-y-4">
@@ -97,7 +116,8 @@
                                     <label for="default_address" class="ml-2">
                                         Use my default address:
                                         <span
-                                            class="font-medium">{{ $user->retailerProfile->barangay_name }},{{ $user->retailerProfile->street ?? '' }}</span>
+                                            class="font-medium">{{ $user->retailerProfile->barangay_name ?? 'Unknown' }},
+                                            {{ $user->retailerProfile->street ?? '' }}</span>
                                     </label>
                                 </div>
                                 <div class="flex items-center">
@@ -135,8 +155,12 @@
                         </form>
                     @else
                         <div class="p-4 mb-4 rounded bg-red-50">
-                            <p class="text-red-600">Unable to process checkout due to missing distributor information.
-                                Please contact support.</p>
+                            <p class="text-red-600">Unable to process checkout due to missing cart or distributor
+                                information.</p>
+                            <p class="mt-2">
+                                <a href="{{ route('retailers.cart.index') }}" class="text-blue-600 underline">Return to
+                                    your cart</a> and try again or contact support if the problem persists.
+                            </p>
                         </div>
                     @endif
                 </div>

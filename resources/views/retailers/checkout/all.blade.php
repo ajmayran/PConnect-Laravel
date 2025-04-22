@@ -41,13 +41,32 @@
                                                             {{ $product->product->product_name }}</p>
                                                         <p class="text-sm text-gray-600">Qty:
                                                             {{ $product->quantity }}</p>
+
+                                                        <!-- Display discount information -->
+                                                        @if ($product->applied_discount)
+                                                            <p class="text-sm text-green-600">
+                                                                Discount: {{ $product->applied_discount }}
+                                                            </p>
+                                                            @if ($product->discount_amount > 0)
+                                                                <p class="text-sm text-green-600">
+                                                                    -₱{{ number_format($product->discount_amount, 2) }}
+                                                                </p>
+                                                            @endif
+                                                            @if ($product->free_items > 0)
+                                                                <p class="text-sm text-green-600">
+                                                                    +{{ $product->free_items }} free item(s)
+                                                                </p>
+                                                            @endif
+                                                        @endif
                                                     </div>
                                                 </div>
                                                 <div class="w-24 text-right">
-                                                    ₱{{ number_format($product->product->price, 2) }}
-                                                </div>
-                                                <div class="w-24 text-right">
-                                                    ₱{{ number_format($product->subtotal, 2) }}
+                                                    @if ($product->discount_amount > 0)
+                                                        <p class="text-sm text-gray-500 line-through">
+                                                            ₱{{ number_format($product->product->price * $product->quantity, 2) }}
+                                                        </p>
+                                                    @endif
+                                                    <p>₱{{ number_format($product->subtotal, 2) }}</p>
                                                 </div>
                                             </div>
                                             <input type="hidden" name="cart_details[{{ $distributorId }}][]"

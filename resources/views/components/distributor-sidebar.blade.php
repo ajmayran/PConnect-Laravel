@@ -103,12 +103,21 @@
     </div>
     <div class="w-4/5 mx-auto text-sm font-bold text-left text-gray-200" id="submenu">
         <a href="{{ route('distributors.blocking.blocked-retailers') }}"
-            class="block p-2 mt-1 rounded-md cursor-pointer hover:bg-green-600 {{ request()->routeIs('distributors.blocking.blocked-retailers') ? 'bg-green-600' : '' }}">Block Retailers</a>
+            class="block p-2 mt-1 rounded-md cursor-pointer hover:bg-green-600 {{ request()->routeIs('distributors.blocking.blocked-retailers') ? 'bg-green-600' : '' }}">Block
+            Retailers</a>
         <a href="{{ route('distributors.blocking.blocked-messages') }}"
             class="block p-2 mt-1 rounded-md cursor-pointer hover:bg-green-600 {{ request()->routeIs('distributors.blocking.blocked-messages') ? 'bg-green-600' : '' }}">
             Blocked Messages
         </a>
     </div>
+
+    <a href="{{ route('distributors.discounts.index') }}"
+        class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.discounts.*') ? 'bg-green-600' : 'hover:bg-green-600' }}">
+        <div class="flex items-center">
+            <iconify-icon icon="mdi:sale" class="text-xl icon"></iconify-icon>
+            <span class="ml-4 font-normal text-gray-200">Discounts & Promos</span>
+        </div>
+    </a>
 
     <div class="my-2 bg-gray-600 h-[1px]"></div>
 

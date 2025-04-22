@@ -35,6 +35,12 @@ class AllProductController extends Controller
             $query->whereIn('user_id', $blockingDistributorIds);
         });
 
+        $query->with(['distributor:id,company_name,user_id', 'discounts' => function ($query) {
+            $query->where('is_active', true)
+                  ->where('start_date', '<=', now())
+                  ->where('end_date', '>=', now());
+        }]);
+
         // Get products with eager loading
         $perPage = ($selectedCategory === 'all') ? 10 : 10;
         $products = $query->with('distributor:id,company_name,user_id')->paginate($perPage);

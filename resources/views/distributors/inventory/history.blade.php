@@ -114,7 +114,13 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">
-                                    {{ $movement->batch ? $movement->batch->batch_number : 'N/A' }}
+                                    @if ($movement->batch)
+                                        {{ $movement->batch->batch_number }}
+                                    @elseif ($movement->batch_id)
+                                        {{ App\Models\ProductBatch::withTrashed()->find($movement->batch_id)?->batch_number ?? 'Batch #' . $movement->batch_id }}
+                                    @else
+                                        N/A
+                                    @endif
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">

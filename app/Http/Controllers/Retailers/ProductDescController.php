@@ -14,7 +14,7 @@ class ProductDescController extends Controller
 {
     public function show($id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::with('discounts')->findOrFail($id);
         $distributor = Distributors::findOrFail($product->distributor_id);
 
         // Calculate average rating for the distributor

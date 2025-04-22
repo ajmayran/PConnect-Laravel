@@ -32,7 +32,8 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
-                            <span id="follower-count">{{ number_format($distributor->followers_count ?? 0) }} Followers</span>
+                            <span id="follower-count">{{ number_format($distributor->followers_count ?? 0) }}
+                                Followers</span>
                         </span>
 
                         <!-- Average Rating -->
@@ -135,6 +136,19 @@
                 @forelse($products as $product)
                     <a href="{{ route('retailers.products.show', $product->id) }}"
                         class="block p-3 transition-all duration-300 transform bg-white border border-gray-200 rounded-lg shadow-md sm:p-6 hover:shadow-xl active:shadow-inner hover:scale-105 active:scale-95 touch-manipulation">
+                        <!-- Discount badge -->
+                        @if ($product->activeDiscount)
+                            <div class="mb-2 text-center">
+                                <span class="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full">
+                                    @if ($product->activeDiscount->type === 'percentage')
+                                        {{ $product->activeDiscount->percentage }}% OFF
+                                    @elseif ($product->activeDiscount->type === 'freebie')
+                                        Buy {{ $product->activeDiscount->buy_quantity }} Get
+                                        {{ $product->activeDiscount->free_quantity }} Free
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
                         <div class="flex justify-center mb-2 sm:mb-4">
                             <img class="object-cover w-24 h-24 transition-transform duration-300 rounded-lg sm:w-32 sm:h-32 hover:scale-110"
                                 src="{{ $product->image ? asset('storage/' . $product->image) : asset('img/default-product.jpg') }}"
@@ -146,14 +160,21 @@
                         <p class="mb-2 text-xs text-gray-600 sm:text-sm">
                             {{ Str::limit($product->description, 50) }}
                         </p>
-                        <div class="flex items-center justify-between">
-                            <span
-                                class="text-sm font-bold text-green-600 sm:text-lg">₱{{ number_format($product->price, 2) }}</span>
-                            <span
-                                class="px-3 py-1 text-xs font-medium text-white transition-colors duration-200 bg-green-500 rounded-lg sm:px-4 sm:py-2 sm:text-sm hover:bg-green-600 active:bg-green-700">
-                                View Details
-                            </span>
+                        <div class="flex items-center justify-start gap-2">
+                            @if ($product->activeDiscount)
+                                <span class="text-sm font-bold text-gray-500 sm:text-base" style="text-decoration:line-through">
+                                    ₱{{ number_format($product->price, 2) }}
+                                </span>
+                                <span class="text-sm font-bold text-green-600 sm:text-lg">
+                                    ₱{{ number_format($product->price - $product->activeDiscount->calculatePercentageDiscount($product->price), 2) }}
+                                </span>
+                            @else
+                                <span class="text-sm font-bold text-green-600 sm:text-lg">
+                                    ₱{{ number_format($product->price, 2) }}
+                                </span>
+                            @endif
                         </div>
+                        <span class="flex justify-end text-xs text-right text-gray-500 sm:text-sm">View Details →</span>
                     </a>
                 @empty
                     <div class="py-8 text-center text-gray-500 col-span-full">

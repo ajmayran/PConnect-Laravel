@@ -93,6 +93,50 @@ class BuynowController extends Controller
         $user = Auth::user();
         $directProduct = Product::with('distributor')->findOrFail($directPurchase['product_id']);
 
+        // Check for applicable discounts
+        $discount = \App\Models\Discount::where('distributor_id', $directProduct->distributor_id)
+            ->where('is_active', true)
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->whereHas('products', function ($query) use ($directProduct) {
+                $query->where('product_id', $directProduct->id);
+            })
+            ->first();
+
+        // Apply discount if applicable
+        $discountAmount = 0;
+        $freeItems = 0;
+        $appliedDiscount = null;
+
+        if ($discount) {
+            if ($discount->type === 'percentage') {
+                $discountAmount = ($directProduct->price * $discount->percentage / 100) * $directPurchase['quantity'];
+                $appliedDiscount = $discount->name;
+
+                // Update final_subtotal for percentage discount
+                $directPurchase['final_subtotal'] = $directPurchase['subtotal'] - $discountAmount;
+            } else if ($discount->type === 'freebie' && $discount->buy_quantity > 0) {
+                // Calculate free items (buy X get Y free logic)
+                $sets = floor($directPurchase['quantity'] / $discount->buy_quantity);
+                $freeItems = $sets * $discount->free_quantity;
+
+                // For freebie discounts, don't reduce the price
+                $discountAmount = 0; // No price discount
+                $appliedDiscount = $discount->name;
+
+                // Keep the original subtotal for freebie discounts
+                $directPurchase['final_subtotal'] = $directPurchase['subtotal'];
+            }
+        }
+
+        // Update the direct purchase with discount info
+        $directPurchase['discount_amount'] = $discountAmount;
+        $directPurchase['free_items'] = $freeItems;
+        $directPurchase['applied_discount'] = $appliedDiscount;
+
+        // Save updated info in session
+        Session::put('direct_purchase', $directPurchase);
+
         return view('retailers.direct-purchase.checkout', compact('directPurchase', 'directProduct', 'user'));
     }
 
@@ -107,7 +151,11 @@ class BuynowController extends Controller
                 'distributor_id' => $request->input('distributor_id'),
                 'quantity' => $request->input('quantity'),
                 'price' => $request->input('price'),
-                'subtotal' => $request->input('subtotal')
+                'subtotal' => $request->input('subtotal'),
+                'discount_amount' => $request->input('discount_amount', 0),
+                'free_items' => $request->input('free_items', 0),
+                'applied_discount' => $request->input('applied_discount'),
+                'final_subtotal' => $request->input('final_subtotal', $request->input('subtotal'))
             ];
         }
 
@@ -119,7 +167,7 @@ class BuynowController extends Controller
 
         Log::info('Direct purchase data found in placeOrder: ', $directPurchase);
 
-        // Validate the checkout form based on your actual form fields
+        // Validate the checkout form
         $validated = $request->validate([
             'delivery_option' => 'required|in:default,other',
             'new_delivery_address' => 'nullable|required_if:delivery_option,other|string',
@@ -146,61 +194,74 @@ class BuynowController extends Controller
 
         DB::beginTransaction();
 
-        // Create the order 
-        $order = Order::create([
-            'user_id' => $user->id,
-            'distributor_id' => $directPurchase['distributor_id'],
-            'total_amount' => $directPurchase['subtotal'],
-            'status' => 'pending',
-            'status_updated_at' => now(),
-        ]);
+        try {
+            // Create the order - use the final subtotal which includes any discounts
+            $order = Order::create([
+                'user_id' => $user->id,
+                'distributor_id' => $directPurchase['distributor_id'],
+                'total_amount' => $directPurchase['final_subtotal'] ?? $directPurchase['subtotal'],
+                'status' => 'pending',
+                'status_updated_at' => now(),
+            ]);
 
-        // Create order details
-        OrderDetails::create([
-            'order_id' => $order->id,
-            'product_id' => $product->id,
-            'quantity' => $directPurchase['quantity'],
-            'price' => $directPurchase['price'],
-            'subtotal' => $directPurchase['subtotal'],
-            'delivery_address' => $deliveryAddress,
-        ]);
+            // Include free items in the quantity
+            $totalQuantity = $directPurchase['quantity'] + ($directPurchase['free_items'] ?? 0);
 
-        $product->save();
+            // Create order details with discount information
+            OrderDetails::create([
+                'order_id' => $order->id,
+                'product_id' => $product->id,
+                'quantity' => $totalQuantity, // Include free items here
+                'price' => $directPurchase['price'],
+                'subtotal' => $directPurchase['final_subtotal'] ?? $directPurchase['subtotal'],
+                'delivery_address' => $deliveryAddress,
+                'discount_amount' => $directPurchase['discount_amount'] ?? 0,
+                'free_items' => $directPurchase['free_items'] ?? 0,
+                'applied_discount' => $directPurchase['applied_discount'] ?? null
+            ]);
 
-        // Commit the transaction
-        DB::commit();
+            $product->save();
 
-        // Clear the session data
-        Session::forget('direct_purchase');
+            // Commit the transaction
+            DB::commit();
 
-        // Send notification to the distributor about the new order
-  
-        // Get distributor details
-        $distributor = \App\Models\Distributors::find($directPurchase['distributor_id']);
+            // Clear the session data
+            Session::forget('direct_purchase');
 
-        if ($distributor) {
-            // Create a new order notification (fix parameters order)
-            $this->notificationService->newOrderNotification(
-                $order->id,
-                $user->id,
-                $distributor->id
-            );
+            // Send notification to the distributor about the new order
+            $distributor = \App\Models\Distributors::find($directPurchase['distributor_id']);
 
-            // Create confirmation notification for retailer
-            $this->notificationService->create(
-                $user->id,
-                'order_placed',
-                [
-                    'title' => 'Order Placed Successfully',
-                    'message' => "Your order has been placed successfully and is awaiting confirmation from {$distributor->company_name}.",
-                    'order_id' => $order->id,
-                    'recipient_type' => 'retailer'
-                ],
-                $order->id
-            );
+            if ($distributor) {
+                // Create a new order notification
+                $this->notificationService->newOrderNotification(
+                    $order->id,
+                    $user->id,
+                    $distributor->id
+                );
+
+                // Create confirmation notification for retailer
+                $this->notificationService->create(
+                    $user->id,
+                    'order_placed',
+                    [
+                        'title' => 'Order Placed Successfully',
+                        'message' => "Your order has been placed successfully and is awaiting confirmation from {$distributor->company_name}.",
+                        'order_id' => $order->id,
+                        'recipient_type' => 'retailer'
+                    ],
+                    $order->id
+                );
+            }
+
+            return redirect()->route('retailers.orders.index')
+                ->with('success', 'Order placed successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error placing direct purchase order: ' . $e->getMessage(), [
+                'exception' => $e,
+            ]);
+
+            return redirect()->back()->with('error', 'Failed to place order: ' . $e->getMessage());
         }
-
-        return redirect()->route('retailers.orders.index')
-            ->with('success', 'Order placed successfully!');
     }
 }

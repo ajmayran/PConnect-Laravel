@@ -46,10 +46,35 @@
                             <!-- Price and Description -->
                             <div class="mb-4 sm:mb-6">
                                 <h2 class="mb-2 text-2xl font-bold text-green-600 sm:text-3xl md:text-4xl">
-                                    ₱{{ number_format($product->price, 2) }}</h2>
+                                    @if ($product->activeDiscount && $product->activeDiscount->type === 'percentage')
+                                        <span class="text-gray-500" style="text-decoration:line-through">₱{{ number_format($product->price, 2) }}</span>
+                                        ₱{{ number_format($product->price - $product->activeDiscount->calculatePercentageDiscount($product->price), 2) }}
+                                    @else
+                                        ₱{{ number_format($product->price, 2) }}
+                                    @endif
+                                </h2>
                                 <p class="p-2 mb-4 text-sm text-gray-700 rounded-md bg-green-50 sm:text-base">
-                                    {{ $product->description }}</p>
+                                    {{ $product->description }}
+                                </p>
                             </div>
+
+                            @if ($product->activeDiscount)
+                                <div class="mb-4">
+                                    <p class="text-sm text-green-600">
+                                        Discount: {{ $product->activeDiscount->name }}
+                                    </p>
+                                    @if ($product->activeDiscount->type === 'percentage')
+                                        <p class="text-sm text-green-600">
+                                            {{ $product->activeDiscount->percentage }}% OFF
+                                        </p>
+                                    @elseif ($product->activeDiscount->type === 'freebie')
+                                        <p class="text-sm text-green-600">
+                                            Buy {{ $product->activeDiscount->buy_quantity }} Get
+                                            {{ $product->activeDiscount->free_quantity }} Free
+                                        </p>
+                                    @endif
+                                </div>
+                            @endif
 
                             <!-- Stock Information -->
                             <div class="mb-4 sm:mb-6">

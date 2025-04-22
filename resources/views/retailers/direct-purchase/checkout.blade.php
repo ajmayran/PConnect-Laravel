@@ -11,21 +11,46 @@
                             <div class="flex items-center space-x-4">
                                 <img class="object-cover w-16 h-16"
                                     src="{{ $directProduct->image ? asset('storage/products/' . basename($directProduct->image)) : asset('img/default-product.jpg') }}"
-                                    alt="{{ $directProduct->product_name }}"
-                                    onerror="this.src='{{ asset('img/default-product.jpg') }}'">
+                                    alt="{{ $directProduct->product_name }}">
                                 <div>
                                     <p class="font-semibold">{{ $directProduct->product_name }}</p>
                                     <p class="text-sm text-gray-600">Qty: {{ $directPurchase['quantity'] }}</p>
+                        
+                                    <!-- Display discount information -->
+                                    @if ($directPurchase['applied_discount'])
+                                        <p class="text-sm text-green-600">
+                                            Discount: {{ $directPurchase['applied_discount'] }}
+                                        </p>
+                                        @if ($directPurchase['discount_amount'] > 0)
+                                            <p class="text-sm text-green-600">
+                                                -₱{{ number_format($directPurchase['discount_amount'], 2) }}
+                                            </p>
+                                        @endif
+                                        @if ($directPurchase['free_items'] > 0)
+                                            <p class="text-sm text-green-600">
+                                                +{{ $directPurchase['free_items'] }} free item(s)
+                                            </p>
+                                        @endif
+                                    @endif
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="font-bold">₱ {{ number_format($directPurchase['subtotal'], 2) }}</p>
+                                @if ($directPurchase['discount_amount'] > 0)
+                                    <p class="text-sm text-gray-500" style="text-decoration:line-through">₱{{ number_format($directPurchase['subtotal'], 2) }}</p>
+                                @endif
+                                <p class="font-bold">₱{{ number_format($directPurchase['final_subtotal'], 2) }}</p>
+                                @if ($directPurchase['free_items'] > 0)
+                                    <p class="text-sm font-semibold text-green-600">
+                                        +{{ $directPurchase['free_items'] }} free item(s)
+                                    </p>
+                                @endif
                             </div>
                         </div>
                     </div>
                     <div class="mt-6 text-right">
+                        <!-- Display the discounted total -->
                         <p class="text-2xl font-bold">
-                            Total: ₱ {{ number_format($directPurchase['subtotal'], 2) }}
+                            Total: ₱ {{ number_format($directPurchase['final_subtotal'], 2) }}
                         </p>
                     </div>
                 </div>
@@ -61,8 +86,9 @@
                     </div>
 
                     <div class="pt-4 mt-6 border-t">
+                        <!-- Display the grand total -->
                         <p class="text-xl font-bold">
-                            Grand Total: ₱ {{ number_format($directPurchase['subtotal'], 2) }}
+                            Grand Total: ₱ {{ number_format($directPurchase['final_subtotal'], 2) }}
                         </p>
                     </div>
                 </div>

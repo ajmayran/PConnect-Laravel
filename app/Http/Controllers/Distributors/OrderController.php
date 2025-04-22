@@ -119,7 +119,7 @@ class OrderController extends Controller
                                 'type' => 'out',
                                 'quantity' => $quantityToTake,
                                 'user_id' => Auth::id(),
-                                'notes' => 'Order #' . $order->id . ' accepted',
+                                'notes' => 'Order ' . $order->formatted_order_id . ' accepted',
                                 'stock_updated_at' => now()
                             ]);
 
@@ -132,8 +132,6 @@ class OrderController extends Controller
 
                             $quantityRemaining -= $quantityToTake;
                         }
-
-                        app(InventoryController::class)->resequenceBatchesByExpiryDate($product->id);
                     } else {
                         Stock::create([
                             'product_id' => $product->id,
@@ -141,7 +139,7 @@ class OrderController extends Controller
                             'type' => 'out',
                             'quantity' => $detail->quantity,
                             'user_id' => Auth::id(),
-                            'notes' => 'Order #' . $order->id . ' accepted',
+                            'notes' => 'Order   ' . $order->formatted_order_id . ' accepted',
                             'stock_updated_at' => now()
                         ]);
                     }

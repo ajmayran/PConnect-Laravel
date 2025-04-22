@@ -27,6 +27,9 @@ return new class extends Migration
             $table->decimal('price', 10, 2);
             $table->integer('quantity');
             $table->decimal('subtotal', 10, 2);
+            $table->decimal('discount_amount', 10, 2)->default(0);
+            $table->integer('free_items')->default(0);
+            $table->string('applied_discount')->nullable();
             $table->timestamps();
 
             $table->foreign('cart_id')->references('id')->on('carts')->onDelete('cascade');
