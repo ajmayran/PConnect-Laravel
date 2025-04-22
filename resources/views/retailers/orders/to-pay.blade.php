@@ -1,15 +1,16 @@
 <x-app-layout>
     <x-dashboard-nav />
     <div class="container px-4 py-8 mx-auto max-w-7xl">
-        <div class="flex items-center justify-between mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Orders To Pay</h1>
+        <div class="flex flex-col items-start justify-between mb-8 space-y-4 sm:flex-row sm:items-center sm:space-y-0">
+            <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">Orders To Pay</h1>
 
             <!-- Add Track Order Form -->
-            <div class="relative">
-                <form action="{{ route('retailers.orders.track') }}" method="GET" class="flex">
+            <div class="relative w-full sm:w-auto">
+                <form action="{{ route('retailers.orders.track') }}" method="GET" class="flex flex-col sm:flex-row">
                     <input type="text" name="tracking_number" placeholder="Enter tracking number"
-                        class="px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                    <button type="submit" class="px-4 py-2 text-white bg-green-600 rounded-r-md hover:bg-green-700">
+                        class="px-4 py-2 mb-2 border border-gray-300 rounded-md sm:rounded-l-md sm:mb-0 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    <button type="submit"
+                        class="px-4 py-2 text-white bg-green-600 rounded-md sm:rounded-l-none sm:rounded-r-md hover:bg-green-700">
                         Track Order
                     </button>
                 </form>
@@ -27,9 +28,10 @@
                 @foreach ($orders as $order)
                     <div class="overflow-hidden bg-white rounded-lg shadow-sm">
                         <div class="p-6">
-                            <div class="flex items-center justify-between mb-6">
+                            <div
+                                class="flex flex-col items-start justify-between mb-6 space-y-4 sm:flex-row sm:items-center sm:space-y-0">
                                 <div class="space-y-1">
-                                    <h2 class="text-xl font-bold text-gray-900">
+                                    <h2 class="text-lg font-bold text-gray-900 sm:text-xl">
                                         {{ $order->formatted_order_id }}
                                     </h2>
                                     <p class="text-gray-600">
@@ -43,7 +45,6 @@
                                             Processing
                                         </span>
                                     </p>
-                                    <!-- Add Tracking Number display if available -->
                                     @if ($order->delivery && $order->delivery->tracking_number)
                                         <p class="text-gray-600">
                                             <span class="font-medium">Tracking Number:</span>
@@ -51,14 +52,14 @@
                                         </p>
                                     @endif
                                 </div>
-                                <div class="text-right">
+                                <div class="text-left sm:text-right">
                                     <p class="text-sm font-medium text-gray-500">Order Date</p>
                                     <p class="text-gray-900">{{ $order->created_at->format('M d, Y') }}</p>
                                 </div>
                             </div>
 
-                            <div class="mt-6 -mx-6">
-                                <table class="w-full">
+                            <div class="mt-6 -mx-6 overflow-x-auto">
+                                <table class="w-full min-w-max">
                                     <thead class="bg-gray-50">
                                         <tr>
                                             <th
@@ -99,7 +100,7 @@
                             </div>
 
                             <div class="pt-6 mt-6 border-t border-gray-200">
-                                <div class="flex items-center text-sm text-gray-600">
+                                <div class="flex items-start text-sm text-gray-600 sm:items-center">
                                     <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -107,14 +108,12 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
-                                    Delivery Address: {{ optional($order->orderDetails->first())->delivery_address }}
+                                    <span>Delivery Address: {{ optional($order->orderDetails->first())->delivery_address }}</span>
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- Add action buttons -->
+
                         <div class="flex justify-end p-4 bg-gray-50">
-                            <!-- Cancel Button -->
                             <button
                                 onclick="document.getElementById('cancelModal{{ $order->id }}').style.display='block'"
                                 class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
@@ -174,8 +173,9 @@
                     </div>
                 @endforeach
             </div>
+
             <!-- Pagination -->
-            <div class="container flex justify-end px-2 pb-8 mx-auto sm:px-4">
+            <div class="container flex justify-center px-2 pb-8 mx-auto sm:justify-end sm:px-4">
                 {{ $orders->links() }}
             </div>
         @endif
@@ -183,7 +183,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Show/hide custom reason textarea
             document.querySelectorAll('input[name="cancel_reason"]').forEach(radio => {
                 radio.addEventListener('change', function() {
                     const textarea = this.closest('form').querySelector(
@@ -192,9 +191,7 @@
                 });
             });
 
-            // Handle all cancel buttons
             @foreach ($orders as $order)
-                // Get direct references to elements
                 const confirmBtn{{ $order->id }} = document.getElementById(
                     'confirmCancelBtn{{ $order->id }}');
                 const modal{{ $order->id }} = document.getElementById('cancelModal{{ $order->id }}');
@@ -202,7 +199,6 @@
 
                 if (confirmBtn{{ $order->id }} && form{{ $order->id }}) {
                     confirmBtn{{ $order->id }}.addEventListener('click', function() {
-                        // Check if a reason is selected
                         const selectedReason = form{{ $order->id }}.querySelector(
                             'input[name="cancel_reason"]:checked');
                         if (!selectedReason) {
@@ -214,7 +210,6 @@
                             return;
                         }
 
-                        // If "other" is selected, verify text is entered
                         if (selectedReason.value === 'other') {
                             const customReason = form{{ $order->id }}.querySelector(
                                 'textarea[name="custom_reason"]').value.trim();
@@ -228,7 +223,6 @@
                             }
                         }
 
-                        // Show confirmation alert
                         Swal.fire({
                             title: 'Cancel Order?',
                             text: 'Are you sure you want to cancel this order #{{ $order->formatted_order_id }}?',
@@ -240,7 +234,6 @@
                             cancelButtonText: 'Keep my order'
                         }).then((result) => {
                             if (result.isConfirmed) {
-                                // Show loading state
                                 Swal.fire({
                                     title: 'Processing...',
                                     text: 'Cancelling your order',
@@ -248,7 +241,6 @@
                                     showConfirmButton: false,
                                     didOpen: () => {
                                         Swal.showLoading();
-                                        // Submit the form
                                         form{{ $order->id }}.submit();
                                     }
                                 });
@@ -257,7 +249,6 @@
                     });
                 }
 
-                // Close modal when clicking outside
                 modal{{ $order->id }}.addEventListener('click', function(e) {
                     if (e.target === this) {
                         this.style.display = 'none';
@@ -265,7 +256,6 @@
                 });
             @endforeach
 
-            // Show success alert if present in session
             @if (session('success'))
                 Swal.fire({
                     title: 'Success!',
@@ -276,7 +266,6 @@
                 });
             @endif
 
-            // Show error alert if present in session
             @if (session('error'))
                 Swal.fire({
                     title: 'Error!',

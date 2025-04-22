@@ -1,15 +1,16 @@
 <x-app-layout>
     <x-dashboard-nav />
     <div class="container px-4 py-8 mx-auto max-w-7xl">
-        <div class="flex items-center justify-between mb-8">
+        <div class="flex flex-wrap items-center justify-between mb-8">
             <h1 class="text-3xl font-bold text-gray-900">Orders To Receive</h1>
 
             <!-- Add Track Order Form -->
-            <div class="relative">
-                <form action="{{ route('retailers.orders.track') }}" method="GET" class="flex">
+            <div class="relative w-full sm:w-auto">
+                <form action="{{ route('retailers.orders.track') }}" method="GET" class="flex flex-col sm:flex-row">
                     <input type="text" name="tracking_number" placeholder="Enter tracking number"
-                        class="px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                    <button type="submit" class="px-4 py-2 text-white bg-green-600 rounded-r-md hover:bg-green-700">
+                        class="px-4 py-2 mb-2 border border-gray-300 rounded-md sm:rounded-l-md sm:mb-0 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    <button type="submit"
+                        class="px-4 py-2 text-white bg-green-600 rounded-md sm:rounded-l-none sm:rounded-r-md hover:bg-green-700">
                         Track Order
                     </button>
                 </form>
@@ -27,7 +28,7 @@
                 @foreach ($orders as $order)
                     <div class="overflow-hidden bg-white rounded-lg shadow-sm">
                         <div class="p-6">
-                            <div class="flex items-center justify-between mb-6">
+                            <div class="flex flex-wrap items-center justify-between mb-6">
                                 <div class="space-y-1">
                                     <h2 class="text-xl font-bold text-gray-900">
                                         {{ $order->formatted_order_id }}
@@ -57,14 +58,14 @@
                                         </p>
                                     @endif
                                 </div>
-                                <div class="text-right">
+                                <div class="mt-4 text-right sm:mt-0">
                                     <p class="text-sm font-medium text-gray-500">Order Date</p>
                                     <p class="text-gray-900">{{ $order->created_at->format('M d, Y') }}</p>
                                 </div>
                             </div>
 
-                            <div class="mt-6 -mx-6">
-                                <table class="w-full">
+                            <div class="mt-6 -mx-6 overflow-x-auto">
+                                <table class="w-full min-w-max">
                                     <thead class="bg-gray-50">
                                         <tr>
                                             <th

@@ -3,8 +3,8 @@
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <!-- Information & Help Section -->
             <div class="text-center sm:text-left">
-                <h3 class="mb-1 text-lg font-semibold text-gray-100">Quick Links</h3>
-                <div class="grid grid-cols-3 gap-2">
+                <h3 class="mb-4 text-lg font-semibold text-gray-100">Quick Links</h3>
+                <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     <a href="#" class="font-light text-gray-500 transition-colors hover:text-gray-200">About Us</a>
                     <a href="#" class="font-light text-gray-500 transition-colors hover:text-gray-200">Services</a>
                     <a href="@if(Auth::check())
@@ -27,24 +27,20 @@
 
             <!-- Our Services Section -->
             <div class="text-center sm:text-left">
-                <h3 class="mb-1 text-lg font-semibold text-gray-100">Our Services</h3>
-                <div class="grid grid-cols-2 gap-2">
-                    <a href="#" class="font-light text-gray-500 transition-colors hover:text-gray-200">Become
-                        Seller</a>
-                    <a href="#" class="font-light text-gray-500 transition-colors hover:text-gray-200">Service
-                        Policy</a>
+                <h3 class="mb-4 text-lg font-semibold text-gray-100">Our Services</h3>
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <a href="#" class="font-light text-gray-500 transition-colors hover:text-gray-200">Become Seller</a>
+                    <a href="#" class="font-light text-gray-500 transition-colors hover:text-gray-200">Service Policy</a>
                 </div>
             </div>
 
             <!-- Contact Section -->
             <div class="text-center sm:text-left">
-                <h3 class="mb-1 text-lg font-semibold text-gray-100">Contact</h3>
+                <h3 class="mb-4 text-lg font-semibold text-gray-100">Contact</h3>
                 <div class="space-y-2">
-                    <div class="flex items-center justify-center sm:justify-start gap-4">
-                        <a href="#"
-                            class="font-light text-gray-500 transition-colors hover:text-gray-200">Email</a>
-                        <a href="#"
-                            class="font-light text-gray-500 transition-colors hover:text-gray-200">Message</a>
+                    <div class="flex flex-wrap items-center justify-center sm:justify-start gap-4">
+                        <a href="#" class="font-light text-gray-500 transition-colors hover:text-gray-200">Email</a>
+                        <a href="#" class="font-light text-gray-500 transition-colors hover:text-gray-200">Message</a>
                     </div>
                     <p class="text-sm font-light text-gray-500">Mon-Sat 9am-3pm GMT+8</p>
                 </div>
@@ -52,7 +48,7 @@
 
             <!-- Social Media Section -->
             <div class="text-center sm:text-left">
-                <h3 class="mb-1 text-lg font-semibold text-gray-100">Follow Us</h3>
+                <h3 class="mb-4 text-lg font-semibold text-gray-100">Follow Us</h3>
                 <div class="flex justify-center sm:justify-start space-x-4">
                     <a href="#" class="text-gray-400 hover:text-gray-200">
                         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -77,7 +73,7 @@
         </div>
 
         <!-- Copyright -->
-        <div class="pt-2 mt-6 text-center border-t border-gray-700">
+        <div class="pt-4 mt-6 text-center border-t border-gray-700">
             <p class="text-sm text-gray-500">&copy; 2024 PConnect. All rights reserved.</p>
         </div>
     </div>

@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-dashboard-nav />
-    <div class="py-8 retailers-messages-page">
+    <div class="py-8 retailers-messages-page flex items-center justify-center">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <x-retailer-sidebar />
             <!-- Main Content Area -->
