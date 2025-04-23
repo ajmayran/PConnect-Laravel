@@ -32,7 +32,10 @@ class CancellationController extends Controller
         }
 
         $retailerCancellations = $retailerCancellationsQuery->latest()->get();
+        $retailerCancellations->each->append('formatted_order_id');
+
         $myCancellations = $myCancellationsQuery->latest()->get();
+        $myCancellations->each->append('formatted_order_id');
 
         // Calculate total amount for each order
         foreach ($retailerCancellations as $order) {
@@ -96,7 +99,7 @@ class CancellationController extends Controller
             DB::beginTransaction();
             $order->delete();
             DB::commit();
-            
+
             return redirect()->back()->with('success', 'Order deleted successfully');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -115,7 +118,7 @@ class CancellationController extends Controller
 
         try {
             DB::beginTransaction();
-            
+
             // Get orders that belong to this distributor
             $orders = Order::whereIn('id', $request->selected_orders)
                 ->where('distributor_id', $distributorId)
@@ -128,7 +131,7 @@ class CancellationController extends Controller
             foreach ($orders as $order) {
                 $order->delete();
             }
-            
+
             DB::commit();
             return redirect()->back()->with('success', count($orders) . ' orders deleted successfully');
         } catch (\Exception $e) {

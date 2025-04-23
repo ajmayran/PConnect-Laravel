@@ -59,16 +59,19 @@
                                             </div>
                                         </td>
                                         <td class="px-4 py-2 text-center">
-                                            @if ($item->discount_amount > 0 && $item->applied_discount === 'freebie')
-                                                <div class="flex flex-col">
+                                            @if ($item->discount_amount > 0)
+                                                <div class="flex flex-col items-center">
                                                     <span
-                                                        class="text-gray-800">₱{{ number_format($item->product->price, 2) }}</span>
-                                                    <span class="text-xs text-green-500 free-items"></span>
+                                                        class="text-gray-500 line-through">₱{{ number_format($item->product->price, 2) }}</span>
+                                                    <span class="text-green-600"
+                                                        data-price="{{ $item->product->price }}"
+                                                        data-discount="{{ $item->discount_amount / $item->quantity }}">
+                                                        ₱{{ number_format($item->product->price - $item->discount_amount / $item->quantity, 2) }}
+                                                    </span>
                                                 </div>
                                             @else
-                                                <span data-price="{{ $item->product->price }}" data-discount="0">
-                                                    ₱{{ number_format($item->product->price, 2) }}
-                                                </span>
+                                                <span class="text-gray-800" data-price="{{ $item->product->price }}"
+                                                    data-discount="0">₱{{ number_format($item->product->price, 2) }}</span>
                                             @endif
                                         </td>
                                         <td class="px-4 py-4">
@@ -137,7 +140,9 @@
                 <div class="space-y-4 md:hidden">
                     @foreach ($items as $item)
                         <div class="p-3 border border-gray-200 rounded-lg cart-item-mobile"
-                            data-item-id="{{ $item->id }}" data-distributor-id="{{ $distributorId }}">
+                            data-item-id="{{ $item->id }}" data-distributor-id="{{ $distributorId }}"
+                            data-buy-quantity="{{ $item->product->activeDiscount->buy_quantity ?? 0 }}"
+                            data-free-quantity="{{ $item->product->activeDiscount->free_quantity ?? 0 }}">
                             <div class="flex items-center gap-3">
                                 <!-- Product image -->
                                 <img src="{{ $item->product->image ? asset('storage/products/' . basename($item->product->image)) : asset('img/default-product.jpg') }}"
@@ -157,9 +162,7 @@
                                         <p class="text-sm font-semibold text-green-600"
                                             data-price="{{ $item->product->price }}"
                                             data-discount="{{ $item->discount_amount / $item->quantity }}">
-                                            ₱{{ number_format(($item->product->price * $item->quantity - $item->discount_amount) / $item->quantity, 2) }}
-                                            <span
-                                                class="text-xs">{{ $item->applied_discount ?? 'Discount Applied' }}</span>
+                                            ₱{{ number_format($item->product->price - $item->discount_amount / $item->quantity, 2) }}
                                         </p>
                                     @else
                                         <p class="mt-1 text-sm font-semibold text-gray-800"
@@ -279,7 +282,16 @@
     </div>
 
     <script>
-        let cartChanges = {};
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize free items display for all cart items
+            document.querySelectorAll('[data-item-id]').forEach(container => {
+                const input = container.querySelector('input[type="number"]');
+                if (input) {
+                    const quantity = parseInt(input.value);
+                    updateFreeItemsDisplay(container, quantity);
+                }
+            });
+        });
 
         function updateCartEmptyState() {
             const cartContainer = document.getElementById('cartContainer');
@@ -356,15 +368,18 @@
                 .then(data => {
                     if (data.success) {
                         const itemElements = document.querySelectorAll(`[data-item-id="${itemId}"]`);
+                        let distributorId = null;
+
                         itemElements.forEach(itemElement => {
+                            distributorId = itemElement.dataset.distributorId;
                             const cartGroup = itemElement.closest('.cart-group');
                             itemElement.remove();
 
-                            // If no items remain in the group, remove the entire group
-                            if (!cartGroup.querySelector('[data-item-id]')) {
+                            // After removing the item, check if there are any items left in the cart group
+                            if (cartGroup && !cartGroup.querySelector('[data-item-id]')) {
                                 cartGroup.remove();
-                            } else {
-                                updateDistributorSubtotal(cartGroup.dataset.distributorId);
+                            } else if (cartGroup) {
+                                updateDistributorSubtotal(distributorId);
                             }
                         });
 
@@ -379,16 +394,20 @@
         }
 
         function updateFreeItemsDisplay(container, quantity) {
-            const buyQuantity = parseInt(container.dataset.buyQuantity);
-            const freeQuantity = parseInt(container.dataset.freeQuantity);
+            if (!container) return;
+
+            const buyQuantity = parseInt(container.dataset.buyQuantity) || 0;
+            const freeQuantity = parseInt(container.dataset.freeQuantity) || 0;
             const freeItemsDisplay = container.querySelector('.free-items-display');
 
-            if (buyQuantity > 0 && freeQuantity > 0) {
+            if (buyQuantity > 0 && freeQuantity > 0 && freeItemsDisplay) {
                 const sets = Math.floor(quantity / buyQuantity);
                 const freeItems = sets * freeQuantity;
 
-                if (freeItemsDisplay) {
-                    freeItemsDisplay.textContent = `+${freeItems}`;
+                if (freeItems > 0) {
+                    freeItemsDisplay.textContent = `+${freeItems} free`;
+                } else {
+                    freeItemsDisplay.textContent = '';
                 }
             } else if (freeItemsDisplay) {
                 freeItemsDisplay.textContent = '';
@@ -397,9 +416,13 @@
 
         function updateQuantity(button, action) {
             const container = button.closest('[data-item-id]');
+            if (!container) return;
+
             const input = container.querySelector('input[type="number"]');
-            const currentQty = parseInt(input.value);
-            const minQty = parseInt(input.dataset.minimum);
+            if (!input) return;
+
+            const currentQty = parseInt(input.value) || 1;
+            const minQty = parseInt(input.dataset.minimum) || 1;
             const itemId = container.dataset.itemId;
             let newQty = action === 'increase' ? currentQty + 1 : currentQty - 1;
 
@@ -410,12 +433,10 @@
 
             input.value = newQty;
 
-            // Update free items display
-            updateFreeItemsDisplay(container, newQty);
+            // Update all instances of this item (both mobile and desktop views)
+            updateAllItemInstances(itemId, newQty);
 
-            // Update subtotal and distributor subtotal
-            updateItemSubtotal(container, newQty);
-            updateDistributorSubtotal(container.dataset.distributorId);
+            // Update totals
             updateCartTotal();
         }
 
@@ -429,6 +450,9 @@
                 const itemInput = container.querySelector('input[type="number"]');
                 if (itemInput) itemInput.value = newQty;
 
+                // Update free items display
+                updateFreeItemsDisplay(container, newQty);
+
                 // Calculate and update subtotal based on price and discount
                 updateItemSubtotal(container, newQty);
 
@@ -440,10 +464,13 @@
         }
 
         function updateItemSubtotal(container, quantity) {
+            if (!container) return;
+
+            // Find the price element which has the data attributes
             const priceElement = container.querySelector('[data-price]');
             if (!priceElement) return;
 
-            const price = parseFloat(priceElement.dataset.price);
+            const price = parseFloat(priceElement.dataset.price) || 0;
             const discountPerUnit = parseFloat(priceElement.dataset.discount) || 0;
 
             // Calculate subtotal with discount applied
@@ -452,10 +479,12 @@
             // Update all subtotal elements within this container
             const subtotalElements = container.querySelectorAll('.item-subtotal');
             subtotalElements.forEach(element => {
-                element.textContent = `₱${subtotal.toLocaleString('en-US', { 
-                    minimumFractionDigits: 2, 
-                    maximumFractionDigits: 2 
-                })}`;
+                if (element) {
+                    element.textContent = `₱${subtotal.toLocaleString('en-US', { 
+                        minimumFractionDigits: 2, 
+                        maximumFractionDigits: 2 
+                    })}`;
+                }
             });
         }
 
@@ -481,7 +510,8 @@
                 // Get subtotal from the item-subtotal element
                 const subtotalElement = item.querySelector('.item-subtotal');
                 if (subtotalElement) {
-                    const itemSubtotal = parseFloat(subtotalElement.textContent.replace('₱', '').replace(/,/g, ''));
+                    const subtotalText = subtotalElement.textContent.replace(/[^0-9.-]+/g, '');
+                    const itemSubtotal = parseFloat(subtotalText);
                     if (!isNaN(itemSubtotal)) subtotal += itemSubtotal;
                 }
             });
@@ -489,10 +519,12 @@
             // Update all distributor subtotal elements in this cart group
             const subtotalElements = cartGroup.querySelectorAll('.distributor-subtotal');
             subtotalElements.forEach(element => {
-                element.textContent = `₱${subtotal.toLocaleString('en-US', { 
-                    minimumFractionDigits: 2, 
-                    maximumFractionDigits: 2 
-                })}`;
+                if (element) {
+                    element.textContent = `₱${subtotal.toLocaleString('en-US', { 
+                        minimumFractionDigits: 2, 
+                        maximumFractionDigits: 2 
+                    })}`;
+                }
             });
         }
 
@@ -514,7 +546,7 @@
                 processedDistributors.add(distributorId);
 
                 // Add this distributor's subtotal to the total
-                const subtotalText = element.textContent.replace('₱', '').replace(/,/g, '');
+                const subtotalText = element.textContent.replace(/[^0-9.-]+/g, '');
                 const subtotal = parseFloat(subtotalText);
                 if (!isNaN(subtotal)) total += subtotal;
             });
@@ -563,7 +595,7 @@
                     processedItemIds.add(itemId);
                     items.push({
                         cart_detail_id: itemId,
-                        quantity: parseInt(input.value)
+                        quantity: parseInt(input.value) || 1
                     });
                 }
             });
@@ -627,7 +659,9 @@
 
         function validateQuantity(input) {
             const container = input.closest('[data-item-id]');
-            const minQty = parseInt(input.dataset.minimum);
+            if (!container) return;
+
+            const minQty = parseInt(input.dataset.minimum) || 1;
             let newQty = parseInt(input.value) || minQty;
 
             if (newQty < minQty) {
@@ -638,27 +672,14 @@
                     confirmButtonText: 'Ok'
                 }).then(() => {
                     input.value = minQty;
-                    updateFreeItemsDisplay(container, minQty);
-                    updateItemSubtotal(container, minQty);
-                    updateDistributorSubtotal(container.dataset.distributorId);
+                    updateAllItemInstances(container.dataset.itemId, minQty);
                     updateCartTotal();
                 });
             } else {
-                updateFreeItemsDisplay(container, newQty);
-                updateItemSubtotal(container, newQty);
-                updateDistributorSubtotal(container.dataset.distributorId);
+                updateAllItemInstances(container.dataset.itemId, newQty);
                 updateCartTotal();
             }
         }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize free items display for all cart items
-            document.querySelectorAll('[data-item-id]').forEach(container => {
-                const input = container.querySelector('input[type="number"]');
-                const quantity = parseInt(input.value);
-                updateFreeItemsDisplay(container, quantity);
-            });
-        });
 
         // Helper functions for alerts
         function showProcessingAlert(text) {

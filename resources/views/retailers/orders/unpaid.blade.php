@@ -2,46 +2,38 @@
     <x-dashboard-nav />
     <div class="container max-w-full px-4 py-8 mx-auto">
         <div class="flex items-center justify-between mb-8 ml-4">
-            <h1 class="text-3xl font-bold text-gray-900">Cancelled/Rejected Orders</h1>
+            <h1 class="text-3xl font-bold text-gray-900">Unpaid Orders</h1>
             <a href="{{ route('retailers.orders.index') }}"
                 class="px-4 py-2 font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
                 Back to Orders
             </a>
         </div>
 
-        <x-retailer-orderstatus-tabs />
-
         @if ($orders->isEmpty())
             <div class="flex items-center justify-center p-8 mt-4 bg-white rounded-lg">
-                <p class="text-lg text-gray-500">No cancelled or rejected orders</p>
+                <p class="text-lg text-gray-500">No unpaid orders found</p>
             </div>
         @else
             <div class="overflow-hidden bg-white rounded-lg shadow">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th scope="col"
-                                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                            <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                 Order ID
                             </th>
-                            <th scope="col"
-                                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                            <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                 Distributor
                             </th>
-                            <th scope="col"
-                                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                                Date
+                            <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                Delivery Date
                             </th>
-                            <th scope="col"
-                                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                            <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                 Total
                             </th>
-                            <th scope="col"
-                                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                            <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                 Status
                             </th>
-                            <th scope="col"
-                                class="px-6 py-3 text-xs font-medium tracking-wider text-center text-gray-500 uppercase">
+                            <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-center text-gray-500 uppercase">
                                 Actions
                             </th>
                         </tr>
@@ -50,8 +42,7 @@
                         @foreach ($orders as $order)
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">{{ $order->formatted_order_id }}
-                                    </div>
+                                    <div class="text-sm font-medium text-gray-900">{{ $order->formatted_order_id }}</div>
                                     <div class="text-xs text-gray-500">{{ $order->created_at->format('M d, Y') }}</div>
                                 </td>
                                 <td class="px-6 py-4">
@@ -59,7 +50,7 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="text-sm text-gray-900">
-                                        {{ $order->status_updated_at ? $order->status_updated_at->format('M d, Y') : 'N/A' }}
+                                        {{ $order->delivery ? $order->delivery->updated_at->format('M d, Y') : 'N/A' }}
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
@@ -68,23 +59,17 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="flex items-center">
-                                        @if ($order->status == 'cancelled')
-                                            <span
-                                                class="inline-flex items-center px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">
-                                                Cancelled - {{ $order->cancel_reason }}
-                                            </span>
-                                        @elseif ($order->status == 'rejected')
-                                            <span
-                                                class="inline-flex items-center px-2 py-1 text-xs font-semibold text-orange-800 bg-orange-100 rounded-full">
-                                                Rejected - {{ $order->cancel_reason }}
-                                            </span>
-                                        @endif
+                                    <div class="flex items-center space-x-2">
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded-full">
+                                            {{ ucfirst($order->status) }}
+                                        </span>
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">
+                                            Unpaid
+                                        </span>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <button onclick="openOrderModal({{ $order->id }})"
-                                        class="text-blue-600 hover:text-blue-900">
+                                    <button onclick="openOrderModal({{ $order->id }})" class="text-blue-600 hover:text-blue-900">
                                         View Details
                                     </button>
                                 </td>
@@ -118,8 +103,8 @@
             <div id="modalContent" class="mt-4">
                 <!-- Order details will be loaded here -->
                 <div class="flex items-center justify-center p-8">
-                    <svg class="w-12 h-12 text-green-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none"
-                        viewBox="0 0 24 24">
+                    <svg class="w-12 h-12 text-green-500 animate-spin" xmlns="http://www.w3.org/2000/svg"
+                        fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                             stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor"
@@ -129,10 +114,14 @@
                 </div>
             </div>
 
-            <div class="flex justify-end pt-4 mt-6 border-t border-gray-200">
+            <div class="flex justify-between pt-4 mt-6 border-t border-gray-200">
                 <button onclick="closeOrderModal()"
                     class="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                     Close
+                </button>
+                <button id="contactDistributorBtn" onclick="contactDistributor()" 
+                    class="px-4 py-2 text-sm font-medium text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Contact Distributor
                 </button>
             </div>
         </div>
@@ -145,7 +134,7 @@
             // Show the modal first with loading indicator
             document.getElementById('orderModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden'; // Prevent background scrolling
-
+            
             // Store the order ID for contact button
             currentOrderId = orderId;
 
@@ -173,6 +162,18 @@
             document.body.style.overflow = ''; // Restore background scrolling
             document.getElementById('modalContent').innerHTML =
                 '<div class="flex items-center justify-center p-8"><svg class="w-12 h-12 text-green-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>';
+        }
+
+        function contactDistributor() {
+            Swal.fire({
+                title: 'Contact Information',
+                html: `
+                    <p class="mb-3">To complete payment for this order, please contact the distributor directly.</p>
+                    <p class="text-gray-600">You can use the chatbox feature in your account to send a message.</p>
+                `,
+                icon: 'info',
+                confirmButtonText: 'OK'
+            });
         }
 
         // Close modal when clicking outside

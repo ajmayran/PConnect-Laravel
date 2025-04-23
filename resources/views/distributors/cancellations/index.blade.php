@@ -4,7 +4,7 @@
             <i class="px-2 bg-gray-900 rounded-md bi bi-filter-left"></i>
         </span>
         <div class="container p-4 mx-auto">
-            <h1 class="mb-4 text-xl font-semibold text-center sm:text-2xl">Cancellations</h1>
+            <h1 class="mb-4 text-2xl font-bold text-left text-gray-800 sm:text-3xl">Cancellations</h1>
 
             <!-- Tabs and Search Section -->
             <div class="p-4 mb-6 bg-white rounded-lg shadow-sm">
@@ -28,18 +28,21 @@
                             <input type="search" name="search" placeholder="Search orders..." id="search-input"
                                 class="px-4 py-2 pr-8 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                                 value="{{ request('search') }}">
-                            <button type="submit" class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                            <button type="submit"
+                                class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                             </button>
                         </form>
-                        @if(request('search'))
-                            <a href="{{ route('distributors.cancellations.index') }}" class="ml-2 text-sm text-red-500">Clear search</a>
+                        @if (request('search'))
+                            <a href="{{ route('distributors.cancellations.index') }}"
+                                class="ml-2 text-sm text-red-500">Clear search</a>
                         @endif
                     </div>
-                    <button id="batchDeleteBtn" class="hidden px-4 py-2 text-white bg-red-500 rounded-lg hover:bg-red-600">
+                    <button id="batchDeleteBtn"
+                        class="hidden px-4 py-2 text-white bg-red-500 rounded-lg hover:bg-red-600">
                         <svg class="inline-block w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -48,13 +51,14 @@
                     </button>
                 </div>
             </div>
-            
+
             <!-- Tables Container -->
             <div class="overflow-hidden bg-white rounded-lg shadow-sm">
                 <!-- Customer Cancellations Table -->
                 <div id="customerCancellations" class="tab-content">
                     <div class="p-4">
-                        <h2 class="mb-4 text-sm text-gray-600">Retailer Cancels: {{ count($retailerCancellations ?? []) }}</h2>
+                        <h2 class="mb-4 text-sm text-gray-600">Retailer Cancels:
+                            {{ count($retailerCancellations ?? []) }}</h2>
                         <form id="deleteForm" method="POST">
                             @csrf
                             @method('DELETE')
@@ -62,7 +66,8 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="w-10 px-6 py-3">
-                                            <input type="checkbox" id="selectAllCustomer" class="border-gray-300 rounded cursor-pointer">
+                                            <input type="checkbox" id="selectAllCustomer"
+                                                class="border-gray-300 rounded cursor-pointer">
                                         </th>
                                         <th
                                             class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
@@ -76,7 +81,7 @@
                                         <th
                                             class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                             Date</th>
-                    
+
                                         <th
                                             class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                             Reason</th>
@@ -87,32 +92,43 @@
                                     @forelse ($retailerCancellations ?? [] as $order)
                                         <tr>
                                             <td class="px-6 py-4">
-                                                <input type="checkbox" name="selected_orders[]" value="{{ $order->id }}" class="border-gray-300 rounded cursor-pointer order-checkbox">
+                                                <input type="checkbox" name="selected_orders[]"
+                                                    value="{{ $order->id }}"
+                                                    class="border-gray-300 rounded cursor-pointer order-checkbox">
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">{{ $order->id }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">{{ $order->formatted_order_id }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 ₱{{ number_format($order->total_amount, 2) }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap">{{ $order->customer_name }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 {{ $order->created_at->format('M d, Y') }}
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">{{ $order->cancel_reason ?? 'No reason provided' }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                {{ $order->cancel_reason ?? 'No reason provided' }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="flex items-center space-x-3">
-                                                    <button type="button" onclick="showOrderDetails({{ $order->id }}, 'cancelled')"
+                                                    <button type="button"
+                                                        onclick="showOrderDetails({{ $order->id }}, 'cancelled')"
                                                         class="text-blue-600 hover:text-blue-900">
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
+                                                            </path>
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                            </path>
                                                         </svg>
                                                     </button>
                                                     <button type="button" onclick="deleteOrder({{ $order->id }})"
                                                         class="text-red-600 hover:text-red-900">
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                            </path>
                                                         </svg>
                                                     </button>
                                                 </div>
@@ -142,7 +158,8 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="w-10 px-6 py-3">
-                                            <input type="checkbox" id="selectAllMy" class="border-gray-300 rounded cursor-pointer">
+                                            <input type="checkbox" id="selectAllMy"
+                                                class="border-gray-300 rounded cursor-pointer">
                                         </th>
                                         <th
                                             class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
@@ -156,7 +173,7 @@
                                         <th
                                             class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                             Date</th>
-                       
+
                                         <th
                                             class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                             Rejection Reason</th>
@@ -167,32 +184,43 @@
                                     @forelse ($myCancellations ?? [] as $order)
                                         <tr>
                                             <td class="px-6 py-4">
-                                                <input type="checkbox" name="selected_orders[]" value="{{ $order->id }}" class="border-gray-300 rounded cursor-pointer order-checkbox-my">
+                                                <input type="checkbox" name="selected_orders[]"
+                                                    value="{{ $order->id }}"
+                                                    class="border-gray-300 rounded cursor-pointer order-checkbox-my">
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">{{ $order->id }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">{{ $order->formatted_order_id }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 ₱{{ number_format($order->total_amount, 2) }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap">{{ $order->customer_name }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 {{ $order->created_at->format('M d, Y') }}
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">{{ $order->reject_reason ?? 'No reason provided' }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                {{ $order->reject_reason ?? 'No reason provided' }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="flex items-center space-x-3">
-                                                    <button type="button" onclick="showOrderDetails({{ $order->id }}, 'rejected')"
+                                                    <button type="button"
+                                                        onclick="showOrderDetails({{ $order->id }}, 'rejected')"
                                                         class="text-blue-600 hover:text-blue-900">
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
+                                                            </path>
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                            </path>
                                                         </svg>
                                                     </button>
                                                     <button type="button" onclick="deleteOrder({{ $order->id }})"
                                                         class="text-red-600 hover:text-red-900">
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                            </path>
                                                         </svg>
                                                     </button>
                                                 </div>
@@ -260,12 +288,12 @@
                 } else {
                     document.getElementById('myCancellations').classList.remove('hidden');
                 }
-                
+
                 // Update batch delete button visibility
                 updateBatchDeleteButton();
             });
         });
-        
+
         // Checkbox functionality for batch delete
         document.getElementById('selectAllCustomer').addEventListener('change', function() {
             const isChecked = this.checked;
@@ -274,7 +302,7 @@
             });
             updateBatchDeleteButton();
         });
-        
+
         document.getElementById('selectAllMy').addEventListener('change', function() {
             const isChecked = this.checked;
             document.querySelectorAll('.order-checkbox-my').forEach(checkbox => {
@@ -282,13 +310,13 @@
             });
             updateBatchDeleteButton();
         });
-        
+
         // Update batch delete button visibility based on selections
         function updateBatchDeleteButton() {
             const activeTab = document.querySelector('.tab-button.text-green-600').id;
             const checkboxSelector = activeTab === 'customerTab' ? '.order-checkbox' : '.order-checkbox-my';
             const anyChecked = Array.from(document.querySelectorAll(checkboxSelector)).some(cb => cb.checked);
-            
+
             const batchDeleteBtn = document.getElementById('batchDeleteBtn');
             if (anyChecked) {
                 batchDeleteBtn.classList.remove('hidden');
@@ -296,22 +324,23 @@
                 batchDeleteBtn.classList.add('hidden');
             }
         }
-        
+
         // Add event listeners to all checkboxes
         document.querySelectorAll('.order-checkbox, .order-checkbox-my').forEach(checkbox => {
             checkbox.addEventListener('change', updateBatchDeleteButton);
         });
-        
+
         // Batch delete functionality
         document.getElementById('batchDeleteBtn').addEventListener('click', function() {
             const activeTab = document.querySelector('.tab-button.text-green-600').id;
             const formId = activeTab === 'customerTab' ? 'deleteForm' : 'deleteFormReject';
-            const checkboxSelector = activeTab === 'customerTab' ? '.order-checkbox:checked' : '.order-checkbox-my:checked';
-            
+            const checkboxSelector = activeTab === 'customerTab' ? '.order-checkbox:checked' :
+                '.order-checkbox-my:checked';
+
             const selectedOrders = Array.from(document.querySelectorAll(checkboxSelector)).map(cb => cb.value);
-            
+
             if (selectedOrders.length === 0) return;
-            
+
             Swal.fire({
                 title: 'Are you sure?',
                 text: `You want to delete ${selectedOrders.length} selected order(s)?`,
@@ -359,10 +388,10 @@
             // Show loading state
             const modalContent = document.querySelector('#orderDetailsModal .px-4.pt-5.pb-4');
             modalContent.innerHTML = '<div class="text-center"><p>Loading order details...</p></div>';
-            
+
             // Show the modal
             document.getElementById('orderDetailsModal').classList.remove('hidden');
-            
+
             // Fetch order details from the server - FIX: Updated URL path
             fetch(`/cancellations/${orderId}/details`)
                 .then(response => {
@@ -372,10 +401,10 @@
                     return response.json();
                 })
                 .then(data => {
-                    let reasonText = type === 'cancelled' ? 
-                        `<strong>Cancellation Reason:</strong> ${data.reason || 'No reason provided'}` : 
+                    let reasonText = type === 'cancelled' ?
+                        `<strong>Cancellation Reason:</strong> ${data.reason || 'No reason provided'}` :
                         `<strong>Rejection Reason:</strong> ${data.reason || 'No reason provided'}`;
-                        
+
                     let html = `
                         <h3 class="mb-4 text-lg font-medium text-gray-900">Order ${data.formatted_id} Details</h3>
                         <dl class="grid grid-cols-1 mb-4 gap-x-4 gap-y-4 sm:grid-cols-2">
@@ -409,17 +438,26 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">`;
-                                
+
                     data.items.forEach(item => {
+                        const originalPrice = parseFloat(item.price).toFixed(2);
+                        const discountedPrice = item.discount_amount > 0 ?
+                            (item.price - (item.discount_amount / item.quantity)).toFixed(2) :
+                            originalPrice;
                         html += `
                             <tr>
                                 <td class="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">${item.product.product_name}</td>
-                                <td class="px-4 py-2 text-sm text-right text-gray-900 whitespace-nowrap">₱${parseFloat(item.price).toFixed(2)}</td>
+                                <td class="px-4 py-2 text-sm text-right text-gray-900 whitespace-nowrap">
+                                 ${item.discount_amount > 0
+                                ? `<span class="text-xs text-gray-500 line-through">₱${originalPrice}</span><br>
+                                       <span class="text-green-600">₱${discountedPrice}</span>`
+                                : `₱${originalPrice}`}
+                                 </td>
                                 <td class="px-4 py-2 text-sm text-right text-gray-900 whitespace-nowrap">${item.quantity}</td>
                                 <td class="px-4 py-2 text-sm text-right text-gray-900 whitespace-nowrap">₱${parseFloat(item.subtotal).toFixed(2)}</td>
                             </tr>`;
                     });
-                    
+
                     html += `
                                 </tbody>
                                 <tfoot>
@@ -431,11 +469,12 @@
                             </table>
                         </div>
                     `;
-                    
+
                     modalContent.innerHTML = html;
                 })
                 .catch(error => {
-                    modalContent.innerHTML = '<div class="text-center text-red-500"><p>Error loading order details: ' + error.message + '</p></div>';
+                    modalContent.innerHTML = '<div class="text-center text-red-500"><p>Error loading order details: ' +
+                        error.message + '</p></div>';
                     console.error('Error fetching order details:', error);
                 });
         }
@@ -457,7 +496,7 @@
                 closeModal();
             }
         });
-        
+
         // Initialize batch delete button visibility
         updateBatchDeleteButton();
     </script>

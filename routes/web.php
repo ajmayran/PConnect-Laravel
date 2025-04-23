@@ -217,6 +217,8 @@ Route::middleware(['auth', 'verified', 'checkRole:retailer', 'check.distributor.
     Route::get('/orders/cancelled', [RetailerOrdersController::class, 'cancelled'])->name('orders.cancelled');
     Route::get('/orders/returned', [RetailerOrdersController::class, 'returned'])->name('orders.returned');
     Route::get('/orders/track', [RetailerOrdersController::class, 'trackOrder'])->name('orders.track');
+    Route::get('/orders/unpaid', [RetailerOrdersController::class, 'unpaid'])->name('orders.unpaid');
+    Route::get('/profile/{order}/order-details', [RetailerOrdersController::class, 'showOrderDetails']);
 
     Route::get('/orders/{order}', [RetailerOrdersController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/cancel', [RetailerOrdersController::class, 'cancelOrder'])->name('orders.cancel');

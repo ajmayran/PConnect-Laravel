@@ -1,239 +1,158 @@
 <x-app-layout>
     <x-dashboard-nav />
-    <div class="container px-4 py-8 mx-auto max-w-7xl">
-        <div class="flex items-center justify-between mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">My Orders</h1>
+    <div class="container max-w-full px-4 py-8 mx-auto">
+        <div class="flex items-center justify-between mb-8 ml-4">
+            <h1 class="text-3xl font-bold text-gray-900">Completed Orders</h1>
+            <a href="{{ route('retailers.orders.unpaid') }}"
+                class="px-4 py-2 font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                Unpaid Orders
+            </a>
         </div>
 
         <x-retailer-orderstatus-tabs />
 
         @if ($orders->isEmpty())
             <div class="flex items-center justify-center p-8 mt-4 bg-white rounded-lg">
-                <p class="text-lg text-gray-500">No orders found</p>
+                <p class="text-lg text-gray-500">No completed orders found</p>
             </div>
         @else
-            <div class="mt-6 space-y-6">
-                @foreach ($orders as $order)
-                    <div class="overflow-hidden bg-white rounded-lg shadow-sm">
-                        <div class="p-6">
-                            <div class="flex items-center justify-between mb-6">
-                                <div class="space-y-1">
-                                    <h2 class="text-xl font-bold text-gray-900">
-                                        {{ $order->formatted_order_id }}
-                                    </h2>
-                                    <p class="text-gray-600">
-                                        <span class="font-medium">Distributor:</span>
-                                        {{ $order->distributor->company_name }}
-                                    </p>
-                                    <p class="text-gray-600">
-                                        <span class="font-medium">Status:</span>
-                                        <span
-                                            class="px-3 py-1 text-sm font-medium rounded-full 
-                                            @if ($order->status === 'completed') bg-green-100 text-green-800
-                                            @elseif($order->status === 'pending') bg-yellow-100 text-yellow-800
-                                            @elseif($order->status === 'cancelled') bg-red-100 text-red-800
-                                            @else bg-gray-100 text-gray-800 @endif">
-                                            {{ ucfirst($order->status) }}
-                                        </span>
-                                    </p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-sm font-medium text-gray-500">Order Date</p>
-                                    <p class="text-gray-900">{{ $order->created_at->format('M d, Y') }}</p>
-                                </div>
-                            </div>
+            <div class="overflow-hidden bg-white rounded-lg shadow">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col"
+                                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                Order ID
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                Distributor
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                Order Date
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                                Total
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-xs font-medium tracking-wider text-center text-gray-500 uppercase">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach ($orders as $order)
+                            @php
+                                // Check if order was completed within the last 7 days
+                                $orderDate = new \Carbon\Carbon($order->status_updated_at ?? $order->updated_at);
+                                $isWithinReturnPeriod = $orderDate->diffInDays(now()) <= 7;
 
-                            <div class="mt-6 -mx-6">
-                                <table class="w-full">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th
-                                                class="px-6 py-3 text-sm font-medium tracking-wider text-left text-gray-500">
-                                                Product</th>
-                                            <th
-                                                class="px-6 py-3 text-sm font-medium tracking-wider text-center text-gray-500">
-                                                Quantity</th>
-                                            <th
-                                                class="px-6 py-3 text-sm font-medium tracking-wider text-right text-gray-500">
-                                                Price</th>
-                                            <th
-                                                class="px-6 py-3 text-sm font-medium tracking-wider text-right text-gray-500">
-                                                Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-200">
-                                        @foreach ($order->orderDetails as $detail)
-                                            <tr>
-                                                <td class="px-6 py-4 text-sm text-gray-900">
-                                                    {{ $detail->product->product_name }}
-                                                    @if($detail->applied_discount)
-                                                        <p class="text-xs text-green-600">{{ $detail->applied_discount }}</p>
-                                                    @endif
-                                                    @if($detail->free_items > 0)
-                                                        <p class="text-xs text-green-600">+{{ $detail->free_items }} free item(s)</p>
-                                                    @endif
-                                                </td>
-                                                <td class="px-6 py-4 text-sm text-center text-gray-500">
-                                                    {{ $detail->quantity }}
-                                                </td>
-                                                <td class="px-6 py-4 text-sm text-right text-gray-900">
-                                                    @if($detail->discount_amount > 0)
-                                                        <span class="text-xs text-gray-500 line-through">₱{{ number_format($detail->price, 2) }}</span>
-                                                        <br>
-                                                        <span class="text-green-600">₱{{ number_format($detail->price - ($detail->discount_amount / $detail->quantity), 2) }}</span>
-                                                    @else
-                                                        ₱{{ number_format($detail->price, 2) }}
-                                                    @endif
-                                                </td>
-                                                <td class="px-6 py-4 text-sm font-medium text-right text-gray-900">
-                                                    @if($detail->discount_amount > 0)
-                                                        <span class="text-xs text-gray-500 line-through">₱{{ number_format($detail->price * $detail->quantity, 2) }}</span>
-                                                        <br>
-                                                    @endif
-                                                    ₱{{ number_format($detail->subtotal, 2) }}
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                    <tfoot class="bg-gray-50">
-                                        <tr>
-                                            <td colspan="3"
-                                                class="px-6 py-4 text-sm font-bold text-right text-gray-900">Total
-                                                Amount:</td>
-                                            <td class="px-6 py-4 text-sm font-bold text-right text-gray-900">
-                                                ₱{{ number_format($order->orderDetails->sum('subtotal'), 2) }}
-                                            </td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
+                                // Check if return request was rejected
+                                $rejectedReturnRequest = $order
+                                    ->returnRequests()
+                                    ->where('status', 'rejected')
+                                    ->exists();
 
-                            <div class="pt-6 mt-6 border-t border-gray-200">
-                                <div class="flex items-center text-sm text-gray-600">
-                                    <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    Delivery Address: {{ optional($order->orderDetails->first())->delivery_address }}
-                                </div>
-                            </div>
-                        </div>
+                                // Check if order has any other return request
+                                $pendingOrApprovedReturnRequest = $order
+                                    ->returnRequests()
+                                    ->whereIn('status', ['pending', 'approved'])
+                                    ->exists();
 
-                        <div class="flex justify-end p-4 bg-gray-50">
-                            @if ($order->status === 'pending')
-                                <!-- Cancel Button -->
-                                <button
-                                    onclick="document.getElementById('cancelModal{{ $order->id }}').style.display='block'"
-                                    class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
-                                    Cancel Order
-                                </button>
-                            @endif
+                                $hasReturnRequest = $order->returnRequests()->exists();
+                            @endphp
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ $order->formatted_order_id }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ $order->distributor->company_name }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ $order->created_at->format('M d, Y') }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        ₱{{ number_format($order->orderDetails->sum('subtotal'), 2) }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm font-medium text-center whitespace-nowrap">
+                                    <div class="flex items-center justify-center space-x-2">
+                                        <button onclick="openOrderModal({{ $order->id }})"
+                                            class="text-blue-600 hover:text-blue-900">
+                                            View Details
+                                        </button>
 
-                            @if ($order->status === 'completed')
-                                <form action="{{ route('retailers.orders.return', $order) }}" method="POST"
-                                    class="inline ml-2">
-                                    @csrf
-                                    <button type="submit"
-                                        class="px-4 py-2 text-sm font-medium text-white bg-yellow-600 rounded-md hover:bg-yellow-700">
-                                        Return Order
-                                    </button>
-                                </form>
-                            @endif
-                        </div>
-                    </div>
-
-                            <div class="flex items-center justify-between pt-6 mt-6 border-t border-gray-200">
-                                <div class="flex items-center text-sm text-gray-600">
-                                    <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    Delivery Address: {{ optional($order->orderDetails->first())->delivery_address }}
-                                </div>
-                                <div class="flex mt-4 space-x-3">
-                                    <a href="{{ route('retailers.orders.view-receipt', $order->id) }}"
-                                        class="flex items-center px-4 py-2 text-sm font-medium text-white transition-colors bg-green-500 rounded-lg hover:bg-green-600">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                        </svg>
-                                        View Receipt
-                                    </a>
-
-                                    @if ($rejectedReturnRequest)
-                                        <span
-                                            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg cursor-not-allowed">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none"
-                                                viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                            Return Declined
-                                        </span>
-                                    @elseif ($isWithinReturnPeriod)
-                                        @if ($pendingOrApprovedReturnRequest)
-                                            <span
-                                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-lg cursor-not-allowed">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2"
-                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                                                </svg>
-                                                Return Request Submitted
-                                            </span>
-                                        @else
+                                        @if ($isWithinReturnPeriod && !$hasReturnRequest)
+                                            <div class="w-px h-4 mx-2 bg-gray-300"></div>
                                             <a href="#" x-data
                                                 @click.prevent="$dispatch('open-modal', 'request-return-{{ $order->id }}')"
-                                                class="flex items-center px-4 py-2 text-sm font-medium text-white transition-colors bg-yellow-500 rounded-lg hover:bg-yellow-600">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2"
-                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                                                </svg>
+                                                class="text-yellow-600 hover:text-yellow-800">
                                                 Request Return
                                             </a>
                                         @endif
-                                    @else
-                                        <span
-                                            class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-lg cursor-not-allowed">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none"
-                                                viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                                            </svg>
-                                            Return Period Expired
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
             <!-- Pagination -->
-            <div class="container flex justify-end px-2 pb-8 mx-auto sm:px-4">
+            <div class="container flex justify-end px-2 py-4 mx-auto sm:px-4">
                 {{ $orders->links() }}
             </div>
         @endif
     </div>
 
+    <!-- Order Details Modal -->
+    <div id="orderModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-black bg-opacity-50">
+        <div class="relative max-w-4xl p-6 mx-auto mt-10 bg-white rounded-lg shadow-xl">
+            <div class="flex items-center justify-between pb-3 border-b">
+                <h3 class="text-lg font-medium text-gray-900" id="modalTitle">Order Details</h3>
+                <button onclick="closeOrderModal()" class="text-gray-400 hover:text-gray-500">
+                    <span class="sr-only">Close</span>
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div id="modalContent" class="mt-4">
+                <div class="flex items-center justify-center p-8">
+                    <svg class="w-12 h-12 text-blue-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                            stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4 mt-6 border-t border-gray-200">
+                <button onclick="closeOrderModal()"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 transition bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Return Request Modals -->
     @foreach ($orders as $order)
         @php
             // Check if order was completed within the last 7 days
             $orderDate = new \Carbon\Carbon($order->status_updated_at ?? $order->updated_at);
             $isWithinReturnPeriod = $orderDate->diffInDays(now()) <= 7;
 
-            // Check if return request was rejected
-            $rejectedReturnRequest = $order->returnRequests()->where('status', 'rejected')->exists();
-
-            // Check if order has any other return request
+            // Check if order has any return request
             $hasReturnRequest = $order->returnRequests()->exists();
         @endphp
 
@@ -255,13 +174,24 @@
                             <x-input-error class="mt-2" :messages="$errors->get('reason')" />
                         </div>
 
-                        <div class="space-y-2">
-                            <x-input-label for="receipt" value="Upload Receipt (Image or PDF)" />
-                            <input type="file" id="receipt" name="receipt"
-                                class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
-                                accept=".jpg,.jpeg,.png,.pdf" required />
-                            <p class="mt-1 text-xs text-gray-500">JPG, JPEG, PNG or PDF (max 5MB)</p>
-                            <x-input-error class="mt-2" :messages="$errors->get('receipt')" />
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div class="space-y-2">
+                                <x-input-label for="receipt" value="Upload Receipt (Image or PDF)" />
+                                <input type="file" id="receipt" name="receipt"
+                                    class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
+                                    accept=".jpg,.jpeg,.png,.pdf" required />
+                                <p class="mt-1 text-xs text-gray-500">JPG, JPEG, PNG or PDF (max 5MB)</p>
+                                <x-input-error class="mt-2" :messages="$errors->get('receipt')" />
+                            </div>
+
+                            <div class="space-y-2">
+                                <x-input-label for="proof_image" value="Upload Proof Image (Optional)" />
+                                <input type="file" id="proof_image" name="proof_image"
+                                    class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
+                                    accept=".jpg,.jpeg,.png" />
+                                <p class="mt-1 text-xs text-gray-500">Additional photo of the returned item(s)</p>
+                                <x-input-error class="mt-2" :messages="$errors->get('proof_image')" />
+                            </div>
                         </div>
 
                         <div>
@@ -304,4 +234,51 @@
             </x-modal>
         @endif
     @endforeach
+
+    <script>
+        function openOrderModal(orderId) {
+            // Show the modal first with loading indicator
+            document.getElementById('orderModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+
+            // Fetch the order details
+            fetch(`/retailers/profile/${orderId}/order-details`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('modalContent').innerHTML = data.html;
+                    document.getElementById('modalTitle').innerText = `Order ${data.order_id}`;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('modalContent').innerHTML =
+                        '<p class="text-center text-red-500">Error loading order details. Please try again.</p>';
+                });
+        }
+
+        function closeOrderModal() {
+            document.getElementById('orderModal').classList.add('hidden');
+            document.body.style.overflow = ''; // Restore background scrolling
+            document.getElementById('modalContent').innerHTML =
+                '<div class="flex items-center justify-center p-8"><svg class="w-12 h-12 text-blue-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('orderModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeOrderModal();
+            }
+        });
+
+        // Close modal with escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeOrderModal();
+            }
+        });
+    </script>
 </x-app-layout>

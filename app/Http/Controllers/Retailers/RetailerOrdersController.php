@@ -55,6 +55,21 @@ class RetailerOrdersController extends Controller
         return view('retailers.orders.to-pay', compact('orders'));
     }
 
+    public function unpaid()
+    {
+        $user = Auth::user();
+        $orders = Order::where('user_id', $user->id)
+            ->where('status', 'delivered') // Orders that are delivered
+            ->with(['distributor', 'orderDetails.product', 'payment'])
+            ->whereHas('payment', function ($query) {
+                $query->where('payment_status', 'unpaid'); // But payment is still unpaid
+            })
+            ->latest()
+            ->paginate(3);
+
+        return view('retailers.orders.unpaid', compact('orders'));
+    }
+
     public function toReceive()
     {
         $user = Auth::user();
@@ -122,16 +137,17 @@ class RetailerOrdersController extends Controller
         }
 
         // Check if the order status allows return (only completed orders can be returned)
-        if ($order->status !== 'completed') {
-            return redirect()->back()->with('error', 'Only completed orders can be returned.');
+        if (!in_array($order->status, ['completed', 'delivered'])) {
+            return redirect()->back()->with('error', 'Only completed and delivered orders can be returned.');
         }
 
         // Validate the request data
         $validated = $request->validate([
             'reason' => 'required|string',
             'receipt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120', // 5MB max
+            'proof_image' => 'nullable|image|mimes:jpg,jpeg,png|max:5120', // 5MB limit
             'products' => 'required|array',
-            'products.*.selected' => 'sometimes|accepted',
+            'products.*.selected' => 'sometimes',
             'products.*.quantity' => 'required_with:products.*.selected|integer|min:1',
         ]);
 
@@ -155,12 +171,19 @@ class RetailerOrdersController extends Controller
             // Store the receipt file
             $receiptPath = $request->file('receipt')->store('receipts', 'public');
 
+            // Store proof image if provided
+            $proofImagePath = null;
+            if ($request->hasFile('proof_image')) {
+                $proofImagePath = $request->file('proof_image')->store('proofs', 'public');
+            }
+
             // Create the return request
             $returnRequest = ReturnRequest::create([
                 'order_id' => $order->id,
                 'retailer_id' => Auth::id(),
                 'reason' => $validated['reason'],
                 'receipt_path' => $receiptPath,
+                'proof_image' => $proofImagePath,
                 'status' => 'pending'
             ]);
 
@@ -195,7 +218,7 @@ class RetailerOrdersController extends Controller
                 'return_request',
                 [
                     'title' => 'New Return Request',
-                    'message' => "A return request has been submitted for order #{$order->formatted_order_id}.",
+                    'message' => "A return request has been submitted for order {$order->formatted_order_id}.",
                     'order_id' => $order->id,
                     'return_request_id' => $returnRequest->id
                 ],
@@ -836,6 +859,46 @@ class RetailerOrdersController extends Controller
         return view('retailers.profile.order-details', compact('order'));
     }
 
+    public function showOrderDetails($orderId)
+    {
+        try {
+            // Load the order but make payment optional
+            $query = Order::with(['orderDetails.product', 'distributor'])
+                ->where('id', $orderId)
+                ->where('user_id', Auth::id());
+
+            // Only load payment if it exists (for non-pending orders)
+            $order = $query->first();
+
+            if (!$order) {
+                throw new \Illuminate\Database\Eloquent\ModelNotFoundException();
+            }
+
+            // Conditionally load the payment relationship if the order isn't pending
+            if ($order->status !== 'pending') {
+                $order->load('payment');
+            }
+
+            $html = view('retailers.profile.order-details', compact('order'))->render();
+
+            return response()->json([
+                'html' => $html,
+                'order_id' => $order->formatted_order_id,
+                'distributor_id' => $order->distributor_id
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error loading order details: ' . $e->getMessage(), [
+                'order_id' => $orderId,
+                'user_id' => Auth::id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'error' => true,
+                'message' => 'Error loading order details. Please try again.'
+            ], 500);
+        }
+    }
     public function trackOrder(Request $request)
     {
         $trackingNumber = $request->tracking_number;

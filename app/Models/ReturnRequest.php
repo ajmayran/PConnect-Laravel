@@ -13,6 +13,7 @@ class ReturnRequest extends Model
         'order_id',
         'retailer_id',
         'reason',
+        'proof_image',
         'receipt_path',
         'status'
     ];

@@ -283,6 +283,7 @@ class OrderController extends Controller
         }
     }
 
+
     public function editOrderQuantity(Request $request, Order $order)
     {
         if (!in_array($order->status, [self::STATUS_PENDING, self::STATUS_PROCESSING])) {
@@ -309,11 +310,32 @@ class OrderController extends Controller
                     // Calculate the difference in quantity
                     $quantityDifference = $detail['quantity'] - $orderDetail->quantity;
 
-                    // Update the order detail quantity and subtotal
-                    $newSubtotal = $detail['quantity'] * $product->price;
+                    // Recalculate discount
+                    $discount = \App\Models\Discount::where('distributor_id', $product->distributor_id)
+                        ->where('is_active', true)
+                        ->where('start_date', '<=', now())
+                        ->where('end_date', '>=', now())
+                        ->whereHas('products', function ($query) use ($product) {
+                            $query->where('product_id', $product->id);
+                        })
+                        ->first();
+
+                    $discountAmount = 0;
+                    if ($discount) {
+                        if ($discount->type === 'percentage') {
+                            $discountAmount = $discount->calculatePercentageDiscount($product->price) * $detail['quantity'];
+                        } elseif ($discount->type === 'freebie') {
+                            $freeItems = $discount->calculateFreeItems($detail['quantity']);
+                            $discountAmount = $freeItems * $product->price;
+                        }
+                    }
+
+                    // Update the order detail quantity, subtotal, and discount
+                    $newSubtotal = ($product->price * $detail['quantity']) - $discountAmount;
                     $orderDetail->update([
                         'quantity' => $detail['quantity'],
                         'subtotal' => $newSubtotal,
+                        'discount_amount' => $discountAmount,
                     ]);
 
                     // Adjust stock based on the quantity difference
@@ -330,6 +352,7 @@ class OrderController extends Controller
                         'quantity' => $orderDetail->quantity,
                         'price' => (float) $product->price,
                         'subtotal' => $newSubtotal,
+                        'discount_amount' => $discountAmount,
                     ];
                 }
 
@@ -438,7 +461,7 @@ class OrderController extends Controller
             }
         }
     }
-    
+
     private function adjustRegularStock($product, $quantityDifference, $orderId)
     {
         if ($quantityDifference > 0) {

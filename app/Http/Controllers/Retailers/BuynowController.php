@@ -55,6 +55,7 @@ class BuynowController extends Controller
                 'quantity' => $validated['quantity'],
                 'price' => $product->price,
                 'subtotal' => $product->price * $validated['quantity'],
+                'final_subtotal' => $product->price * $validated['quantity'],
             ];
 
             // Store in session

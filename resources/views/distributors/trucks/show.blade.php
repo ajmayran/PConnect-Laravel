@@ -490,7 +490,23 @@
                         modalHtml += '<span class="font-medium text-gray-800">' + (detail.product ? detail.product
                             .product_name : 'Unknown Product') + '</span>';
                         modalHtml += '</div></td>';
-                        modalHtml += '<td class="px-4 py-3">₱' + parseFloat(detail.price || 0).toFixed(2) + '</td>';
+                        modalHtml += '<td class="px-4 py-3">';
+
+                        if (detail.discount_amount > 0) {
+                            // Show original price with strikethrough and discounted price below
+                            const originalPrice = parseFloat(detail.price).toFixed(2);
+                            const discountedPrice = (detail.price - (detail.discount_amount / detail.quantity))
+                                .toFixed(2);
+
+                            modalHtml += '<span class="text-xs text-gray-500 line-through">₱' + originalPrice +
+                                '</span><br>' +
+                                '<span class="text-green-600">₱' + discountedPrice + '</span>';
+                        } else {
+                            // Show regular price if no discount
+                            modalHtml += '₱' + parseFloat(detail.price || 0).toFixed(2);
+                        }
+
+                        modalHtml += '</td>';
                         modalHtml += '<td class="px-4 py-3">' + (detail.quantity || 0) + '</td>';
                         modalHtml += '<td class="px-4 py-3 font-medium text-blue-600">₱' + parseFloat(detail
                             .subtotal || 0).toFixed(2) + '</td>';

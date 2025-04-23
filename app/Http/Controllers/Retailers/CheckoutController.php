@@ -131,16 +131,17 @@ class CheckoutController extends Controller
         );
     }
 
+
     private function applyDiscounts($cartItems)
     {
         $discountedItems = [];
-    
+
         foreach ($cartItems as $item) {
             $product = $item->product;
             $distributorId = $product->distributor_id;
             $quantity = $item->quantity;
             $originalSubtotal = $product->price * $quantity;
-    
+
             // Find applicable discounts
             $discounts = Discount::where('distributor_id', $distributorId)
                 ->where('is_active', true)
@@ -150,11 +151,11 @@ class CheckoutController extends Controller
                     $query->where('product_id', $product->id);
                 })
                 ->get();
-    
+
             $discountAmount = 0;
             $freeItems = 0;
             $appliedDiscountName = null;
-    
+
             // Apply the most favorable discount
             foreach ($discounts as $discount) {
                 if ($discount->type === 'percentage') {
@@ -166,7 +167,7 @@ class CheckoutController extends Controller
                     }
                 } else if ($discount->type === 'freebie') {
                     $potentialFreeItems = $discount->calculateFreeItems($quantity);
-    
+
                     // For freebie discounts, do not reduce the subtotal
                     if ($potentialFreeItems > $freeItems) {
                         $freeItems = $potentialFreeItems;
@@ -175,7 +176,13 @@ class CheckoutController extends Controller
                     }
                 }
             }
-    
+
+            // Calculate the final subtotal - this is the key fix
+            $finalSubtotal = $originalSubtotal;
+            if ($discountAmount > 0) {
+                $finalSubtotal = $originalSubtotal - $discountAmount;
+            }
+
             // Create a new object with original and discounted values
             $discountedItems[] = [
                 'id' => $item->id,
@@ -185,12 +192,12 @@ class CheckoutController extends Controller
                 'original_subtotal' => $originalSubtotal,
                 'discount_amount' => $discountAmount,
                 'free_items' => $freeItems,
-                'final_subtotal' => $originalSubtotal, // Keep the original subtotal for freebie discounts
+                'final_subtotal' => $finalSubtotal, // Now correctly calculated
                 'applied_discount' => $appliedDiscountName,
                 'subtotal' => $originalSubtotal // Adding subtotal for blade template compatibility
             ];
         }
-    
+
         return $discountedItems;
     }
 }

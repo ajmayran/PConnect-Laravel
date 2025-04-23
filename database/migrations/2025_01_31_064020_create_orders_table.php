@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('distributor_id');
-            $table->enum('status', ['pending', 'processing', 'completed', 'cancelled', 'rejected','returned'])
+            $table->enum('status', ['pending', 'processing', 'completed', 'cancelled', 'rejected','returned', 'refunded', 'failed', 'delivered'])
                 ->default('pending');
             $table->text('reject_reason')->nullable();
             $table->text('cancel_reason')->nullable();

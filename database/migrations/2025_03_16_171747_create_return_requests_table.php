@@ -14,6 +14,7 @@ return new class extends Migration
             $table->unsignedBigInteger('order_id');
             $table->unsignedBigInteger('retailer_id');
             $table->text('reason');
+            $table->text('proof_image')->nullable();
             $table->string('receipt_path');
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->timestamps();

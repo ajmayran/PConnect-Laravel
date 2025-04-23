@@ -4,7 +4,7 @@
             <i class="px-2 bg-gray-900 rounded-md bi bi-filter-left"></i>
         </span>
         <div class="container p-4 mx-auto">
-            <h1 class="mb-4 text-xl font-semibold text-center sm:text-2xl">Return and Refund</h1>
+            <h1 class="mb-4 text-2xl font-bold text-left text-gray-800 sm:text-3xl">Return and Refund</h1>
 
             <!-- Tabs and Search Section -->
             <div class="p-4 mb-6 bg-white rounded-lg shadow-sm">

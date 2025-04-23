@@ -114,6 +114,11 @@
                             <span class="ml-2">Mark as Unpaid</span>
                         </label>
                     </div>
+                    <!-- Note input field -->
+                    <div class="mt-4">
+                        <label for="delivery_note" class="block mb-2 text-sm font-medium text-gray-700">Delivery Note</label>
+                        <textarea name="payment_note" id="payment_note" rows="2" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Add any notes about this delivery"></textarea>
+                    </div>
                 </div>
 
                 <div class="flex justify-end">
@@ -440,6 +445,7 @@
                         <p class="mb-2">${retailerName}</p>
                         <p class="mb-2">${orderAmount}</p>
                         <p class="mt-2"><strong>Payment Status:</strong> ${paymentLabel}</p>
+                        <p class="mt-2"><strong>Payment Note:</strong>  ${document.getElementById('payment_note').value || 'No notes provided'}</p>
                     </div>
                 `,
                         icon: 'question',

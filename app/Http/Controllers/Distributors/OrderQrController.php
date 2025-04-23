@@ -190,6 +190,7 @@ class OrderQrController extends Controller
             'qr_token' => 'required|string',
             'payment_status' => 'required|in:paid,unpaid',
             'delivery_id' => 'sometimes|exists:deliveries,id',
+            'payment_note' => 'nullable|string|max:500',
         ]);
 
         // Find order by QR token
@@ -231,22 +232,25 @@ class OrderQrController extends Controller
         // Process the delivery completion in a transaction
         DB::transaction(function () use ($order, $delivery, $validated) {
             // Update delivery status
-            $delivery->update(['status' => 'delivered']);
+            $delivery->update([
+                'status' => 'delivered',
+                'notes' => $validated['payment_note'] ?? null
+            ]);
 
-            //  Update order status
+            $orderStatus = ($validated['payment_status'] === 'paid') ? 'completed' : 'delivered';
             $order->update([
-                'status' => 'completed',
+                'status' => $orderStatus,
                 'status_updated_at' => now(),
                 'delivery_date' => now()
             ]);
 
             app(NotificationService::class)->orderStatusChanged(
                 $order->id,
-                'completed',
+                $orderStatus,
                 $order->user_id,
                 $order->distributor_id
             );
-
+            
             //  Update or create payment record
             $payment = Payment::firstOrNew(['order_id' => $order->id]);
             $payment->distributor_id = $order->distributor_id;
@@ -254,9 +258,12 @@ class OrderQrController extends Controller
 
             if ($validated['payment_status'] === 'paid') {
                 $payment->paid_at = now();
-                $payment->payment_note = 'Payment confirmed upon delivery via QR code';
+                $payment->payment_note = $validated['payment_note'] ?? 'Payment confirmed upon delivery via QR code';
             } else {
-                $payment->payment_note = 'Unpaid - Delivery completed';
+                // For unpaid: only use default message if no note is provided
+                $payment->payment_note = !empty($validated['payment_note']) ?
+                    $validated['payment_note'] :
+                    'Unpaid - Delivery completed';
             }
 
             $payment->save();

@@ -5,6 +5,7 @@
             position: sticky;
             z-index: 40;
         }
+
         .container {
             position: relative;
             z-index: 30;
@@ -361,117 +362,101 @@
 
             document.getElementById('modalTitle').innerText = 'Order ' + formattedOrderId;
 
-            var modalHtml = '<div class="space-y-6">';
-
-            // Products Section
-            modalHtml += '<div class="overflow-hidden bg-white rounded-lg shadow">';
-            modalHtml +=
-                '<div class="p-4 border-b bg-gray-50"><h3 class="text-lg font-semibold text-gray-800">Products Ordered</h3></div>';
-            modalHtml += '<div class="overflow-x-auto">';
-            modalHtml += '<table class="min-w-full divide-y divide-gray-200">';
-            modalHtml += '<thead class="bg-gray-50"><tr>';
-            modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Product</th>';
-            modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Price</th>';
-            modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Quantity</th>';
-            modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Subtotal</th>';
-            modalHtml += '</tr></thead><tbody class="divide-y divide-gray-200">';
+            let modalHtml = `
+        <div class="space-y-6">
+            <!-- Products Section -->
+            <div class="overflow-hidden bg-white rounded-lg shadow">
+                <div class="p-4 border-b bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-800">Products Ordered</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Product</th>
+                                <th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Price</th>
+                                <th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Quantity</th>
+                                <th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+    `;
 
             let totalAmount = 0;
             details.forEach(function(detail) {
-                modalHtml += '<tr class="hover:bg-gray-50">';
-                modalHtml += '<td class="px-4 py-3">';
-                modalHtml += '<div class="flex items-center gap-3">';
-                if (detail.product.image) {
-                    modalHtml += '<img src="' + storageBaseUrl + '/' + detail.product.image + '" alt="' + detail
-                        .product.product_name + '" class="object-cover w-16 h-16 rounded-lg" />';
-                } else {
-                    modalHtml += '<img src="img/default-product.jpg" class="object-cover w-16 h-16 rounded-lg" />';
-                }
-                modalHtml += '<span class="font-medium text-gray-800">' + detail.product.product_name + '</span>';
-                modalHtml += '</div></td>';
-                modalHtml += '<td class="px-4 py-3">₱' + parseFloat(detail.product.price).toFixed(2) + '</td>';
-                modalHtml += '<td class="px-4 py-3">' + detail.quantity + '</td>';
-                modalHtml += '<td class="px-4 py-3 font-medium text-blue-600">₱' + parseFloat(detail.subtotal)
-                    .toFixed(2) + '</td>';
-                modalHtml += '</tr>';
+                const originalPrice = parseFloat(detail.product.price).toFixed(2);
+                const discountedPrice = detail.discount_amount > 0 ?
+                    (detail.product.price - (detail.discount_amount / detail.quantity)).toFixed(2) :
+                    originalPrice;
+                modalHtml += `
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3">
+                    <div class="flex items-center gap-3">
+                        <img src="${detail.product.image ? storageBaseUrl + '/' + detail.product.image : 'img/default-product.jpg'}" 
+                             alt="${detail.product.product_name}" 
+                             class="object-cover w-16 h-16 rounded-lg" />
+                        <span class="font-medium text-gray-800">${detail.product.product_name}</span>
+                    </div>
+                </td>
+                <td class="px-4 py-3">
+                    ${detail.discount_amount > 0
+                        ? `<span class="text-xs text-gray-500 line-through">₱${originalPrice}</span><br>
+                               <span class="text-green-600">₱${discountedPrice}</span>`
+                        : `₱${originalPrice}`}
+                </td>
+                <td class="px-4 py-3">${detail.quantity}</td>
+                <td class="px-4 py-3 font-medium text-blue-600">₱${parseFloat(detail.subtotal).toFixed(2)}</td>
+            </tr>
+        `;
                 totalAmount += parseFloat(detail.subtotal);
             });
 
-            modalHtml += '</tbody>';
-            modalHtml += '<tfoot class="bg-gray-50"><tr>';
-            modalHtml += '<td colspan="3" class="px-4 py-3 font-medium text-right text-gray-700">Total Amount:</td>';
-            modalHtml += '<td class="px-4 py-3 font-bold text-blue-600">₱' + totalAmount.toFixed(2) + '</td>';
-            modalHtml += '</tr></tfoot>';
-            modalHtml += '</table></div></div>';
+            modalHtml += `
+                        </tbody>
+                        <tfoot class="bg-gray-50">
+                            <tr>
+                                <td colspan="3" class="px-4 py-3 font-medium text-right text-gray-700">Total Amount:</td>
+                                <td colspan="3" class="px-4 py-3 font-bold text-blue-600">₱${totalAmount.toFixed(2)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
 
-            // Retailer Profile Card - Compact Design
-            modalHtml += '<div class="p-4 bg-white rounded-lg shadow">';
-            modalHtml += '<div class="flex items-start space-x-4">';
-            // Profile picture and name section with clickable elements
-            modalHtml += '<div class="flex items-center">';
-            modalHtml += '<a href="' + '{{ route('distributors.retailers.show', ':id') }}'.replace(':id', retailer.id) +
-                '" class="block">';
-            if (retailer.retailer_profile && retailer.retailer_profile.profile_picture) {
-                modalHtml += '<img src="' + storageBaseUrl + '/' + retailer.retailer_profile.profile_picture +
-                    '" alt="Profile" class="object-cover w-12 h-12 rounded-full shadow hover:ring-2 hover:ring-green-500" />';
-            } else {
-                modalHtml +=
-                    '<div class="flex items-center justify-center w-12 h-12 bg-gray-200 rounded-full hover:ring-2 hover:ring-green-500">' +
-                    '<span class="text-xl font-medium text-gray-600">' + retailer.first_name.charAt(0) + '</span></div>';
-            }
-            modalHtml += '</a>';
-            modalHtml += '</div>';
-            // Retailer information container
-            modalHtml += '<div class="flex-1">';
-            modalHtml += '<div class="flex items-center mb-2">';
-            modalHtml += '<a href="/retailers/' + retailer.id + '" class="hover:text-green-600">';
-            modalHtml += '<h4 class="text-lg font-medium text-gray-800">' + retailer.first_name + ' ' + retailer.last_name +
-                '</h4>';
-            modalHtml += '</a>';
-            modalHtml += '</div>';
-            modalHtml += '<div class="grid grid-cols-1 gap-2 text-sm">';
-            if (retailer.email) {
-                modalHtml +=
-                    '<p class="flex items-center text-gray-600"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>' +
-                    retailer.email + '</p>';
-            }
-            if (retailer.retailer_profile) {
-                if (retailer.retailer_profile.phone) {
-                    modalHtml +=
-                        '<p class="flex items-center text-gray-600"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>' +
-                        retailer.retailer_profile.phone + '</p>';
-                }
-                if (deliveryAddress) {
-                    modalHtml +=
-                        '<p class="flex items-center text-gray-600"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>' +
-                        deliveryAddress + '</p>';
-                }
-            }
-            modalHtml += '</div>';
-            modalHtml += '</div>';
-            modalHtml += '</div>'; // End of retailer card
-
-            modalHtml += '</div>';
+            <!-- Retailer Profile Section -->
+            <div class="p-4 bg-white rounded-lg shadow">
+                <div class="flex items-start space-x-4">
+                    <div class="flex-shrink-0">
+                        <img src="${retailer.retailer_profile?.profile_picture ? storageBaseUrl + '/' + retailer.retailer_profile.profile_picture : 'img/default-avatar.jpg'}" 
+                             alt="Profile" 
+                             class="object-cover w-16 h-16 rounded-full shadow" />
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-medium text-gray-800">${retailer.first_name} ${retailer.last_name}</h4>
+                        <p class="text-sm text-gray-600">${retailer.email}</p>
+                        <p class="text-sm text-gray-600">${retailer.retailer_profile?.phone || 'No phone number'}</p>
+                        <p class="text-sm text-gray-600">${deliveryAddress || 'No delivery address'}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
 
             document.getElementById('modalContent').innerHTML = modalHtml;
             document.getElementById('orderModal').classList.remove('hidden');
 
-            if (orderStatus !== 'pending') {
-                document.getElementById('actionButtons').classList.add('hidden');
+            // Show or hide action buttons based on order status
+            const actionButtons = document.getElementById('actionButtons');
+            if (orderStatus === 'pending') {
+                actionButtons.classList.remove('hidden');
             } else {
-                document.getElementById('actionButtons').classList.remove('hidden');
-            }
-
-            if (orderStatus !== 'pending') {
-                document.getElementById('actionButtons').classList.add('hidden');
-            } else {
-                document.getElementById('actionButtons').classList.remove('hidden');
+                actionButtons.classList.add('hidden');
             }
 
             // Show QR code button only for processing orders
             const qrCodeButton = document.getElementById('qrCodeButton');
             if (orderStatus === 'processing') {
-                qrCodeButton.href = "/orders/" + orderId + "/qrcode";
+                qrCodeButton.href = `/orders/${orderId}/qrcode`;
                 qrCodeButton.classList.remove('hidden');
             } else {
                 qrCodeButton.classList.add('hidden');
@@ -612,7 +597,7 @@
             const orderDetails = [];
             formData.forEach((value, key) => {
                 const match = key.match(
-                /^order_details\[(\d+)\]\[quantity\]$/); // Match keys like "order_details[1][quantity]"
+                    /^order_details\[(\d+)\]\[quantity\]$/); // Match keys like "order_details[1][quantity]"
                 if (match) {
                     const detailId = match[1];
                     orderDetails.push({
