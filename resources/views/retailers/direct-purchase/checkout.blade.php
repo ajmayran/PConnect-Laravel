@@ -15,7 +15,7 @@
                                 <div>
                                     <p class="font-semibold">{{ $directProduct->product_name }}</p>
                                     <p class="text-sm text-gray-600">Qty: {{ $directPurchase['quantity'] }}</p>
-                        
+
                                     <!-- Display discount information -->
                                     @if ($directPurchase['applied_discount'])
                                         <p class="text-sm text-green-600">
@@ -36,7 +36,8 @@
                             </div>
                             <div class="text-right">
                                 @if ($directPurchase['discount_amount'] > 0)
-                                    <p class="text-sm text-gray-500" style="text-decoration:line-through">₱{{ number_format($directPurchase['subtotal'], 2) }}</p>
+                                    <p class="text-sm text-gray-500" style="text-decoration:line-through">
+                                        ₱{{ number_format($directPurchase['subtotal'], 2) }}</p>
                                 @endif
                                 <p class="font-bold">₱{{ number_format($directPurchase['final_subtotal'], 2) }}</p>
                                 @if ($directPurchase['free_items'] > 0)
@@ -97,8 +98,18 @@
                 <div class="p-6 bg-white rounded-lg shadow">
                     <h2 class="mb-4 text-xl font-semibold">Delivery Address</h2>
                     <form id="orderForm" action="{{ route('retailers.direct-purchase.place-order') }}" method="POST">
+                        
                         @csrf
-                        <input type="hidden" name="total_amount" value="{{ $directPurchase['subtotal'] }}">
+                        <input type="hidden" name="product_id" value="{{ $directPurchase['product_id'] }}">
+                        <input type="hidden" name="distributor_id" value="{{ $directPurchase['distributor_id'] }}">
+                        <input type="hidden" name="quantity" value="{{ $directPurchase['quantity'] }}">
+                        <input type="hidden" name="price" value="{{ $directPurchase['price'] }}">
+                        <input type="hidden" name="subtotal" value="{{ $directPurchase['subtotal'] }}">
+                        <input type="hidden" name="discount_amount" value="{{ $directPurchase['discount_amount'] ?? 0 }}">
+                        <input type="hidden" name="free_items" value="{{ $directPurchase['free_items'] ?? 0 }}">
+                        <input type="hidden" name="applied_discount" value="{{ $directPurchase['applied_discount'] ?? '' }}">
+                        <input type="hidden" name="final_subtotal" value="{{ $directPurchase['final_subtotal'] ?? $directPurchase['subtotal'] }}">
+                        <input type="hidden" name="total_amount" value="{{ $directPurchase['final_subtotal'] ?? $directPurchase['subtotal'] }}">
 
                         <div class="flex flex-col space-y-4">
                             <div class="flex items-center">

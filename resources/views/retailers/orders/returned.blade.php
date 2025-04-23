@@ -16,6 +16,7 @@
                 @foreach ($orders as $order)
                     <div class="overflow-hidden bg-white rounded-lg shadow-sm">
                         <div class="p-6">
+                            <!-- Order header info remains unchanged -->
                             <div class="flex items-center justify-between mb-6">
                                 <div class="space-y-1">
                                     <h2 class="text-xl font-bold text-gray-900">
@@ -39,20 +40,21 @@
                                 </div>
                             </div>
 
+                            <!-- Updated table with discount display -->
                             <div class="mt-6 -mx-6">
                                 <table class="w-full">
                                     <thead class="bg-gray-50">
                                         <tr>
-                                            <th
-                                                class="px-6 py-3 text-sm font-medium tracking-wider text-left text-gray-500">
+                                            <th class="px-6 py-3 text-sm font-medium tracking-wider text-left text-gray-500">
                                                 Product
                                             </th>
-                                            <th
-                                                class="px-6 py-3 text-sm font-medium tracking-wider text-center text-gray-500">
+                                            <th class="px-6 py-3 text-sm font-medium tracking-wider text-center text-gray-500">
                                                 Quantity
                                             </th>
-                                            <th
-                                                class="px-6 py-3 text-sm font-medium tracking-wider text-right text-gray-500">
+                                            <th class="px-6 py-3 text-sm font-medium tracking-wider text-right text-gray-500">
+                                                Price
+                                            </th>
+                                            <th class="px-6 py-3 text-sm font-medium tracking-wider text-right text-gray-500">
                                                 Total
                                             </th>
                                         </tr>
@@ -62,11 +64,30 @@
                                             <tr>
                                                 <td class="px-6 py-4 text-sm text-gray-900">
                                                     {{ $detail->product->product_name }}
+                                                    @if($detail->applied_discount)
+                                                        <p class="text-xs text-green-600">{{ $detail->applied_discount }}</p>
+                                                    @endif
+                                                    @if($detail->free_items > 0)
+                                                        <p class="text-xs text-green-600">+{{ $detail->free_items }} free item(s)</p>
+                                                    @endif
                                                 </td>
                                                 <td class="px-6 py-4 text-sm text-center text-gray-500">
                                                     {{ $detail->quantity }}
                                                 </td>
+                                                <td class="px-6 py-4 text-sm text-right text-gray-900">
+                                                    @if($detail->discount_amount > 0)
+                                                        <span class="text-xs text-gray-500 line-through">₱{{ number_format($detail->price, 2) }}</span>
+                                                        <br>
+                                                        <span class="text-green-600">₱{{ number_format($detail->price - ($detail->discount_amount / $detail->quantity), 2) }}</span>
+                                                    @else
+                                                        ₱{{ number_format($detail->price, 2) }}
+                                                    @endif
+                                                </td>
                                                 <td class="px-6 py-4 text-sm font-medium text-right text-gray-900">
+                                                    @if($detail->discount_amount > 0)
+                                                        <span class="text-xs text-gray-500 line-through">₱{{ number_format($detail->price * $detail->quantity, 2) }}</span>
+                                                        <br>
+                                                    @endif
                                                     ₱{{ number_format($detail->subtotal, 2) }}
                                                 </td>
                                             </tr>
@@ -74,8 +95,7 @@
                                     </tbody>
                                     <tfoot class="bg-gray-50">
                                         <tr>
-                                            <td colspan="2"
-                                                class="px-6 py-4 text-sm font-bold text-right text-gray-900">
+                                            <td colspan="3" class="px-6 py-4 text-sm font-bold text-right text-gray-900">
                                                 Total Amount:
                                             </td>
                                             <td class="px-6 py-4 text-sm font-bold text-right text-gray-900">

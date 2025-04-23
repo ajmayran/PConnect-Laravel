@@ -540,16 +540,29 @@ class RetailerOrdersController extends Controller
             ]);
 
             foreach ($cartDetails as $cartDetail) {
+                $product = $cartDetail->product;
+
                 // Calculate the correct final subtotal after discount
                 $originalSubtotal = $cartDetail->price * $cartDetail->quantity;
                 $discountAmount = $cartDetail->discount_amount ?? 0;
                 $finalSubtotal = $originalSubtotal - $discountAmount;
 
+                // Calculate free items for freebie discounts
+                $freeItems = 0;
+                if ($cartDetail->applied_discount && $cartDetail->free_items > 0) {
+                    $freeItems = $cartDetail->free_items;
+                }
+
+                // Total quantity including free items
+                $totalQuantity = $cartDetail->quantity + $freeItems;
+
                 // Debug each cart detail with calculated values
                 Log::info('Processing cart detail', [
                     'product_id' => $cartDetail->product_id,
-                    'product_name' => $cartDetail->product->product_name,
+                    'product_name' => $product->product_name,
                     'quantity' => $cartDetail->quantity,
+                    'free_items' => $freeItems,
+                    'total_quantity' => $totalQuantity,
                     'price' => $cartDetail->price,
                     'original_subtotal' => $originalSubtotal,
                     'discount_amount' => $discountAmount,
@@ -560,12 +573,12 @@ class RetailerOrdersController extends Controller
                 OrderDetails::create([
                     'order_id' => $order->id,
                     'product_id' => $cartDetail->product_id,
-                    'quantity' => $cartDetail->quantity,
+                    'quantity' => $totalQuantity, // Include free items here
                     'price' => $cartDetail->price,
                     'subtotal' => $finalSubtotal, // Use calculated final subtotal
                     'delivery_address' => $deliveryAddress,
                     'discount_amount' => $discountAmount,
-                    'free_items' => $cartDetail->free_items ?? 0,
+                    'free_items' => $freeItems,
                     'applied_discount' => $cartDetail->applied_discount
                 ]);
 
@@ -706,11 +719,22 @@ class RetailerOrdersController extends Controller
                         $discountAmount = $cartDetail->discount_amount ?? 0;
                         $finalSubtotal = $originalSubtotal - $discountAmount;
 
+                        // Calculate free items for freebie discounts
+                        $freeItems = 0;
+                        if ($cartDetail->applied_discount && $cartDetail->free_items > 0) {
+                            $freeItems = $cartDetail->free_items;
+                        }
+
+                        // Total quantity including free items
+                        $totalQuantity = $cartDetail->quantity + $freeItems;
+
                         // Debug each cart detail with calculated values
                         Log::info('Processing cart detail', [
                             'product_id' => $cartDetail->product_id,
                             'product_name' => $cartDetail->product->product_name,
                             'quantity' => $cartDetail->quantity,
+                            'free_items' => $freeItems,
+                            'total_quantity' => $totalQuantity,
                             'price' => $cartDetail->price,
                             'original_subtotal' => $originalSubtotal,
                             'discount_amount' => $discountAmount,
@@ -721,25 +745,18 @@ class RetailerOrdersController extends Controller
                         OrderDetails::create([
                             'order_id' => $order->id,
                             'product_id' => $cartDetail->product_id,
-                            'quantity' => $cartDetail->quantity,
+                            'quantity' => $totalQuantity, // Include free items here
                             'price' => $cartDetail->price,
                             'subtotal' => $finalSubtotal, // Use calculated final subtotal
                             'delivery_address' => $deliveryAddress,
                             'discount_amount' => $discountAmount,
-                            'free_items' => $cartDetail->free_items ?? 0,
+                            'free_items' => $freeItems,
                             'applied_discount' => $cartDetail->applied_discount
                         ]);
 
                         // Add this item's final subtotal to the order total
                         $totalAmount += $finalSubtotal;
                     }
-
-                    // Log the calculated order total
-                    Log::info('Calculated order total', [
-                        'order_id' => $order->id,
-                        'total_amount' => $totalAmount,
-                        'request_total' => $request->input('total_amount', 'N/A')
-                    ]);
 
                     // Clear the processed cart
                     $cart->details()->delete();

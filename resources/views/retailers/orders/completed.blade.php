@@ -1,55 +1,19 @@
-@php
-    use Illuminate\Support\Str;
-@endphp
 <x-app-layout>
     <x-dashboard-nav />
     <div class="container px-4 py-8 mx-auto max-w-7xl">
         <div class="flex items-center justify-between mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Completed Orders</h1>
+            <h1 class="text-3xl font-bold text-gray-900">My Orders</h1>
         </div>
 
         <x-retailer-orderstatus-tabs />
 
         @if ($orders->isEmpty())
             <div class="flex items-center justify-center p-8 mt-4 bg-white rounded-lg">
-                <p class="text-lg text-gray-500">No completed orders</p>
+                <p class="text-lg text-gray-500">No orders found</p>
             </div>
         @else
             <div class="mt-6 space-y-6">
                 @foreach ($orders as $order)
-                    @php
-                        // Check if order was completed within the last 7 days
-                        $orderDate = new \Carbon\Carbon($order->status_updated_at ?? $order->updated_at);
-                        $isWithinReturnPeriod = $orderDate->diffInDays(now()) <= 7;
-                        $daysLeft = 7 - $orderDate->diffInDays(now());
-
-                        // Format the days left to be more readable
-                        if ($daysLeft > 0) {
-                            if ($daysLeft < 1) {
-                                // Less than a day left, show hours
-                                $hoursLeft = 24 - ($orderDate->diffInHours(now()) % 24);
-                                $timeLeft = $hoursLeft . ' ' . Str::plural('hour', $hoursLeft);
-                            } else {
-                                // Round to whole days
-                                $timeLeft = ceil($daysLeft) . ' ' . Str::plural('day', ceil($daysLeft));
-                            }
-                        } else {
-                            $timeLeft = 'Expired';
-                        }
-
-                        // Check if return request was rejected
-                        $rejectedReturnRequest = $order->returnRequests()->where('status', 'rejected')->exists();
-
-                        // Check if order has any other return request
-                        $pendingOrApprovedReturnRequest = $order
-                            ->returnRequests()
-                            ->whereIn('status', ['pending', 'approved'])
-                            ->exists();
-
-                        // General check for any return request
-                        $hasReturnRequest = $rejectedReturnRequest || $pendingOrApprovedReturnRequest;
-                    @endphp
-
                     <div class="overflow-hidden bg-white rounded-lg shadow-sm">
                         <div class="p-6">
                             <div class="flex items-center justify-between mb-6">
@@ -64,28 +28,18 @@
                                     <p class="text-gray-600">
                                         <span class="font-medium">Status:</span>
                                         <span
-                                            class="px-3 py-1 text-sm font-medium text-green-800 bg-green-100 rounded-full">
-                                            Completed
+                                            class="px-3 py-1 text-sm font-medium rounded-full 
+                                            @if ($order->status === 'completed') bg-green-100 text-green-800
+                                            @elseif($order->status === 'pending') bg-yellow-100 text-yellow-800
+                                            @elseif($order->status === 'cancelled') bg-red-100 text-red-800
+                                            @else bg-gray-100 text-gray-800 @endif">
+                                            {{ ucfirst($order->status) }}
                                         </span>
                                     </p>
-                                    @if ($isWithinReturnPeriod && !$rejectedReturnRequest)
-                                        <p class="text-sm text-orange-600">
-                                            <span class="font-medium">Return Period:</span>
-                                            {{ $timeLeft }} left
-                                        </p>
-                                    @elseif (!$rejectedReturnRequest)
-                                        <p class="text-sm text-gray-500">
-                                            <span class="font-medium">Return Period:</span>
-                                            Expired
-                                        </p>
-                                    @endif
                                 </div>
                                 <div class="text-right">
                                     <p class="text-sm font-medium text-gray-500">Order Date</p>
                                     <p class="text-gray-900">{{ $order->created_at->format('M d, Y') }}</p>
-                                    <p class="mt-1 text-sm font-medium text-gray-500">Completed On</p>
-                                    <p class="text-gray-900">
-                                        {{ ($order->status_updated_at ?? $order->updated_at)->format('M d, Y') }}</p>
                                 </div>
                             </div>
 
@@ -95,16 +49,16 @@
                                         <tr>
                                             <th
                                                 class="px-6 py-3 text-sm font-medium tracking-wider text-left text-gray-500">
-                                                Product
-                                            </th>
+                                                Product</th>
                                             <th
                                                 class="px-6 py-3 text-sm font-medium tracking-wider text-center text-gray-500">
-                                                Quantity
-                                            </th>
+                                                Quantity</th>
                                             <th
                                                 class="px-6 py-3 text-sm font-medium tracking-wider text-right text-gray-500">
-                                                Total
-                                            </th>
+                                                Price</th>
+                                            <th
+                                                class="px-6 py-3 text-sm font-medium tracking-wider text-right text-gray-500">
+                                                Total</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-200">
@@ -112,11 +66,30 @@
                                             <tr>
                                                 <td class="px-6 py-4 text-sm text-gray-900">
                                                     {{ $detail->product->product_name }}
+                                                    @if($detail->applied_discount)
+                                                        <p class="text-xs text-green-600">{{ $detail->applied_discount }}</p>
+                                                    @endif
+                                                    @if($detail->free_items > 0)
+                                                        <p class="text-xs text-green-600">+{{ $detail->free_items }} free item(s)</p>
+                                                    @endif
                                                 </td>
                                                 <td class="px-6 py-4 text-sm text-center text-gray-500">
                                                     {{ $detail->quantity }}
                                                 </td>
+                                                <td class="px-6 py-4 text-sm text-right text-gray-900">
+                                                    @if($detail->discount_amount > 0)
+                                                        <span class="text-xs text-gray-500 line-through">₱{{ number_format($detail->price, 2) }}</span>
+                                                        <br>
+                                                        <span class="text-green-600">₱{{ number_format($detail->price - ($detail->discount_amount / $detail->quantity), 2) }}</span>
+                                                    @else
+                                                        ₱{{ number_format($detail->price, 2) }}
+                                                    @endif
+                                                </td>
                                                 <td class="px-6 py-4 text-sm font-medium text-right text-gray-900">
+                                                    @if($detail->discount_amount > 0)
+                                                        <span class="text-xs text-gray-500 line-through">₱{{ number_format($detail->price * $detail->quantity, 2) }}</span>
+                                                        <br>
+                                                    @endif
                                                     ₱{{ number_format($detail->subtotal, 2) }}
                                                 </td>
                                             </tr>
@@ -124,10 +97,9 @@
                                     </tbody>
                                     <tfoot class="bg-gray-50">
                                         <tr>
-                                            <td colspan="2"
-                                                class="px-6 py-4 text-sm font-bold text-right text-gray-900">
-                                                Total Amount:
-                                            </td>
+                                            <td colspan="3"
+                                                class="px-6 py-4 text-sm font-bold text-right text-gray-900">Total
+                                                Amount:</td>
                                             <td class="px-6 py-4 text-sm font-bold text-right text-gray-900">
                                                 ₱{{ number_format($order->orderDetails->sum('subtotal'), 2) }}
                                             </td>
@@ -135,6 +107,43 @@
                                     </tfoot>
                                 </table>
                             </div>
+
+                            <div class="pt-6 mt-6 border-t border-gray-200">
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    Delivery Address: {{ optional($order->orderDetails->first())->delivery_address }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end p-4 bg-gray-50">
+                            @if ($order->status === 'pending')
+                                <!-- Cancel Button -->
+                                <button
+                                    onclick="document.getElementById('cancelModal{{ $order->id }}').style.display='block'"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
+                                    Cancel Order
+                                </button>
+                            @endif
+
+                            @if ($order->status === 'completed')
+                                <form action="{{ route('retailers.orders.return', $order) }}" method="POST"
+                                    class="inline ml-2">
+                                    @csrf
+                                    <button type="submit"
+                                        class="px-4 py-2 text-sm font-medium text-white bg-yellow-600 rounded-md hover:bg-yellow-700">
+                                        Return Order
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    </div>
 
                             <div class="flex items-center justify-between pt-6 mt-6 border-t border-gray-200">
                                 <div class="flex items-center text-sm text-gray-600">

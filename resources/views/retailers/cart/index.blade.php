@@ -41,7 +41,9 @@
                             <tbody>
                                 @foreach ($items as $item)
                                     <tr class="border-b border-gray-100" data-item-id="{{ $item->id }}"
-                                        data-distributor-id="{{ $distributorId }}">
+                                        data-distributor-id="{{ $distributorId }}"
+                                        data-buy-quantity="{{ $item->product->activeDiscount->buy_quantity ?? 0 }}"
+                                        data-free-quantity="{{ $item->product->activeDiscount->free_quantity ?? 0 }}">
                                         <td class="px-4 py-2">
                                             <div class="flex items-center">
                                                 <img src="{{ $item->product->image ? asset('storage/products/' . basename($item->product->image)) : asset('img/default-product.jpg') }}"
@@ -57,17 +59,11 @@
                                             </div>
                                         </td>
                                         <td class="px-4 py-2 text-center">
-                                            @if($item->discount_amount > 0)
+                                            @if ($item->discount_amount > 0 && $item->applied_discount === 'freebie')
                                                 <div class="flex flex-col">
-                                                    <span class="text-gray-500 line-through">₱{{ number_format($item->product->price, 2) }}</span>
-                                                    <span class="text-green-600" 
-                                                          data-price="{{ $item->product->price }}" 
-                                                          data-discount="{{ $item->discount_amount / $item->quantity }}">
-                                                        ₱{{ number_format(($item->product->price * $item->quantity - $item->discount_amount) / $item->quantity, 2) }}
-                                                    </span>
-                                                    <span class="text-xs text-green-500">
-                                                        {{ $item->applied_discount ?? 'Discount Applied' }}
-                                                    </span>
+                                                    <span
+                                                        class="text-gray-800">₱{{ number_format($item->product->price, 2) }}</span>
+                                                    <span class="text-xs text-green-500 free-items"></span>
                                                 </div>
                                             @else
                                                 <span data-price="{{ $item->product->price }}" data-discount="0">
@@ -91,6 +87,7 @@
                                                     class="px-2 py-1 text-gray-600 bg-gray-100 rounded-r hover:bg-green-100">
                                                     +
                                                 </button>
+                                                <span class="ml-2 text-sm text-green-600 free-items-display"></span>
                                             </div>
                                         </td>
                                         <td class="px-4 py-2 text-center item-subtotal">
@@ -152,20 +149,21 @@
                                 <div class="flex-1">
                                     <h4 class="font-medium text-gray-800">{{ $item->product->product_name }}</h4>
                                     <p class="text-xs text-gray-500">SKU: {{ $item->product->sku }}</p>
-                                    
-                                    @if($item->discount_amount > 0)
+
+                                    @if ($item->discount_amount > 0)
                                         <p class="mt-1 text-sm text-gray-500 line-through">
                                             ₱{{ number_format($item->product->price, 2) }}
                                         </p>
                                         <p class="text-sm font-semibold text-green-600"
-                                           data-price="{{ $item->product->price }}" 
-                                           data-discount="{{ $item->discount_amount / $item->quantity }}">
+                                            data-price="{{ $item->product->price }}"
+                                            data-discount="{{ $item->discount_amount / $item->quantity }}">
                                             ₱{{ number_format(($item->product->price * $item->quantity - $item->discount_amount) / $item->quantity, 2) }}
-                                            <span class="text-xs">{{ $item->applied_discount ?? 'Discount Applied' }}</span>
+                                            <span
+                                                class="text-xs">{{ $item->applied_discount ?? 'Discount Applied' }}</span>
                                         </p>
                                     @else
                                         <p class="mt-1 text-sm font-semibold text-gray-800"
-                                           data-price="{{ $item->product->price }}" data-discount="0">
+                                            data-price="{{ $item->product->price }}" data-discount="0">
                                             ₱{{ number_format($item->product->price, 2) }}
                                         </p>
                                     @endif
@@ -257,10 +255,10 @@
                         <span class="text-lg font-bold text-gray-900 sm:text-xl" id="globalCartTotal">
                             ₱{{ number_format(
                                 $groupedItems->flatMap(function ($items) {
-                                    return $items->map(function ($item) {
-                                        return $item->subtotal;
-                                    });
-                                })->sum(),
+                                        return $items->map(function ($item) {
+                                            return $item->subtotal;
+                                        });
+                                    })->sum(),
                                 2,
                             ) }}
                         </span>
@@ -321,25 +319,25 @@
                     showProcessingAlert('Deleting cart...');
 
                     fetch(`/retailers/cart/delete/${cartId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        }
-                    })
-                    .then(handleApiResponse)
-                    .then(data => {
-                        if (data.success) {
-                            const cartGroup = document.querySelector(`[data-cart-id="${cartId}"]`);
-                            if (cartGroup) cartGroup.remove();
-                            updateCartTotal();
-                            updateCartEmptyState();
-                            showSuccessAlert('Deleted!', 'Your cart has been cleared.');
-                        } else {
-                            throw new Error(data.message || 'Failed to delete cart');
-                        }
-                    })
-                    .catch(error => showErrorAlert('Error!', error.message || 'Failed to delete cart'));
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            }
+                        })
+                        .then(handleApiResponse)
+                        .then(data => {
+                            if (data.success) {
+                                const cartGroup = document.querySelector(`[data-cart-id="${cartId}"]`);
+                                if (cartGroup) cartGroup.remove();
+                                updateCartTotal();
+                                updateCartEmptyState();
+                                showSuccessAlert('Deleted!', 'Your cart has been cleared.');
+                            } else {
+                                throw new Error(data.message || 'Failed to delete cart');
+                            }
+                        })
+                        .catch(error => showErrorAlert('Error!', error.message || 'Failed to delete cart'));
                 }
             });
         }
@@ -348,40 +346,56 @@
             showProcessingAlert('Removing item...');
 
             fetch(`/retailers/cart/remove/${itemId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    }
+                })
+                .then(handleApiResponse)
+                .then(data => {
+                    if (data.success) {
+                        const itemElements = document.querySelectorAll(`[data-item-id="${itemId}"]`);
+                        itemElements.forEach(itemElement => {
+                            const cartGroup = itemElement.closest('.cart-group');
+                            itemElement.remove();
+
+                            // If no items remain in the group, remove the entire group
+                            if (!cartGroup.querySelector('[data-item-id]')) {
+                                cartGroup.remove();
+                            } else {
+                                updateDistributorSubtotal(cartGroup.dataset.distributorId);
+                            }
+                        });
+
+                        updateCartTotal();
+                        updateCartEmptyState();
+                        showSuccessAlert('Success!', 'Item removed from cart');
+                    } else {
+                        throw new Error(data.message || 'Failed to remove item');
+                    }
+                })
+                .catch(error => showErrorAlert('Error!', error.message || 'Failed to remove item'));
+        }
+
+        function updateFreeItemsDisplay(container, quantity) {
+            const buyQuantity = parseInt(container.dataset.buyQuantity);
+            const freeQuantity = parseInt(container.dataset.freeQuantity);
+            const freeItemsDisplay = container.querySelector('.free-items-display');
+
+            if (buyQuantity > 0 && freeQuantity > 0) {
+                const sets = Math.floor(quantity / buyQuantity);
+                const freeItems = sets * freeQuantity;
+
+                if (freeItemsDisplay) {
+                    freeItemsDisplay.textContent = `+${freeItems}`;
                 }
-            })
-            .then(handleApiResponse)
-            .then(data => {
-                if (data.success) {
-                    const itemElements = document.querySelectorAll(`[data-item-id="${itemId}"]`);
-                    itemElements.forEach(itemElement => {
-                        const cartGroup = itemElement.closest('.cart-group');
-                        itemElement.remove();
-                        
-                        // If no items remain in the group, remove the entire group
-                        if (!cartGroup.querySelector('[data-item-id]')) {
-                            cartGroup.remove();
-                        } else {
-                            updateDistributorSubtotal(cartGroup.dataset.distributorId);
-                        }
-                    });
-                    
-                    updateCartTotal();
-                    updateCartEmptyState();
-                    showSuccessAlert('Success!', 'Item removed from cart');
-                } else {
-                    throw new Error(data.message || 'Failed to remove item');
-                }
-            })
-            .catch(error => showErrorAlert('Error!', error.message || 'Failed to remove item'));
+            } else if (freeItemsDisplay) {
+                freeItemsDisplay.textContent = '';
+            }
         }
 
         function updateQuantity(button, action) {
-            // Find closest parent that has data-item-id (could be tr or mobile div)
             const container = button.closest('[data-item-id]');
             const input = container.querySelector('input[type="number"]');
             const currentQty = parseInt(input.value);
@@ -395,12 +409,13 @@
             }
 
             input.value = newQty;
-            cartChanges[itemId] = newQty;
 
-            // Update all instances of this item (both mobile and desktop views)
-            updateAllItemInstances(itemId, newQty);
+            // Update free items display
+            updateFreeItemsDisplay(container, newQty);
 
-            // Update the global cart total
+            // Update subtotal and distributor subtotal
+            updateItemSubtotal(container, newQty);
+            updateDistributorSubtotal(container.dataset.distributorId);
             updateCartTotal();
         }
 
@@ -408,18 +423,18 @@
             // Find all DOM elements for this cart item (mobile and desktop views)
             const allItemContainers = document.querySelectorAll(`[data-item-id="${itemId}"]`);
             let distributorId = null;
-            
+
             allItemContainers.forEach(container => {
                 // Update quantity input value
                 const itemInput = container.querySelector('input[type="number"]');
                 if (itemInput) itemInput.value = newQty;
-                
+
                 // Calculate and update subtotal based on price and discount
                 updateItemSubtotal(container, newQty);
-                
+
                 if (!distributorId) distributorId = container.dataset.distributorId;
             });
-            
+
             // Update distributor subtotal after updating all items
             if (distributorId) updateDistributorSubtotal(distributorId);
         }
@@ -430,7 +445,7 @@
 
             const price = parseFloat(priceElement.dataset.price);
             const discountPerUnit = parseFloat(priceElement.dataset.discount) || 0;
-            
+
             // Calculate subtotal with discount applied
             const subtotal = (price - discountPerUnit) * quantity;
 
@@ -541,7 +556,7 @@
         async function updateCartQuantities() {
             const items = [];
             const processedItemIds = new Set();
-            
+
             document.querySelectorAll('input[type="number"][data-item-id]').forEach(input => {
                 const itemId = input.dataset.itemId;
                 if (!processedItemIds.has(itemId)) {
@@ -560,9 +575,11 @@
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     },
-                    body: JSON.stringify({ items })
+                    body: JSON.stringify({
+                        items
+                    })
                 });
-                
+
                 const result = await response.json();
                 if (result.success) {
                     return true;
@@ -578,14 +595,14 @@
 
         async function proceedToCheckout(distributorId) {
             showProcessingAlert('Preparing your checkout...');
-            
+
             // First save any quantity changes
             const updateSuccess = await updateCartQuantities();
             if (!updateSuccess) {
                 showErrorAlert('Error', 'Could not update quantities. Please try again.');
                 return;
             }
-            
+
             // Redirect to checkout page
             setTimeout(() => {
                 window.location.href = `/retailers/checkout/${distributorId}`;
@@ -594,14 +611,14 @@
 
         async function proceedToCheckoutAll() {
             showProcessingAlert('Preparing your checkout...');
-            
+
             // First save any quantity changes
             const updateSuccess = await updateCartQuantities();
             if (!updateSuccess) {
                 showErrorAlert('Error', 'Could not update quantities. Please try again.');
                 return;
             }
-            
+
             // Redirect to checkout all page
             setTimeout(() => {
                 window.location.href = '/retailers/checkout-all';
@@ -609,7 +626,7 @@
         }
 
         function validateQuantity(input) {
-            const itemId = input.dataset.itemId;
+            const container = input.closest('[data-item-id]');
             const minQty = parseInt(input.dataset.minimum);
             let newQty = parseInt(input.value) || minQty;
 
@@ -620,14 +637,29 @@
                     icon: 'warning',
                     confirmButtonText: 'Ok'
                 }).then(() => {
-                    resetItemToMinimum(itemId, minQty);
+                    input.value = minQty;
+                    updateFreeItemsDisplay(container, minQty);
+                    updateItemSubtotal(container, minQty);
+                    updateDistributorSubtotal(container.dataset.distributorId);
+                    updateCartTotal();
                 });
             } else {
-                updateAllItemInstances(itemId, newQty);
+                updateFreeItemsDisplay(container, newQty);
+                updateItemSubtotal(container, newQty);
+                updateDistributorSubtotal(container.dataset.distributorId);
                 updateCartTotal();
             }
         }
-        
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize free items display for all cart items
+            document.querySelectorAll('[data-item-id]').forEach(container => {
+                const input = container.querySelector('input[type="number"]');
+                const quantity = parseInt(input.value);
+                updateFreeItemsDisplay(container, quantity);
+            });
+        });
+
         // Helper functions for alerts
         function showProcessingAlert(text) {
             Swal.fire({
@@ -640,7 +672,7 @@
                 }
             });
         }
-        
+
         function showSuccessAlert(title, text) {
             Swal.fire({
                 title: title || 'Success',
@@ -650,7 +682,7 @@
                 showConfirmButton: false
             });
         }
-        
+
         function showErrorAlert(title, text) {
             Swal.fire({
                 title: title || 'Error',
@@ -659,7 +691,7 @@
                 confirmButtonText: 'Ok'
             });
         }
-        
+
         function handleApiResponse(response) {
             if (!response.ok) {
                 throw new Error('Network response was not ok');

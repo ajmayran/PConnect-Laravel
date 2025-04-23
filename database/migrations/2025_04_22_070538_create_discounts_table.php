@@ -20,6 +20,7 @@ return new class extends Migration
             $table->dateTime('start_date');
             $table->dateTime('end_date');
             $table->boolean('is_active')->default(true);
+            $table->enum('status', ['active', 'inactive', 'expired'])->default('active');
             $table->timestamps();
             
             $table->foreign('distributor_id')->references('id')->on('distributors')->onDelete('cascade');

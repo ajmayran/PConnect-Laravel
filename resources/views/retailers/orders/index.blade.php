@@ -55,6 +55,9 @@
                                                 Quantity</th>
                                             <th
                                                 class="px-6 py-3 text-sm font-medium tracking-wider text-right text-gray-500">
+                                                Price</th>
+                                            <th
+                                                class="px-6 py-3 text-sm font-medium tracking-wider text-right text-gray-500">
                                                 Total</th>
                                         </tr>
                                     </thead>
@@ -62,24 +65,111 @@
                                         @foreach ($order->orderDetails as $detail)
                                             <tr>
                                                 <td class="px-6 py-4 text-sm text-gray-900">
-                                                    {{ $detail->product->product_name }}</td>
+                                                    {{ $detail->product->product_name }}
+                                                    @if ($detail->applied_discount)
+                                                        <p class="text-xs text-green-600">
+                                                            {{ $detail->applied_discount }}</p>
+                                                    @endif
+                                                    @if ($detail->free_items > 0)
+                                                        <p class="text-xs text-green-600">+{{ $detail->free_items }}
+                                                            free item(s)</p>
+                                                    @endif
+                                                </td>
                                                 <td class="px-6 py-4 text-sm text-center text-gray-500">
-                                                    {{ $detail->quantity }}</td>
+                                                    {{ $detail->quantity }}
+                                                </td>
+                                                <td class="px-6 py-4 text-sm text-right text-gray-900">
+                                                    @if ($detail->discount_amount > 0)
+                                                        <span
+                                                            class="text-xs text-gray-500 line-through">₱{{ number_format($detail->price, 2) }}</span>
+                                                        <br>
+                                                        <span
+                                                            class="text-green-600">₱{{ number_format($detail->price - $detail->discount_amount / $detail->quantity, 2) }}</span>
+                                                    @else
+                                                        ₱{{ number_format($detail->price, 2) }}
+                                                    @endif
+                                                </td>
                                                 <td class="px-6 py-4 text-sm font-medium text-right text-gray-900">
+                                                    @if ($detail->discount_amount > 0)
+                                                        <span
+                                                            class="text-xs text-gray-500 line-through">₱{{ number_format($detail->price * $detail->quantity, 2) }}</span>
+                                                        <br>
+                                                    @endif
                                                     ₱{{ number_format($detail->subtotal, 2) }}
                                                 </td>
                                             </tr>
                                         @endforeach
                                     </tbody>
                                     <tfoot class="bg-gray-50">
+                                        @php
+                                            $totalOriginal = 0;
+                                            $totalDiscount = 0;
+                                            $hasFreeItems = false;
+
+                                            foreach ($order->orderDetails as $detail) {
+                                                // Calculate original price (before discounts)
+                                                if ($detail->discount_amount > 0) {
+                                                    $totalOriginal += $detail->price * $detail->quantity;
+                                                    $totalDiscount += $detail->discount_amount;
+                                                } else {
+                                                    $totalOriginal += $detail->subtotal;
+                                                }
+
+                                                // Check for free items
+                                                if ($detail->free_items > 0) {
+                                                    $hasFreeItems = true;
+                                                    // Optionally, calculate the value of free items
+                                                    $freeItemsValue = $detail->price * $detail->free_items;
+                                                    $totalDiscount += $freeItemsValue;
+                                                }
+                                            }
+
+                                            $finalTotal = $order->orderDetails->sum('subtotal');
+
+                                            // Check for either monetary discounts OR free items
+                                            $hasDiscounts = $totalDiscount > 0 || $hasFreeItems;
+                                        @endphp
+
+
                                         <tr>
-                                            <td colspan="2"
-                                                class="px-6 py-4 text-sm font-bold text-right text-gray-900">Total
-                                                Amount:</td>
+                                            <td colspan="3"
+                                                class="px-6 py-4 text-sm font-bold text-right text-gray-900">
+                                                @if ($hasDiscounts)
+                                                    Original Total:
+                                                @else
+                                                    Total Amount:
+                                                @endif
+                                            </td>
                                             <td class="px-6 py-4 text-sm font-bold text-right text-gray-900">
-                                                ₱{{ number_format($order->orderDetails->sum('subtotal'), 2) }}
+                                                @if ($hasDiscounts)
+                                                    <span>₱{{ number_format($totalOriginal, 2) }}</span>
+                                                @else
+                                                    <span>₱{{ number_format($finalTotal, 2) }}</span>
+                                                @endif
                                             </td>
                                         </tr>
+
+                                        @if ($hasDiscounts)
+                                            <tr>
+                                                <td colspan="3"
+                                                    class="px-6 py-4 text-sm font-bold text-right text-green-600">
+                                                    Total Discount:
+                                                </td>
+                                                <td class="px-6 py-4 text-sm font-bold text-right text-green-600">
+                                                    -₱{{ number_format($totalDiscount, 2) }}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="3"
+                                                    class="px-6 py-4 text-sm font-bold text-right text-gray-900 bg-gray-100">
+                                                    Final Total:
+                                                </td>
+                                                <td
+                                                    class="px-6 py-4 text-sm font-bold text-right text-gray-900 bg-gray-100">
+                                                    ₱{{ number_format($finalTotal, 2) }}
+                                                </td>
+                                            </tr>
+                                        @endif
                                     </tfoot>
                                 </table>
                             </div>

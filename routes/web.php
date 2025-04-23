@@ -348,14 +348,15 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::get('/insights/data', [InsightsController::class, 'getInsightsData'])->name('distributors.insights.data');
 
     // Discount Routes
-    Route::resource('discounts', DiscountsController::class);
     Route::patch('discounts/{discount}/toggle', [DiscountsController::class, 'toggle'])->name('distributors.discounts.toggle');
     Route::get('/discounts', [DiscountsController::class, 'index'])->name('distributors.discounts.index');
     Route::get('/discounts/create', [DiscountsController::class, 'create'])->name('distributors.discounts.create');
     Route::post('/discounts', [DiscountsController::class, 'store'])->name('distributors.discounts.store');
-    Route::get('/discounts/{id}/edit', [DiscountsController::class, 'edit'])->name('distributors.discounts.edit');
+    Route::get('discounts/{discount}/edit', [DiscountsController::class, 'edit'])->name('distributors.discounts.edit');
     Route::put('/discounts/{id}', [DiscountsController::class, 'update'])->name('distributors.discounts.update');
     Route::delete('/discounts/{id}', [DiscountsController::class, 'destroy'])->name('distributors.discounts.destroy');
+    Route::get('discounts/expired', [DiscountsController::class, 'expired'])->name('distributors.discounts.expired');
+    Route::get('/discounts/{id}', [DiscountsController::class, 'show'])->name('distributors.discounts.show');
 
 
     // Payment Routes

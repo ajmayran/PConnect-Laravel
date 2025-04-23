@@ -47,7 +47,8 @@
                             <div class="mb-4 sm:mb-6">
                                 <h2 class="mb-2 text-2xl font-bold text-green-600 sm:text-3xl md:text-4xl">
                                     @if ($product->activeDiscount && $product->activeDiscount->type === 'percentage')
-                                        <span class="text-gray-500" style="text-decoration:line-through">₱{{ number_format($product->price, 2) }}</span>
+                                        <span class="text-gray-500"
+                                            style="text-decoration:line-through">₱{{ number_format($product->price, 2) }}</span>
                                         ₱{{ number_format($product->price - $product->activeDiscount->calculatePercentageDiscount($product->price), 2) }}
                                     @else
                                         ₱{{ number_format($product->price, 2) }}
@@ -73,6 +74,10 @@
                                             {{ $product->activeDiscount->free_quantity }} Free
                                         </p>
                                     @endif
+
+                                    <p class="mt-1 text-sm font-medium text-red-600" id="discount-countdown">
+                                        Discount ends in: <span id="countdown-timer">calculating...</span>
+                                    </p>
                                 </div>
                             @endif
 
@@ -172,8 +177,8 @@
                                     <div class="flex flex-col mt-2 space-y-3 sm:flex-row sm:space-y-0 sm:space-x-4">
                                         <a href="{{ route('retailers.distributor-page', $product->distributor->id) }}"
                                             class="flex items-center justify-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none"
-                                                viewBox="0 0 24 24" stroke="currentColor">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                                             </svg>
@@ -566,6 +571,42 @@
                     });
             });
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if there's an active discount with an end date
+            @if ($product->activeDiscount && $product->activeDiscount->end_date)
+                const endDate = new Date("{{ $product->activeDiscount->end_date->toIso8601String() }}");
+                const countdownElement = document.getElementById('countdown-timer');
+
+                function updateCountdown() {
+                    const now = new Date();
+                    const timeDiff = endDate - now;
+
+                    if (timeDiff <= 0) {
+                        countdownElement.innerHTML = "Expired";
+                        return;
+                    }
+
+                    // Calculate the days, hours, minutes, and seconds
+                    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+
+                    // Format the countdown display
+                    let countdownText = '';
+                    if (days > 0) countdownText += `${days}d `;
+                    countdownText +=
+                        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                    countdownElement.innerHTML = countdownText;
+                }
+
+                // Update the countdown immediately and then every second
+                updateCountdown();
+                setInterval(updateCountdown, 1000);
+            @endif
+        });
     </script>
 
     <x-footer />
