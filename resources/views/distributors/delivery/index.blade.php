@@ -3,9 +3,9 @@
         <span class="absolute text-3xl text-white cursor-pointer top-5 left-4 lg:hidden" onclick="toggleSidebar()">
             <i class="px-2 bg-gray-900 rounded-md bi bi-filter-left"></i>
         </span>
-        <div class="container p-4 mx-auto">
+        <div class="container mx-auto">
             <div class="flex flex-wrap justify-between">
-                <h1 class="mb-6 text-2xl font-bold text-center text-gray-800 sm:text-3xl">Delivery Management</h1>
+                <h1 class="mb-6 text-1xl font-bold text-center text-gray-800 md:text-3xl sm:text-lg">Delivery Management</h1>
                 <div class="flex items-center">
                     @if (request('status') === 'out_for_delivery')
                         <a href="{{ route('distributors.delivery.scan-qr-general', ['delivery' => 'general']) }}"

@@ -20,8 +20,8 @@
         <span class="absolute text-3xl text-white cursor-pointer top-5 left-4 lg:hidden" onclick="toggleSidebar()">
             <i class="px-2 bg-gray-900 rounded-md bi bi-filter-left"></i>
         </span>
-        <div class="container p-2 mx-auto">
-            <div class="flex items-center justify-between mb-2">
+        <div class="container mx-auto">
+            <div class="flex items-center justify-between mb-6">
                 <h1 class="text-3xl font-bold text-gray-800">My Products</h1>
 
                 <div class="block">

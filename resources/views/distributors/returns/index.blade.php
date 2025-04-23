@@ -26,12 +26,12 @@
         }
     </style>
 
-    <div class="container p-4 mx-auto" style="height: 100vh;">
+    <div class="container mx-auto" style="height: 100vh;">
         <span class="absolute text-3xl text-white cursor-pointer top-5 left-4 lg:hidden" onclick="toggleSidebar()">
             <i class="px-2 bg-gray-900 rounded-md bi bi-filter-left"></i>
         </span>
         <div class="container p-3 sm:p-4 mx-auto">
-            <h1 class="mb-4 text-lg sm:text-xl md:text-2xl font-semibold text-center">Return and Refund</h1>
+            <h1 class="mb-4 text-lg sm:text-xl md:text-3xl font-bold">Return and Refund</h1>
 
             <!-- Tabs and Search Section -->
             <div class="p-3 sm:p-4 mb-4 sm:mb-6 bg-white rounded-lg shadow-sm">

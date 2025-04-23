@@ -1,7 +1,7 @@
 <x-distributor-layout>
     <div class="container p-4 mx-auto">
         <div class="flex items-center justify-between mb-4">
-            <h1 class="text-2xl font-bold">Payment Management</h1>
+            <h1 class="text-2xl md:text-3xl font-bold">Payment Management</h1>
             <a href="{{ route('distributors.payments.history') }}" class="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600">
                 <i class="mr-1 fas fa-history"></i> Payment History
             </a>

@@ -1,6 +1,6 @@
 <x-distributor-layout>
     <div class="container p-4 mx-auto">
-        <h1 class="mb-6 text-2xl font-bold">Inventory Management</h1>
+        <h1 class="mb-6 text-2xl md:text-3xl font-bold">Inventory Management</h1>
 
         <!-- Search Bar -->
         <div class="flex items-center justify-between mb-6">

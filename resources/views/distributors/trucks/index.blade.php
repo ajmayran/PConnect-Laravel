@@ -1,5 +1,5 @@
 <x-distributor-layout>
-    <div class="py-12">
+    <div class="py-6">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <a href="{{ route('distributors.delivery.index') }}"
                 class="inline-block px-4 py-2 mb-4 text-sm font-medium text-gray-700 hover:text-green-400">← Back to
