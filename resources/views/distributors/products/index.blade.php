@@ -26,13 +26,13 @@
 
                 <div class="block">
                     <a href="{{ route('distributors.products.history') }}"
-                        class="flex items-center px-2 py-1 text-xs font-medium text-white transition duration-200 bg-purple-500 rounded-lg hover:bg-purple-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:mr-1" fill="none"
+                        class="flex items-center px-2 py-1 text-xs font-medium text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 sm:mr-1" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span class="hidden sm:inline">History</span>
+                        <span class="hidden sm:inline text-lg font-normal">History</span>
                     </a>
                 </div>
             </div>
@@ -58,14 +58,14 @@
                 </div>
                 <div class="flex items-center justify-end space-x-2">
                     <div class="items-center hidden sm:block md:flex">
-                        <button onclick="openModal('priceModal')"
-                            class="px-2 py-1 text-xs font-medium text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600">
+                        <button onclick="openModal('priceModal')"   
+                            class="px-2 py-2 font-medium text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600">
                             Product Prices
                         </button>
                     </div>
                     <div>
                         <a href="{{ route('distributors.products.create') }}"
-                            class="px-2 py-1 text-xs font-medium text-green-500 transition duration-200 rounded-lg">
+                            class="px-2 py-2 font-medium text-green-500 transition duration-200 rounded-lg">
                             <span class="hidden sm:inline">Add New Product</span>
                             <span class="sm:hidden">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
