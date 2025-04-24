@@ -12,12 +12,22 @@
 
 
                 <div class="flex-1">
-                    <div class="px-4 mb-6">
-                        <h1 class="text-2xl font-semibold text-gray-800">My Purchase</h1>
-                        <div>
-                            <span class="text-sm text-gray-500">Showing your recent orders</span>
+                    <div class="flex justify-between px-4 mb-6">
+                        <div class="mb-4">
+                            <h1 class="text-2xl font-semibold text-gray-800">My Purchase</h1>
+                            <div>
+                                <span class="text-sm text-gray-500">Showing your recent orders</span>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <a href="{{ route('retailers.orders.refund-track') }}"
+                                class="text-blue-600 hover:text-blue-800 hover:underline">Track Refund</a>
+                            <a href="{{ route('retailers.orders.purchase-history') }}"
+                                class="text-blue-600 hover:text-blue-800 hover:underline">Purchase History</a>
                         </div>
                     </div>
+
 
                     <div class="px-4 space-y-6">
                         <div class="p-4 bg-white shadow sm:p-8 sm:rounded-lg">
@@ -33,17 +43,18 @@
                                     <div class="p-4 transition-all border rounded-lg hover:shadow-md">
                                         <div class="flex justify-between mb-2">
                                             <span class="text-sm text-gray-600">{{ $order->formatted_order_id }}</span>
-                                                <div class="flex justify-end gap-2">
+                                            <div class="flex justify-end gap-2">
                                                 <span
                                                     class="px-3 py-1 text-sm rounded-full {{ $order->status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
                                                     {{ ucfirst($order->status) }}
                                                 </span>
                                                 @if (isset($order->payment) && $order->payment && $order->payment->payment_status === 'unpaid')
-                                                    <span class="px-3 py-1 ml-2 text-sm text-red-800 bg-red-100 rounded-full">
+                                                    <span
+                                                        class="px-3 py-1 ml-2 text-sm text-red-800 bg-red-100 rounded-full">
                                                         Unpaid
                                                     </span>
                                                 @endif
-                                            </div>      
+                                            </div>
                                         </div>
 
                                         <div class="mb-2">
@@ -123,7 +134,7 @@
                     </div>
                 `;
                 document.getElementById('orderModal').classList.remove('hidden');
-                
+
                 // Fetch the order details
                 fetch(`/retailers/profile/${orderId}/order-details`)
                     .then(response => {
@@ -137,7 +148,7 @@
                         if (data.error) {
                             throw new Error(data.message || 'Error loading order details');
                         }
-                        
+
                         // Use the HTML from the response
                         document.getElementById('modalContent').innerHTML = data.html;
                     })
@@ -153,18 +164,18 @@
                         `;
                     });
             }
-    
+
             function closeOrderModal() {
                 document.getElementById('orderModal').classList.add('hidden');
                 document.getElementById('modalContent').innerHTML = '';
             }
-    
+
             document.getElementById('orderModal').addEventListener('click', function(e) {
                 if (e.target === this) {
                     closeOrderModal();
                 }
             });
-            
+
             // Close modal on escape key
             document.addEventListener('keydown', function(event) {
                 if (event.key === 'Escape') {

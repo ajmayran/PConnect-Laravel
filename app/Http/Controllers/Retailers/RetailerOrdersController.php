@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Retailers;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Refund;
 use App\Models\CartDetail;
 use App\Models\Distributors;
 use App\Models\OrderDetails;
@@ -991,5 +992,34 @@ class RetailerOrdersController extends Controller
 
         // Download the file
         return $pdf->download('receipt-' . $order->formatted_order_id . '.pdf');
+    }
+
+    public function trackRefund()
+    {
+        $user = Auth::user();
+        $refunds = Refund::whereHas('order', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })->with(['order', 'returnRequest'])->paginate(10);
+
+        return view('retailers.orders.track-refund', compact('refunds'));
+    }
+
+    public function purchaseHistory(Request $request)
+    {
+        $user = Auth::user();
+        $search = $request->input('search');
+
+        $orders = Order::where('user_id', $user->id)
+            ->whereNotIn('status', ['pending', 'processing', 'delivered'])
+            ->when($search, function ($query, $search) {
+                $query->where('formatted_order_id', 'like', "%{$search}%")
+                    ->orWhereHas('distributor', function ($q) use ($search) {
+                        $q->where('company_name', 'like', "%{$search}%");
+                    });
+            })
+            ->with(['orderDetails', 'distributor'])
+            ->paginate(10);
+
+        return view('retailers.orders.purchase-history', compact('orders'));
     }
 }

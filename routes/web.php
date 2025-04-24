@@ -220,6 +220,8 @@ Route::middleware(['auth', 'verified', 'checkRole:retailer', 'check.distributor.
     Route::get('/orders/unpaid', [RetailerOrdersController::class, 'unpaid'])->name('orders.unpaid');
     Route::get('/profile/{order}/order-details', [RetailerOrdersController::class, 'showOrderDetails']);
     Route::get('/check-return-request-status/{orderId}', [ReturnRequestController::class, 'checkReturnRequestStatus'])->name('check-return-request-status');
+    Route::get('/orders/refund-track', [RetailerOrdersController::class, 'trackRefund'])->name('orders.refund-track');
+    Route::get('/orders/purchase-history', [RetailerOrdersController::class, 'purchaseHistory'])->name('orders.purchase-history');
 
     Route::get('/orders/{order}', [RetailerOrdersController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/cancel', [RetailerOrdersController::class, 'cancelOrder'])->name('orders.cancel');
@@ -287,6 +289,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::post('/toggle-order-acceptance', [OrderController::class, 'toggleOrderAcceptance'])->name('distributors.toggle-order-acceptance');
     Route::post('/orders/{order}/edit', [OrderController::class, 'editOrderQuantity'])->name('distributors.orders.edit');
     Route::get('/orders/{order}/detail', [OrderController::class, 'getOrderDetail'])->name('orders.detail');
+    
 
     // Order QR Routes
     Route::get('/orders/{order}/qrcode', [OrderQrController::class, 'showQrCode'])->name('distributors.orders.qrcode');
@@ -367,6 +370,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::get('/refunds', [DistributorRefundController::class, 'index'])->name('distributors.refunds.index');
     Route::post('/refunds/process/{id}', [DistributorRefundController::class, 'processRefund'])->name('distributors.refunds.process');
     Route::post('/refunds/complete/{id}', [DistributorRefundController::class, 'completeRefund'])->name('distributors.refunds.complete');
+    
 
     // Exchanges
     Route::get('/exchanges', [ExchangeController::class, 'index'])->name('distributors.exchanges.index');
