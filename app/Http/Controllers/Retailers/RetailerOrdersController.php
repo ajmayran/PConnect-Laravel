@@ -35,7 +35,7 @@ class RetailerOrdersController extends Controller
             ->where('status', 'pending')
             ->with(['orderDetails.product', 'distributor'])
             ->latest()
-            ->paginate(3);
+            ->paginate(10);
 
         return view('retailers.orders.index', compact('orders'));
     }
@@ -50,7 +50,7 @@ class RetailerOrdersController extends Controller
                 $query->where('payment_status', 'unpaid');
             })
             ->latest()
-            ->paginate(3);
+            ->paginate(10);
 
         return view('retailers.orders.to-pay', compact('orders'));
     }
@@ -65,7 +65,7 @@ class RetailerOrdersController extends Controller
                 $query->where('payment_status', 'unpaid'); // But payment is still unpaid
             })
             ->latest()
-            ->paginate(3);
+            ->paginate(10);
 
         return view('retailers.orders.unpaid', compact('orders'));
     }
@@ -80,7 +80,7 @@ class RetailerOrdersController extends Controller
             })
             ->with(['distributor', 'orderDetails.product', 'delivery'])
             ->latest()
-            ->paginate(3);
+            ->paginate(10);
 
         return view('retailers.orders.to-receive', compact('orders'));
     }
@@ -93,7 +93,7 @@ class RetailerOrdersController extends Controller
 
             ->with(['distributor', 'orderDetails.product'])
             ->latest()
-            ->paginate(3);
+            ->paginate(10);
 
         return view('retailers.orders.completed', compact('orders'));
     }
@@ -106,7 +106,7 @@ class RetailerOrdersController extends Controller
             ->whereIn('status', ['cancelled', 'rejected'])
             ->with(['distributor', 'orderDetails.product'])
             ->latest()
-            ->paginate(3);
+            ->paginate(10);
 
         // Calculate total amount for each order
         foreach ($orders as $order) {
@@ -117,14 +117,47 @@ class RetailerOrdersController extends Controller
     }
 
 
-    public function returned()
+    public function returned(Request $request)
     {
         $user = Auth::user();
-        $orders = Order::where('user_id', $user->id)
-            ->whereIn('status', ['returned'])
-            ->with(['distributor', 'orderDetails.product'])
-            ->latest()
-            ->paginate(3);
+        $status = $request->get('status', 'all');
+
+        // Query return requests instead of orders
+        $query = ReturnRequest::where('retailer_id', $user->id)
+            ->with(['order', 'order.distributor', 'items.orderDetail.product']);
+
+        // Filter by status if provided
+        if ($status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        // Order by creation date, newest first
+        $query->latest();
+
+        // Get the return requests with pagination
+        $returnRequests = $query->paginate(10);
+
+        // Transform to include order information
+        $orders = $returnRequests->map(function ($returnRequest) {
+            $order = $returnRequest->order;
+            // Add return request data to the order object
+            $order->returnRequest = $returnRequest;
+            return $order;
+        });
+
+        // Update the paginator instance with our transformed items
+        $orders = new \Illuminate\Pagination\LengthAwarePaginator(
+            $orders,
+            $returnRequests->total(),
+            $returnRequests->perPage(),
+            $returnRequests->currentPage(),
+            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]
+        );
+
+        // Preserve query parameters in pagination links
+        if ($request->has('status')) {
+            $orders->appends(['status' => $request->status]);
+        }
 
         return view('retailers.orders.returned', compact('orders'));
     }
@@ -144,8 +177,9 @@ class RetailerOrdersController extends Controller
         // Validate the request data
         $validated = $request->validate([
             'reason' => 'required|string',
-            'receipt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120', // 5MB max
-            'proof_image' => 'nullable|image|mimes:jpg,jpeg,png|max:5120', // 5MB limit
+            'other_reason' => 'required_if:reason,other',
+            'preferred_solution' => 'required|in:exchange,refund',
+            'proof_image' => 'required|image|mimes:jpg,jpeg,png|max:5120', // 5MB max, now required
             'products' => 'required|array',
             'products.*.selected' => 'sometimes',
             'products.*.quantity' => 'required_with:products.*.selected|integer|min:1',
@@ -168,22 +202,22 @@ class RetailerOrdersController extends Controller
         DB::beginTransaction();
 
         try {
-            // Store the receipt file
-            $receiptPath = $request->file('receipt')->store('receipts', 'public');
-
-            // Store proof image if provided
-            $proofImagePath = null;
-            if ($request->hasFile('proof_image')) {
-                $proofImagePath = $request->file('proof_image')->store('proofs', 'public');
+            // Handle the reason field - if 'other' is selected, use the other_reason value
+            $finalReason = $request->reason;
+            if ($finalReason === 'other' && $request->has('other_reason')) {
+                $finalReason = $request->other_reason;
             }
 
-            // Create the return request
+            // Store proof image - required
+            $proofImagePath = $request->file('proof_image')->store('proofs', 'public');
+
+            // Create the return request with the new fields
             $returnRequest = ReturnRequest::create([
                 'order_id' => $order->id,
                 'retailer_id' => Auth::id(),
-                'reason' => $validated['reason'],
-                'receipt_path' => $receiptPath,
+                'reason' => $finalReason,
                 'proof_image' => $proofImagePath,
+                'preferred_solution' => $validated['preferred_solution'],
                 'status' => 'pending'
             ]);
 

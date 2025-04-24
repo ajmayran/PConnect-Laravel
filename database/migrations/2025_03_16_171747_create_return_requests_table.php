@@ -15,8 +15,10 @@ return new class extends Migration
             $table->unsignedBigInteger('retailer_id');
             $table->text('reason');
             $table->text('proof_image')->nullable();
-            $table->string('receipt_path');
+            $table->enum('preferred_solution', ['exchange', 'refund']);
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->text('reject_reason')->nullable();
+            $table->timestamp('processed_at')->nullable();
             $table->timestamps();
 
             $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');

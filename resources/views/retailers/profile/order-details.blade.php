@@ -18,6 +18,7 @@
         </div>
     </div>
 
+
     <!-- Order Items Table -->
     <div class="overflow-hidden border border-gray-200 rounded-lg shadow-sm">
         <table class="min-w-full divide-y divide-gray-200">
@@ -33,8 +34,12 @@
                     </th>
                 </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @foreach ($order->orderDetails as $detail)
+            
+            @foreach ($order->orderDetails as $detail)
+            <h1 class="p-2 ml-2 text-gray-800">
+                {{ $detail->product->distributor->company_name ?? 'Unknown Distributor' }}
+            </h1>
+            <tbody class="bg-white divide-y divide-gray-200">                
                     <tr class="transition-colors hover:bg-gray-50">
                         <td class="px-6 py-4 text-sm text-gray-900">{{ $detail->product->product_name }}</td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ $detail->quantity }}</td>

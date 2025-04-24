@@ -86,14 +86,12 @@
                                             View Details
                                         </button>
 
-                                        @if ($isWithinReturnPeriod && !$hasReturnRequest)
-                                            <div class="w-px h-4 mx-2 bg-gray-300"></div>
-                                            <a href="#" x-data
-                                                @click.prevent="$dispatch('open-modal', 'request-return-{{ $order->id }}')"
-                                                class="text-yellow-600 hover:text-yellow-800">
-                                                Request Return
-                                            </a>
-                                        @endif
+                                        <div class="w-px h-4 mx-2 bg-gray-300"></div>
+                                        <button
+                                            onclick="checkReturnEligibility({{ $order->id }}, {{ $isWithinReturnPeriod ? 'true' : 'false' }}, {{ $hasReturnRequest ? 'true' : 'false' }}, '{{ $order->formatted_order_id }}')"
+                                            class="text-yellow-600 hover:text-yellow-800">
+                                            Request Return
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -156,42 +154,69 @@
             $hasReturnRequest = $order->returnRequests()->exists();
         @endphp
 
-        @if ($isWithinReturnPeriod && !$hasReturnRequest)
-            <!-- Modal for Return Request -->
-            <x-modal name="request-return-{{ $order->id }}" focusable>
-                <div class="p-6">
+        <!-- Create a modal for EVERY order, not just those without return requests -->
+        <div id="request-return-{{ $order->id }}"
+            class="fixed inset-0 z-50 hidden overflow-y-auto bg-black bg-opacity-50">
+            <div class="relative p-6 mx-auto mt-10 bg-white rounded-lg shadow-xl max-w-7xl">
+                <div class="flex items-center justify-between pb-3 border-b">
                     <h2 class="text-lg font-medium text-gray-900">
                         Request Return for Order #{{ $order->formatted_order_id }}
                     </h2>
+                    <button onclick="closeReturnRequestModal({{ $order->id }})"
+                        class="text-gray-400 hover:text-gray-500">
+                        <span class="sr-only">Close</span>
+                        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
 
+                <div class="p-6">
                     <form method="POST" action="{{ route('retailers.orders.request-return', $order->id) }}"
                         class="mt-6 space-y-6" enctype="multipart/form-data">
                         @csrf
 
                         <div class="space-y-2">
-                            <x-input-label for="reason" value="Reason for Return" />
-                            <x-text-area-input id="reason" name="reason" class="block w-full" required />
+                            <x-input-label for="reason-{{ $order->id }}" value="Reason for Return" />
+                            <select id="reason-{{ $order->id }}" name="reason"
+                                class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                onchange="toggleOtherReason(this, {{ $order->id }})" required>
+                                <option value="">Select reason</option>
+                                <option value="Damage">Damage</option>
+                                <option value="Spoiled upon arrival">Spoiled upon arrival</option>
+                                <option value="Wrong Item sent">Wrong Item sent</option>
+                                <option value="other">Other reason</option>
+                            </select>
+                            <div id="other_reason_container-{{ $order->id }}" class="hidden mt-2">
+                                <textarea id="other_reason-{{ $order->id }}" name="other_reason"
+                                    class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                    placeholder="Please specify your reason..."></textarea>
+                            </div>
                             <x-input-error class="mt-2" :messages="$errors->get('reason')" />
                         </div>
 
-                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div class="space-y-2">
-                                <x-input-label for="receipt" value="Upload Receipt (Image or PDF)" />
-                                <input type="file" id="receipt" name="receipt"
-                                    class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
-                                    accept=".jpg,.jpeg,.png,.pdf" required />
-                                <p class="mt-1 text-xs text-gray-500">JPG, JPEG, PNG or PDF (max 5MB)</p>
-                                <x-input-error class="mt-2" :messages="$errors->get('receipt')" />
-                            </div>
+                        <div class="space-y-2">
+                            <x-input-label for="solution-{{ $order->id }}" value="Preferred Solution" />
+                            <select id="solution-{{ $order->id }}" name="preferred_solution"
+                                class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                required>
+                                <option value="">Select preferred solution</option>
+                                <option value="exchange">Return and Exchange</option>
+                                <option value="refund">Refund only</option>
+                            </select>
+                            <x-input-error class="mt-2" :messages="$errors->get('solution')" />
+                        </div>
 
-                            <div class="space-y-2">
-                                <x-input-label for="proof_image" value="Upload Proof Image (Optional)" />
-                                <input type="file" id="proof_image" name="proof_image"
-                                    class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
-                                    accept=".jpg,.jpeg,.png" />
-                                <p class="mt-1 text-xs text-gray-500">Additional photo of the returned item(s)</p>
-                                <x-input-error class="mt-2" :messages="$errors->get('proof_image')" />
-                            </div>
+                        <div>
+                            <x-input-label for="proof_image-{{ $order->id }}"
+                                value="Upload Proof Image (Required)" />
+                            <input type="file" id="proof_image-{{ $order->id }}" name="proof_image"
+                                class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
+                                accept=".jpg,.jpeg,.png" required />
+                            <p class="mt-1 text-xs text-gray-500">Photo evidence of the item(s) condition</p>
+                            <x-input-error class="mt-2" :messages="$errors->get('proof_image')" />
                         </div>
 
                         <div>
@@ -201,20 +226,22 @@
                                     <div class="flex items-center justify-between p-3 border-b border-gray-200">
                                         <div class="flex items-start">
                                             <input type="checkbox" name="products[{{ $detail->id }}][selected]"
-                                                id="product-{{ $detail->id }}"
-                                                class="w-4 h-4 mt-1 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-                                            <label for="product-{{ $detail->id }}"
+                                                id="product-{{ $detail->id }}-{{ $order->id }}"
+                                                class="w-4 h-4 mt-1 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                                onchange="toggleQuantityInput(this, {{ $detail->id }}, {{ $order->id }})">
+                                            <label for="product-{{ $detail->id }}-{{ $order->id }}"
                                                 class="ml-3 text-sm text-gray-700">
                                                 {{ $detail->product->product_name }} (Qty: {{ $detail->quantity }})
                                             </label>
                                         </div>
                                         <div class="w-20">
-                                            <x-input-label for="quantity-{{ $detail->id }}" value="Qty"
-                                                class="sr-only" />
-                                            <x-text-input id="quantity-{{ $detail->id }}"
+                                            <label for="quantity-{{ $detail->id }}-{{ $order->id }}"
+                                                class="sr-only">Qty</label>
+                                            <input id="quantity-{{ $detail->id }}-{{ $order->id }}"
                                                 name="products[{{ $detail->id }}][quantity]" type="number"
-                                                class="block w-full text-xs" min="1"
-                                                max="{{ $detail->quantity }}" value="1" />
+                                                class="block w-full text-xs border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                                min="1" max="{{ $detail->quantity }}" value="1"
+                                                disabled />
                                         </div>
                                     </div>
                                 @endforeach
@@ -222,20 +249,87 @@
                         </div>
 
                         <div class="flex items-center justify-end mt-6 gap-x-6">
-                            <x-secondary-button x-on:click="$dispatch('close')">
+                            <button type="button" onclick="closeReturnRequestModal({{ $order->id }})"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                 Cancel
-                            </x-secondary-button>
-                            <x-primary-button>
+                            </button>
+                            <button type="submit"
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                 Submit Return Request
-                            </x-primary-button>
+                            </button>
                         </div>
                     </form>
                 </div>
-            </x-modal>
-        @endif
+            </div>
+        </div>
     @endforeach
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure SweetAlert is loaded
+            if (typeof Swal === 'undefined') {
+                console.error('SweetAlert is not loaded. Please include SweetAlert in your project.');
+                return;
+            }
+
+            // Select all return request forms
+            const returnForms = document.querySelectorAll('form[action*="request-return"]');
+
+            if (returnForms.length === 0) {
+                console.warn('No return request forms found on the page.');
+                return;
+            }
+
+            // Attach event listeners to each form
+            returnForms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault(); // Prevent default form submission
+
+                    // Check if at least one product is selected
+                    const selectedProducts = form.querySelectorAll(
+                        'input[name^="products"][name$="[selected]"]:checked');
+                    if (selectedProducts.length === 0) {
+                        Swal.fire({
+                            title: 'No Products Selected',
+                            text: 'Please select at least one product to return.',
+                            icon: 'warning',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+
+                    // Show confirmation dialog
+                    Swal.fire({
+                        title: 'Confirm Return Request',
+                        text: 'Are you sure you want to submit this return request?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#10b981',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Yes, submit request',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Show processing message
+                            Swal.fire({
+                                title: 'Processing...',
+                                text: 'Submitting your return request.',
+                                allowOutsideClick: false,
+                                showConfirmButton: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                    form.submit(); // Submit the form
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+
+            console.log(`Attached SweetAlert confirmation to ${returnForms.length} return request forms.`);
+        });
+
         function openOrderModal(orderId) {
             // Show the modal first with loading indicator
             document.getElementById('orderModal').classList.remove('hidden');
@@ -276,9 +370,97 @@
 
         // Close modal with escape key
         document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
+            if (event.key === 'Escape' && !document.getElementById('orderModal').classList.contains('hidden')) {
                 closeOrderModal();
             }
         });
+
+
+        function checkReturnEligibility(orderId, isWithinReturnPeriod, hasReturnRequest, formattedOrderId) {
+            if (!isWithinReturnPeriod) {
+                Swal.fire({
+                    title: 'Cannot Request Return',
+                    text: 'This order is more than 7 days old and is no longer eligible for return.',
+                    icon: 'warning',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                });
+            } else if (hasReturnRequest) {
+                // Check if there's a pending or approved return request
+                fetch(`/retailers/check-return-request-status/${orderId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.can_request_again) {
+                            // If previous return request was completed (approved/rejected), allow new request
+                            openReturnRequestModal(orderId);
+                        } else {
+                            Swal.fire({
+                                title: 'Return Already Requested',
+                                text: 'You have already submitted a return request for this order.',
+                                icon: 'info',
+                                confirmButtonColor: '#3085d6',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Could not verify return request status. Please try again.',
+                            icon: 'error',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
+                    });
+            } else {
+                // If eligible, open the modal
+                openReturnRequestModal(orderId);
+            }
+        }
+
+        function openReturnRequestModal(orderId) {
+            const modalElement = document.getElementById(`request-return-${orderId}`);
+            if (modalElement) {
+                modalElement.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            } else {
+                console.error(`Modal with ID request-return-${orderId} not found.`);
+            }
+        }
+
+        function closeReturnRequestModal(orderId) {
+            const modalElement = document.getElementById(`request-return-${orderId}`);
+            if (modalElement) {
+                modalElement.classList.add('hidden');
+                document.body.style.overflow = ''; // Restore background scrolling
+            }
+        }
+
+        // Toggle other reason textarea
+        function toggleOtherReason(selectElement, orderId) {
+            const otherReasonContainer = document.getElementById(`other_reason_container-${orderId}`);
+            const otherReasonInput = document.getElementById(`other_reason-${orderId}`);
+
+            if (selectElement.value === 'other') {
+                otherReasonContainer.classList.remove('hidden');
+                otherReasonInput.setAttribute('required', 'required');
+            } else {
+                otherReasonContainer.classList.add('hidden');
+                otherReasonInput.removeAttribute('required');
+            }
+        }
+
+        // Toggle quantity input
+        function toggleQuantityInput(checkbox, detailId, orderId) {
+            const quantityInput = document.getElementById(`quantity-${detailId}-${orderId}`);
+            if (checkbox.checked) {
+                quantityInput.disabled = false;
+                quantityInput.setAttribute('required', 'required');
+            } else {
+                quantityInput.disabled = true;
+                quantityInput.removeAttribute('required');
+            }
+        }
     </script>
 </x-app-layout>

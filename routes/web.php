@@ -64,8 +64,8 @@ use App\Http\Controllers\Distributors\DistributorProductController;
 use App\Http\Controllers\Distributors\DistributorProfileController;
 use App\Http\Controllers\Distributors\DistributorDashboardController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
-
-
+use App\Http\Controllers\Distributors\DistributorRefundController;
+use App\Http\Controllers\Distributors\ExchangeController;
 
 Route::middleware('auth')->group(function () {
     // Email verification routes - these are already in your file
@@ -219,10 +219,13 @@ Route::middleware(['auth', 'verified', 'checkRole:retailer', 'check.distributor.
     Route::get('/orders/track', [RetailerOrdersController::class, 'trackOrder'])->name('orders.track');
     Route::get('/orders/unpaid', [RetailerOrdersController::class, 'unpaid'])->name('orders.unpaid');
     Route::get('/profile/{order}/order-details', [RetailerOrdersController::class, 'showOrderDetails']);
+    Route::get('/check-return-request-status/{orderId}', [ReturnRequestController::class, 'checkReturnRequestStatus'])->name('check-return-request-status');
 
     Route::get('/orders/{order}', [RetailerOrdersController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/cancel', [RetailerOrdersController::class, 'cancelOrder'])->name('orders.cancel');
     Route::post('/orders/{order}/request-return', [RetailerOrdersController::class, 'requestReturn'])->name('orders.request-return');
+    Route::get('/return-items/{returnId}', [ReturnRequestController::class, 'getReturnItems']);
+    Route::get('/return-proof-images/{returnId}', [ReturnRequestController::class, 'getProofImages']);
 
 
     //Nav Routes
@@ -360,6 +363,16 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::get('discounts/expired', [DiscountsController::class, 'expired'])->name('distributors.discounts.expired');
     Route::get('/discounts/{id}', [DiscountsController::class, 'show'])->name('distributors.discounts.show');
 
+    // Refund 
+    Route::get('/refunds', [DistributorRefundController::class, 'index'])->name('distributors.refunds.index');
+    Route::post('/refunds/process/{id}', [DistributorRefundController::class, 'processRefund'])->name('distributors.refunds.process');
+    Route::post('/refunds/complete/{id}', [DistributorRefundController::class, 'completeRefund'])->name('distributors.refunds.complete');
+
+    // Exchanges
+    Route::get('/exchanges', [ExchangeController::class, 'index'])->name('distributors.exchanges.index');
+    Route::get('/exchanges/{id}/details', [ExchangeController::class, 'getExchangeDetails'])->name('distributors.exchanges.details');
+    Route::post('/exchanges/{delivery}/assign-truck', [ExchangeController::class, 'assignTruck'])->name('distributors.exchanges.assign-truck');
+    Route::post('/exchanges/{delivery}/delivered', [ExchangeController::class, 'markDelivered'])->name('distributors.exchanges.delivered');
 
     // Payment Routes
     Route::get('/payments', [PaymentController::class, 'index'])->name('distributors.payments.index');

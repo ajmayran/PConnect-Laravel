@@ -14,8 +14,14 @@ class ReturnRequest extends Model
         'retailer_id',
         'reason',
         'proof_image',
-        'receipt_path',
-        'status'
+        'preferred_solution',
+        'status',
+        'processed_at',
+        'reject_reason'
+    ];
+
+    protected $casts = [
+        'proof_images' => 'array', // Cast the proof_images column as an array
     ];
 
     /**
