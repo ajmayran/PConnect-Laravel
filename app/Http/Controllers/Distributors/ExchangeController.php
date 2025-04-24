@@ -60,7 +60,7 @@ class ExchangeController extends Controller
 
         return view('distributors.exchanges.index', compact('exchanges', 'availableTrucks', 'status'));
     }
-    
+
     public function assignTruck(Request $request, Delivery $delivery)
     {
         $request->validate([
@@ -84,9 +84,6 @@ class ExchangeController extends Controller
 
             // Get the truck
             $truck = Trucks::findOrFail($request->truck_id);
-
-            // Update the truck status to active
-            $truck->update(['status' => 'active']);
 
             // Update delivery status to in_transit
             $delivery->update(['status' => 'in_transit']);
@@ -184,21 +181,22 @@ class ExchangeController extends Controller
 
     public function getExchangeDetails($id)
     {
-        $delivery = Delivery::with([
-            'order.user',
-            'returnRequest.items.orderDetail.product'
-        ])->findOrFail($id);
+        try {
+            $delivery = Delivery::with([
+                'order.user',
+                'returnRequest.items.orderDetail.product'
+            ])->findOrFail($id);
 
-        if (!$delivery->exchange_for_return_id) {
-            return response()->json(['success' => false, 'message' => 'This is not a valid exchange delivery']);
+            return response()->json([
+                'success' => true,
+                'delivery' => $delivery,
+                'return' => $delivery->returnRequest,
+                'items' => $delivery->returnRequest ? $delivery->returnRequest->items : [],
+                'customer' => $delivery->order->user
+            ]);
+        } catch (\Exception $e) {
+            echo "<p class='error'>Error: " . $e->getMessage() . "</p>";
+            exit;
         }
-
-        return response()->json([
-            'success' => true,
-            'delivery' => $delivery,
-            'return' => $delivery->returnRequest,
-            'items' => $delivery->returnRequest->items,
-            'customer' => $delivery->order->user
-        ]);
     }
 }

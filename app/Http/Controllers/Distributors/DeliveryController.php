@@ -12,6 +12,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Services\NotificationService;
+use Illuminate\Support\Facades\DB;
 
 class DeliveryController extends Controller
 {
@@ -26,23 +27,53 @@ class DeliveryController extends Controller
     {
         $distributorId = Auth::user()->distributor->id;
         $status = request('status', self::STATUS_PENDING);
-        $deliveries = Delivery::with([
+        $search = request('search');
+
+        // Build base query to include both regular and exchange deliveries
+        $query = Delivery::with([
             'order',
             'order.user.retailerProfile',
-            'order.orderDetails.product'
+            'order.orderDetails.product',
+            'returnRequest.items.orderDetail.product' // Add this relationship for exchange deliveries
         ])
             ->whereHas('order', function ($query) use ($distributorId) {
                 $query->where('distributor_id', $distributorId);
-            })
-            ->where('status', $status)
-            ->oldest()
-            ->paginate(10);
+            });
 
-        $availableTrucks = Trucks::where('distributor_id', Auth::user()->distributor->id)
+        // Handle special "exchanges" filter
+        if (request('view') === 'exchanges') {
+            $query->where(function ($q) {
+                $q->where('is_exchange_delivery', true)
+                    ->orWhereNotNull('exchange_for_return_id');
+            });
+        }
+        // Handle regular status filtering
+        else if ($status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        // Apply search if provided
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('tracking_number', 'like', "%{$search}%")
+                    ->orWhereHas('order', function ($sq) use ($search) {
+                        $sq->where('formatted_order_id', 'like', "%{$search}%")
+                            ->orWhereHas('user', function ($usq) use ($search) {
+                                $usq->where( DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%");
+                            });
+                    });
+            });
+        }
+
+        $deliveries = $query->latest()->paginate(10);
+        $deliveries->appends(request()->query());
+
+        // Get available trucks for assigning deliveries
+        $availableTrucks = Trucks::where('distributor_id', $distributorId)
             ->where('status', 'available')
             ->get();
 
-        return view('distributors.delivery.index', compact('deliveries', 'availableTrucks'));
+        return view('distributors.delivery.index', compact('deliveries', 'availableTrucks', 'status'));
     }
 
     public function updateStatus(Request $request, $id)
