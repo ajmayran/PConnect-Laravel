@@ -88,6 +88,9 @@ class ExchangeController extends Controller
             // Update delivery status to in_transit
             $delivery->update(['status' => 'in_transit']);
 
+            // Update the truck status to on_delivery
+            $truck->update(['status' => 'on_delivery']);
+
             // Attach truck to delivery
             $truck->deliveries()->attach($delivery->id);
 
@@ -115,6 +118,56 @@ class ExchangeController extends Controller
         }
     }
 
+    // New method to handle out for delivery status
+    public function markOutForDelivery(Request $request, Delivery $delivery)
+    {
+        $distributorId = Auth::user()->distributor->id;
+
+        // Validate the request
+        $request->validate([
+            'estimated_delivery' => 'required|date|after_or_equal:today',
+        ]);
+
+        // Check if delivery belongs to this distributor
+        if (!$delivery->order || $delivery->order->distributor_id != $distributorId) {
+            return redirect()->back()->with('error', 'Unauthorized access to this exchange delivery');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Update delivery status
+            $delivery->update([
+                'status' => 'out_for_delivery',
+                'estimated_delivery' => $request->estimated_delivery,
+                'updated_at' => now()
+            ]);
+
+            // Send notification to retailer
+            $this->notificationService->create(
+                $delivery->order->user_id,
+                'exchange_out_for_delivery',
+                [
+                    'title' => 'Exchange Items Out for Delivery',
+                    'message' => "Your exchange items for order #{$delivery->order->formatted_order_id} are out for delivery.",
+                    'delivery_id' => $delivery->id,
+                    'order_id' => $delivery->order_id,
+                    'recipient_type' => 'retailer',
+                    'estimated_delivery' => $request->estimated_delivery
+                ],
+                $delivery->order_id
+            );
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Exchange delivery marked as out for delivery successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to mark exchange as out for delivery: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update delivery status: ' . $e->getMessage());
+        }
+    }
+
     public function markDelivered(Request $request, Delivery $delivery)
     {
         $distributorId = Auth::user()->distributor->id;
@@ -130,7 +183,7 @@ class ExchangeController extends Controller
             // Update delivery status
             $delivery->update([
                 'status' => 'delivered',
-                'delivered_at' => now()
+                'updated_at' => now()
             ]);
 
             // Get the truck if assigned
@@ -155,6 +208,45 @@ class ExchangeController extends Controller
                 }
             }
 
+            // Process exchange items if there's a return request
+            if ($delivery->returnRequest && $delivery->returnRequest->items) {
+                foreach ($delivery->returnRequest->items as $item) {
+                    $product = $item->orderDetail->product;
+
+                    if (!$product) {
+                        Log::warning('Product not found for return item', ['item_id' => $item->id]);
+                        continue;
+                    }
+
+                    // Add stock based on product type (batch managed or regular)
+                    if ($product->isBatchManaged()) {
+                        $this->adjustBatchStockForExchange($product, $item->quantity, $delivery->returnRequest);
+                    } else {
+                        // For regular products, just create a stock record
+                        \App\Models\Stock::create([
+                            'product_id' => $product->id,
+                            'batch_id' => null,
+                            'type' => 'in',
+                            'quantity' => $item->quantity,
+                            'user_id' => Auth::id(),
+                            'notes' => "Exchange for Return Request #{$delivery->returnRequest->id} completed",
+                            'stock_updated_at' => now()
+                        ]);
+
+                        // Update product's stock_updated_at
+                        $product->update(['stock_updated_at' => now()]);
+                    }
+                }
+            }
+
+            // Update the return request status to completed
+            if ($delivery->returnRequest) {
+                $delivery->returnRequest->update([
+                    'status' => 'completed',
+                    'completed_at' => now()
+                ]);
+            }
+
             // Send notification to retailer
             $this->notificationService->create(
                 $delivery->order->user_id,
@@ -168,6 +260,13 @@ class ExchangeController extends Controller
                 ],
                 $delivery->order_id
             );
+
+            if ($delivery->order) {
+                $delivery->order->update([
+                    'status' => 'returned',
+                    'status_updated_at' => now()
+                ]);
+            }
 
             DB::commit();
 
@@ -195,8 +294,63 @@ class ExchangeController extends Controller
                 'customer' => $delivery->order->user
             ]);
         } catch (\Exception $e) {
-            echo "<p class='error'>Error: " . $e->getMessage() . "</p>";
-            exit;
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load exchange details: ' . $e->getMessage()
+            ], 500);
         }
+    }
+
+    private function adjustBatchStockForExchange($product, $quantity, $returnRequest)
+    {
+        $remainingQuantity = $quantity;
+
+        // Try to add stock to existing batches first
+        $batches = $product->batches()
+            ->orderBy('expiry_date')
+            ->get();
+
+        foreach ($batches as $batch) {
+            if ($remainingQuantity <= 0) break;
+
+            // Create stock record
+            \App\Models\Stock::create([
+                'product_id' => $product->id,
+                'batch_id' => $batch->id,
+                'type' => 'in',
+                'quantity' => $remainingQuantity,
+                'user_id' => Auth::id(),
+                'notes' => "Exchange for Return Request #{$returnRequest->id} completed",
+                'stock_updated_at' => now()
+            ]);
+
+            // Update batch quantity
+            $batch->increment('quantity', $remainingQuantity);
+            $remainingQuantity = 0;
+        }
+
+        // If no batches exist or all were full, create a new batch
+        if ($remainingQuantity > 0) {
+            $newBatch = $product->batches()->create([
+                'batch_number' => 'exchange-' . uniqid(),
+                'quantity' => $remainingQuantity,
+                'expiry_date' => now()->addMonths(6), // Default expiry of 6 months
+                'received_at' => now(),
+                'notes' => "Created from Exchange #{$returnRequest->id}"
+            ]);
+
+            \App\Models\Stock::create([
+                'product_id' => $product->id,
+                'batch_id' => $newBatch->id,
+                'type' => 'in',
+                'quantity' => $remainingQuantity,
+                'user_id' => Auth::id(),
+                'notes' => "Exchange for Return Request #{$returnRequest->id} completed",
+                'stock_updated_at' => now()
+            ]);
+        }
+
+        // Update product's stock_updated_at timestamp
+        $product->update(['stock_updated_at' => now()]);
     }
 }

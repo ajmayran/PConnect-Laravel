@@ -377,7 +377,8 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::get('/exchanges/{id}/details', [ExchangeController::class, 'getExchangeDetails'])->name('distributors.exchanges.details');
     Route::post('/exchanges/{delivery}/assign-truck', [ExchangeController::class, 'assignTruck'])->name('distributors.exchanges.assign-truck');
     Route::post('/exchanges/{delivery}/delivered', [ExchangeController::class, 'markDelivered'])->name('distributors.exchanges.delivered');
-
+    Route::post('/exchanges/{delivery}/out-for-delivery', [ExchangeController::class, 'markOutForDelivery'])->name('distributors.exchanges.out-for-delivery');
+    
     // Payment Routes
     Route::get('/payments', [PaymentController::class, 'index'])->name('distributors.payments.index');
     Route::put('/payments/{payment}/update-status', [PaymentController::class, 'updateStatus'])->name('distributors.payments.update-status');

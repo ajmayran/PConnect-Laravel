@@ -31,6 +31,10 @@
                         class="px-4 py-2 {{ $status === 'in_transit' ? 'text-green-600 border-b-2 border-green-500' : 'text-gray-500 hover:text-green-600' }}">
                         In Transit
                     </a>
+                    <a href="{{ route('distributors.exchanges.index', ['status' => 'out_for_delivery']) }}"
+                        class="px-4 py-2 {{ $status === 'out_for_delivery' ? 'text-green-600 border-b-2 border-green-500' : 'text-gray-500 hover:text-green-600' }}">
+                        Out for Delivery
+                    </a>
                     <a href="{{ route('distributors.exchanges.index', ['status' => 'delivered']) }}"
                         class="px-4 py-2 {{ $status === 'delivered' ? 'text-green-600 border-b-2 border-green-500' : 'text-gray-500 hover:text-green-600' }}">
                         Delivered
@@ -160,18 +164,19 @@
 
                                 @if ($exchange->status === 'pending')
                                     <button onclick="assignTruck({{ $exchange->id }})"
-                                        class="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700">
+                                        class="px-3 py-1 text-sm font-medium bg-green-600 rounded-md hover:bg-green-700">
                                         Assign Truck
                                     </button>
                                 @elseif($exchange->status === 'in_transit')
-                                    <form action="{{ route('distributors.exchanges.delivered', $exchange->id) }}"
-                                        method="POST" class="inline">
-                                        @csrf
-                                        <button type="submit"
-                                            class="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700">
-                                            Mark Delivered
-                                        </button>
-                                    </form>
+                                    <button onclick="markOutForDelivery({{ $exchange->id }})"
+                                        class="px-3 py-1 text-sm font-medium bg-purple-600 rounded-md hover:bg-purple-700">
+                                        Out for Delivery
+                                    </button>
+                                @elseif($exchange->status === 'out_for_delivery')
+                                    <button onclick="confirmMarkDelivered({{ $exchange->id }})"
+                                        class="px-3 py-1 text-sm font-medium bg-green-600 rounded-md hover:bg-green-700">
+                                        Mark Delivered
+                                    </button>
                                 @endif
                             </td>
                         </tr>
@@ -242,7 +247,7 @@
                         <option value="">Select a truck</option>
                         @foreach ($availableTrucks as $truck)
                             <option value="{{ $truck->id }}">
-                                {{ $truck->truck_number }} - {{ $truck->model }} ({{ $truck->plate_number }})
+                                {{ $truck->plate_number }} {{ isset($truck->model) ? '- ' . $truck->model : '' }}
                             </option>
                         @endforeach
                     </select>
@@ -261,6 +266,49 @@
         </div>
     </div>
 
+    <!-- Out for Delivery Modal -->
+    <div id="outForDeliveryModal"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden overflow-auto bg-black bg-opacity-50">
+        <div class="w-full max-w-md p-6 mx-4 bg-white rounded-lg shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-gray-800">Set Estimated Delivery Date</h2>
+                <button onclick="closeOutForDeliveryModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="outForDeliveryForm" action="" method="POST">
+                @csrf
+                <div class="mb-4">
+                    <label for="estimated_delivery" class="block mb-2 text-sm font-medium text-gray-700">
+                        Estimated Delivery Date
+                    </label>
+                    <input type="date" id="estimated_delivery" name="estimated_delivery" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
+                        min="{{ date('Y-m-d') }}" required>
+                    <p class="mt-1 text-xs text-gray-500">Select the expected delivery date</p>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeOutForDeliveryModal()"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 text-sm font-medium bg-purple-600 rounded-md hover:bg-purple-700">
+                        Mark Out for Delivery
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hidden form for Mark as Delivered -->
+    <form id="markDeliveredForm" method="POST" style="display: none;">
+        @csrf
+    </form>
+
     <script>
         function showExchangeDetails(id) {
             document.getElementById('exchangeDetailsModal').classList.remove('hidden');
@@ -278,7 +326,12 @@
 
             // Fetch exchange details
             fetch(`{{ route('distributors.exchanges.details', ':id') }}`.replace(':id', id))
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
                         let html = `<div class="space-y-6">`;
@@ -291,16 +344,19 @@
                         const statusClass = delivery.status === 'pending' ?
                             'text-yellow-700 bg-yellow-50 border-yellow-200' :
                             delivery.status === 'in_transit' ? 'text-blue-700 bg-blue-50 border-blue-200' :
+                            delivery.status === 'out_for_delivery' ? 'text-indigo-700 bg-indigo-50 border-indigo-200' :
                             delivery.status === 'delivered' ? 'text-green-700 bg-green-50 border-green-200' :
                             'text-gray-700 bg-gray-50 border-gray-200';
 
                         const statusBadgeClass = delivery.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                             delivery.status === 'in_transit' ? 'bg-blue-100 text-blue-800' :
+                            delivery.status === 'out_for_delivery' ? 'bg-indigo-100 text-indigo-800' :
                             delivery.status === 'delivered' ? 'bg-green-100 text-green-800' :
                             'bg-gray-100 text-gray-800';
 
                         const statusText = delivery.status === 'pending' ? 'Pending' :
                             delivery.status === 'in_transit' ? 'In Transit' :
+                            delivery.status === 'out_for_delivery' ? 'Out for Delivery' :
                             delivery.status === 'delivered' ? 'Delivered' :
                             delivery.status.charAt(0).toUpperCase() + delivery.status.slice(1);
 
@@ -313,6 +369,7 @@
                                 <div class="mt-1 text-sm">
                                     <p>Tracking Number: ${delivery.tracking_number}</p>
                                     <p>Created Date: ${new Date(delivery.created_at).toLocaleDateString()}</p>
+                                    ${delivery.estimated_delivery ? `<p>Estimated Delivery: ${new Date(delivery.estimated_delivery).toLocaleDateString()}</p>` : ''}
                                     ${delivery.delivered_at ? `<p>Delivered Date: ${new Date(delivery.delivered_at).toLocaleDateString()}</p>` : ''}
                                 </div>
                             </div>`;
@@ -356,7 +413,7 @@
                 .catch(error => {
                     console.error('Error fetching exchange details:', error);
                     contentDiv.innerHTML =
-                        `<div class="p-4 text-red-500">An error occurred while fetching exchange details.</div>`;
+                        `<div class="p-4 text-red-500">An error occurred while fetching exchange details: ${error.message}</div>`;
                 });
         }
 
@@ -366,19 +423,112 @@
 
         function assignTruck(id) {
             const form = document.getElementById('assignTruckForm');
+            
             // Fix: use named route parameter correctly
             form.action = "{{ route('distributors.exchanges.assign-truck', ':id') }}".replace(':id', id);
+            
+            // Show the modal
             document.getElementById('assignTruckModal').classList.remove('hidden');
+            
+            // Validate form before submission
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                
+                const truckId = document.getElementById('truck_id').value;
+                if (!truckId) {
+                    alert('Please select a truck');
+                    return false;
+                }
+                
+                // Show confirmation dialog
+                Swal.fire({
+                    title: 'Assign Truck?',
+                    text: "Are you sure you want to assign this truck for the exchange delivery?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10B981',
+                    cancelButtonColor: '#6B7280',
+                    confirmButtonText: 'Yes, assign it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            };
         }
 
         function closeAssignTruckModal() {
             document.getElementById('assignTruckModal').classList.add('hidden');
+        }
+        
+        function markOutForDelivery(id) {
+            const form = document.getElementById('outForDeliveryForm');
+            
+            // Fix: use named route parameter correctly
+            form.action = "{{ route('distributors.exchanges.out-for-delivery', ':id') }}".replace(':id', id);
+            
+            // Set default date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('estimated_delivery').value = tomorrow.toISOString().split('T')[0];
+            
+            // Show the modal
+            document.getElementById('outForDeliveryModal').classList.remove('hidden');
+            
+            // Validate form before submission
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                
+                const estimatedDelivery = document.getElementById('estimated_delivery').value;
+                if (!estimatedDelivery) {
+                    alert('Please select an estimated delivery date');
+                    return false;
+                }
+                
+                // Show confirmation dialog
+                Swal.fire({
+                    title: 'Mark as Out for Delivery?',
+                    text: "Are you sure this exchange is out for delivery?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#8B5CF6',
+                    cancelButtonColor: '#6B7280',
+                    confirmButtonText: 'Yes, confirm!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            };
+        }
+        
+        function closeOutForDeliveryModal() {
+            document.getElementById('outForDeliveryModal').classList.add('hidden');
+        }
+        
+        function confirmMarkDelivered(id) {
+            Swal.fire({
+                title: 'Mark as Delivered?',
+                text: "Are you sure this exchange has been delivered to the customer?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10B981',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: 'Yes, delivered!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('markDeliveredForm');
+                    form.action = "{{ route('distributors.exchanges.delivered', ':id') }}".replace(':id', id);
+                    form.submit();
+                }
+            });
         }
 
         // Close modals when clicking outside
         window.addEventListener('click', function(event) {
             const exchangeModal = document.getElementById('exchangeDetailsModal');
             const assignTruckModal = document.getElementById('assignTruckModal');
+            const outForDeliveryModal = document.getElementById('outForDeliveryModal');
 
             if (event.target === exchangeModal) {
                 closeExchangeModal();
@@ -387,6 +537,32 @@
             if (event.target === assignTruckModal) {
                 closeAssignTruckModal();
             }
+            
+            if (event.target === outForDeliveryModal) {
+                closeOutForDeliveryModal();
+            }
+        });
+        
+        // Add SweetAlert for form submission confirmations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for success/error messages
+            @if(session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: "{{ session('success') }}",
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            @endif
+            
+            @if(session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: "{{ session('error') }}"
+                });
+            @endif
         });
     </script>
 </x-distributor2nd-layout>
