@@ -145,6 +145,12 @@ class DistributorRefundController extends Controller
                 ]);
             }
 
+            // Update the order status to 'returned'
+            $refund->order->update([
+                'status' => 'returned',
+                'status_updated_at' => now()
+            ]);
+
             // Add refunded items back to stock
             foreach ($refund->returnRequest->items as $item) {
                 $product = $item->orderDetail->product;

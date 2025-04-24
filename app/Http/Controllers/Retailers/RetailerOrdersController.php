@@ -254,7 +254,8 @@ class RetailerOrdersController extends Controller
                     'title' => 'New Return Request',
                     'message' => "A return request has been submitted for order {$order->formatted_order_id}.",
                     'order_id' => $order->id,
-                    'return_request_id' => $returnRequest->id
+                    'return_request_id' => $returnRequest->id,
+                    'recipient_type' => 'distributor'
                 ],
                 $order->id
             );

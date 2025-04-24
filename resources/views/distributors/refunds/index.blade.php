@@ -156,10 +156,13 @@
                                     <form action="{{ route('distributors.refunds.complete', $refund->id) }}"
                                         method="POST">
                                         @csrf
-                                        <button type="submit"
-                                            class="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700">
-                                            Mark as Delivered
-                                        </button>
+                                        <form id="completeRefundForm-{{ $refund->id }}" action="{{ route('distributors.refunds.complete', $refund->id) }}" method="POST">
+                                            @csrf
+                                            <button type="button" onclick="confirmCompleteRefund({{ $refund->id }})"
+                                                class="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700">
+                                                Mark as Complete
+                                            </button>
+                                        </form>
                                     </form>
                                 @elseif($refund->status === 'completed')
                                     <span class="text-sm text-gray-500">Refund completed</span>
@@ -222,6 +225,25 @@
             const modal = document.getElementById('scheduleModal');
             modal.classList.add('hidden');
         }
+
+        function confirmCompleteRefund(refundId) {
+        Swal.fire({
+            title: 'Mark as Complete?',
+            text: 'Are you sure you want to mark this refund as completed?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#10B981',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: 'Yes, complete it',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Submit the form if confirmed
+                document.getElementById(`completeRefundForm-${refundId}`).submit();
+            }
+        });
+    }
+        
     </script>
 
 </x-distributor2nd-layout>
