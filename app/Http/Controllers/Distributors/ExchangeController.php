@@ -239,14 +239,6 @@ class ExchangeController extends Controller
                 }
             }
 
-            // Update the return request status to completed
-            if ($delivery->returnRequest) {
-                $delivery->returnRequest->update([
-                    'status' => 'completed',
-                    'completed_at' => now()
-                ]);
-            }
-
             // Send notification to retailer
             $this->notificationService->create(
                 $delivery->order->user_id,
