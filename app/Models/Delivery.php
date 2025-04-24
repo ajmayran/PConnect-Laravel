@@ -13,6 +13,9 @@ class Delivery extends Model
         'tracking_number',
         'estimated_delivery',
         'status',
+        'exchange_for_return_id',  
+        'is_exchange_delivery',         
+        'delivered_at'
     ];
 
     protected $attributes = [
@@ -49,5 +52,10 @@ class Delivery extends Model
         return $this->belongsToMany(Trucks::class, 'truck_delivery', 'delivery_id', 'truck_id')
             ->withPivot('started_at')
             ->withTimestamps();
+    }
+
+    public function returnRequest()
+    {
+        return $this->belongsTo(ReturnRequest::class, 'exchange_for_return_id');
     }
 }

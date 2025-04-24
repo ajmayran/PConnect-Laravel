@@ -358,7 +358,6 @@ class ReturnRequestController extends Controller
         $exchangeItems = [];
 
         foreach ($returnRequest->items as $item) {
-            // Adjust stock for returned items (same as refund)
             $exchangeItems[] = [
                 'product_id' => $item->orderDetail->product_id,
                 'quantity' => $item->quantity,
@@ -371,8 +370,16 @@ class ReturnRequestController extends Controller
             'tracking_number' => 'EXC-' . strtoupper(uniqid()),
             'status' => 'pending', // Pending delivery status
             'exchange_for_return_id' => $returnRequest->id,
+            'is_exchange_delivery' => true, // Add this field
             'notes' => 'Exchange items for return request #' . $returnRequest->id,
             'created_at' => now(),
+        ]);
+
+        // Log the created delivery for debugging
+        Log::info('Created exchange delivery', [
+            'delivery_id' => $delivery->id,
+            'return_id' => $returnRequest->id,
+            'exchange_for_return_id' => $delivery->exchange_for_return_id
         ]);
 
         // Create exchange items inventory adjustment 
@@ -399,12 +406,6 @@ class ReturnRequestController extends Controller
                 $product->save();
             }
         }
-
-        Log::info('Exchange delivery created for return request', [
-            'return_id' => $returnRequest->id,
-            'delivery_id' => $delivery->id,
-            'items_count' => count($exchangeItems)
-        ]);
     }
 
     private function adjustBatchStockForExchange($product, $quantity, $returnRequest)

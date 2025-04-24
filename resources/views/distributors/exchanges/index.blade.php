@@ -72,7 +72,7 @@
                             </th>
                             <th scope="col"
                                 class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                                Items
+                                Product
                             </th>
                             <th scope="col"
                                 class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
@@ -128,7 +128,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900">
-                                        {{ $itemsCount }} {{ $itemsCount == 1 ? 'item' : 'items' }}
+                                        {{ $itemsCount }} {{ $itemsCount == 1 ? 'Product' : 'Products' }}
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">

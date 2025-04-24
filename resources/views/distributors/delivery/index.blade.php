@@ -195,49 +195,6 @@
         </div>
     </div>
 
-
-    {{-- <div id="changeStatusModal"
-        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
-        <div class="w-11/12 max-w-md bg-white rounded-lg shadow-xl md:w-1/3 sm:w-2/3">
-            <div class="flex items-center justify-between p-4 border-b">
-                <h2 class="text-lg font-semibold text-gray-800">Change Delivery Status</h2>
-                <button onclick="closeChangeStatusModal()"
-                    class="p-1 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-
-            <form id="changeStatusForm" method="POST" class="p-6">
-                @csrf
-                <div class="mb-4">
-                    <label for="status" class="block mb-2 text-sm font-medium text-gray-700">Update Status</label>
-                    <select id="status" name="status"
-                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                        <option value="in_transit">In Transit</option>
-                        <option value="out_for_delivery">Out for Delivery</option>
-                        <option value="delivered">Delivered</option>
-                    </select>
-                </div>
-
-                <div class="flex justify-end gap-3 mt-6">
-                    <button type="button" onclick="closeChangeStatusModal()"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        Cancel
-                    </button>
-                    <button type="submit"
-                        class="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                        Update Status
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div> --}}
-
-
-
     <script>
         function openDeliveryModal(row) {
             let orderDetails;
