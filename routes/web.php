@@ -305,6 +305,8 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::post('/returns/{returnRequest}/reject', [ReturnRequestController::class, 'reject'])->name('distributors.returns.reject');
     Route::get('/returns/export', [ReturnRequestController::class, 'export'])->name('distributors.returns.export');
     Route::get('/returns/{id}', [ReturnRequestController::class, 'show'])->name('distributors.returns.show');
+    Route::get('/returns/{returnRequest}/items', [ReturnRequestController::class, 'getReturnItems'])->name('distributors.returns.items');
+    Route::get('/returns/{returnRequest}/item/{productId}', [ReturnRequestController::class, 'getReturnItemQuantity'])->name('distributors.returns.item-quantity');
 
     Route::get('/retailers/{id}', [RetailerProfileController::class, 'show'])->name('distributors.retailers.show');
     Route::get('/retailers/{retailer}/orders', [RetailerProfileController::class, 'getRetailerOrders']);
@@ -378,7 +380,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::post('/exchanges/{delivery}/assign-truck', [ExchangeController::class, 'assignTruck'])->name('distributors.exchanges.assign-truck');
     Route::post('/exchanges/{delivery}/delivered', [ExchangeController::class, 'markDelivered'])->name('distributors.exchanges.delivered');
     Route::post('/exchanges/{delivery}/out-for-delivery', [ExchangeController::class, 'markOutForDelivery'])->name('distributors.exchanges.out-for-delivery');
-    
+
     // Payment Routes
     Route::get('/payments', [PaymentController::class, 'index'])->name('distributors.payments.index');
     Route::put('/payments/{payment}/update-status', [PaymentController::class, 'updateStatus'])->name('distributors.payments.update-status');

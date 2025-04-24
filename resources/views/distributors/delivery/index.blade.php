@@ -98,7 +98,7 @@
                                     onclick="openDeliveryModal(this)" data-delivery-id="{{ $delivery->id }}"
                                     data-delivery-status="{{ $delivery->status }}"
                                     data-order-id="{{ $delivery->order->formatted_order_id }}"
-                                    data-is-exchange-delivery="{{ ($delivery->is_exchange_delivery || $delivery->exchange_for_return_id) ? 'true' : 'false' }}"
+                                    data-is-exchange-delivery="{{ $delivery->is_exchange_delivery || $delivery->exchange_for_return_id ? 'true' : 'false' }}"
                                     data-exchange-for-return-id="{{ $delivery->exchange_for_return_id ?? '' }}"
                                     data-order-details='@json($delivery->order->orderDetails)'>
                                     <td class="px-4 py-3">
@@ -271,10 +271,10 @@
             // Products Section - Different display for exchanges vs regular orders
             modalContent += '<div class="overflow-hidden bg-white rounded-lg shadow">';
             modalContent += `<div class="p-4 border-b bg-gray-50">
-        <h3 class="text-lg font-semibold text-gray-800">
+             <h3 class="text-lg font-semibold text-gray-800">
             ${isExchange ? 'Exchange Items' : 'Products Ordered'}
-        </h3>
-    </div>`;
+              </h3>
+             </div>`;
             modalContent += '<div class="overflow-x-auto">';
             modalContent += '<table class="min-w-full divide-y divide-gray-200">';
             modalContent += '<thead class="bg-gray-50"><tr>';
@@ -307,12 +307,13 @@
 
                     modalContent += `<div class="ml-2">`;
                     modalContent += `<div class="font-medium text-gray-900">${detail.product.product_name}</div>`;
-                    
+
                     // Only show price for regular orders, not for exchanges
                     if (!isExchange) {
-                        modalContent += `<div class="text-xs text-gray-500">Unit Price: ₱${parseFloat(detail.price).toFixed(2)}</div>`;
+                        modalContent +=
+                            `<div class="text-xs text-gray-500">Unit Price: ₱${parseFloat(detail.price).toFixed(2)}</div>`;
                     }
-                    
+
                     modalContent += `</div>`;
                     modalContent += `</div>`;
                 } else {
@@ -320,7 +321,47 @@
                 }
 
                 modalContent += '</td>';
-                modalContent += `<td class="px-4 py-3">${detail.quantity}</td>`;
+                // For regular items, just show the quantity
+                if (isExchange && exchangeForReturnId) {
+                    modalContent += `<td class="px-4 py-3">
+                <div class="flex flex-col">
+                    <span>${detail.quantity}</span>
+                    <span id="return-qty-${detail.product.id}" class="text-xs font-medium text-purple-600">
+                        <svg class="inline-block w-4 h-4 mr-1 text-purple-500 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Loading return quantity...
+                    </span>
+                </div>
+            </td>`;
+
+                    // Fetch return quantities
+                    setTimeout(() => {
+                        fetch(`/returns/${exchangeForReturnId}/item/${detail.product.id}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    const returnQtySpan = document.getElementById(
+                                        `return-qty-${detail.product.id}`);
+                                    if (returnQtySpan) {
+                                        returnQtySpan.innerHTML = `(to return: ${data.quantity})`;
+                                    }
+                                } else {
+                                    throw new Error('Failed to load return quantity');
+                                }
+                            })
+                            .catch(error => {
+                                const returnQtySpan = document.getElementById(
+                                    `return-qty-${detail.product.id}`);
+                                if (returnQtySpan) {
+                                    returnQtySpan.innerHTML = `(to return: ${detail.quantity})`;
+                                }
+                            });
+                    }, 300);
+                } else {
+                    modalContent += `<td class="px-4 py-3">${detail.quantity}</td>`;
+                }
 
                 // Only show subtotal for regular orders
                 if (!isExchange) {
@@ -348,8 +389,10 @@
             if (orderDetails.length > 0 && orderDetails[0].delivery_address) {
                 modalContent += '<div class="flex items-center gap-2 p-3 rounded-lg bg-gray-50">';
                 modalContent += '<svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">';
-                modalContent += '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />';
-                modalContent += '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />';
+                modalContent +=
+                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />';
+                modalContent +=
+                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />';
                 modalContent += '</svg>';
                 modalContent += `Delivery Address: ${orderDetails[0].delivery_address}`;
                 modalContent += '</div></div>';

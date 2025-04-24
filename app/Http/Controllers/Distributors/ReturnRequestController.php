@@ -578,4 +578,33 @@ class ReturnRequestController extends Controller
             ]);
         }
     }
+
+    public function getReturnItemQuantity(ReturnRequest $returnRequest, $productId)
+    {
+        try {
+            // Find the return request item for this product
+            $returnItem = $returnRequest->items()
+                ->whereHas('orderDetail', function ($query) use ($productId) {
+                    $query->where('product_id', $productId);
+                })
+                ->first();
+
+            if ($returnItem) {
+                return response()->json([
+                    'success' => true,
+                    'quantity' => $returnItem->quantity
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Return item not found'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load return item: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
