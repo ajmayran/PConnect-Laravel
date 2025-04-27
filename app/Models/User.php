@@ -72,11 +72,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Order::class);
     }
 
-    public function credential()
-    {
-        return $this->hasMany(Credential::class);
-    }
-
     public function products()
     {
         return $this->hasMany(Product::class, 'user_id');

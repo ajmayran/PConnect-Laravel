@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Models\User;
 use App\Models\Product;
 use App\Models\Distributors;
+use App\Models\Credential; // Import the Credential model
+
 use Illuminate\Http\Request;
 use App\Events\DistributorApproved;
 use Illuminate\Support\Facades\Log;
@@ -65,25 +67,20 @@ class Distributor extends Controller
 
         return redirect()->back()->with('success', 'Distributor application declined');
     }
-    public function downloadCredential($id)
+
+    public function downloadCredential($distributorId, $credentialId)
     {
-        try {
-            $distributor = User::with('credential')->findOrFail($id);
+        $credential = Credential::where('id', $credentialId)
+            ->where('user_id', $distributorId)
+            ->firstOrFail();
 
-            if (!$distributor->credential) {
-                return back()->with('error', 'No credential file found for this distributor.');
-            }
+        $filePath = storage_path('app/public/' . $credential->file_path);
 
-            $filePath = storage_path('app/public/credentials/' . $distributor->credential->file_path);
-
-            if (!Storage::disk('public')->exists('credentials/' . $distributor->credential->file_path)) {
-                return back()->with('error', 'Credential file is missing from storage.');
-            }
-
-            return response()->download($filePath);
-        } catch (\Exception $e) {
-            return back()->with('error', 'Error downloading file: ' . $e->getMessage());
+        if (!file_exists($filePath)) {
+            return back()->with('error', 'File not found.');
         }
+
+        return response()->download($filePath);
     }
 
     public function approvedDistributors()

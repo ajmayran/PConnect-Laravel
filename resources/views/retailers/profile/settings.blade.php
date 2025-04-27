@@ -2,7 +2,7 @@
     <x-dashboard-nav />
     <x-slot name="header">
         <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-            {{ __('Settings') }}
+            {{ __('Admin Settings') }}
         </h2>
     </x-slot>
 

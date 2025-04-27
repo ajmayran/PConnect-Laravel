@@ -17,6 +17,7 @@ use Carbon\Carbon;
 
 class AdminDashboardController extends Controller
 {
+
     public function index()
     {
         // Fetch the number of active retailers

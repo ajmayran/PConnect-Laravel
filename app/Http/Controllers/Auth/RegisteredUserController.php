@@ -38,73 +38,60 @@ class RegisteredUserController extends Controller
      * @throws \Illuminate\Validation\ValidationException
      */
     public function store(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'middle_name' => ['nullable', 'string', 'max:255'],
-            'email' => [
-                'required',
-                'string',
-                'lowercase',
-                'email',
-                'max:255',
-                Rule::unique('users')->where(function ($query) {
-                    $query->where('status', 'approved'); // Only check for approved users
-                }),
-            ],
-            'user_type' => ['required', 'in:retailer,distributor'],
-            'credentials' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
-            'credentials2' => ['required_if:user_type,distributor', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+{
+    $validated = $request->validate([
+        'first_name' => ['required', 'string', 'max:255'],
+        'last_name' => ['required', 'string', 'max:255'],
+        'middle_name' => ['nullable', 'string', 'max:255'],
+        'email' => [
+            'required',
+            'string',
+            'lowercase',
+            'email',
+            'max:255',
+            Rule::unique('users')->where(function ($query) {
+                $query->where('status', 'approved'); // Only check for approved users
+            }),
+        ],
+        'user_type' => ['required', 'in:retailer,distributor'],
+        'credentials' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
+        'credentials2' => ['required_if:user_type,distributor', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
+        'password' => ['required', 'confirmed', Rules\Password::defaults()],
+    ]);
+
+    $user = User::create([
+        'first_name' => $validated['first_name'],
+        'last_name' => $validated['last_name'],
+        'middle_name' => $validated['middle_name'],
+        'user_type' => $validated['user_type'],
+        'email' => $validated['email'],
+        'password' => bcrypt($validated['password']),
+    ]);
+
+    // Save the first credential (BIR Form)
+    if ($request->hasFile('credentials')) {
+        $filePath = $request->file('credentials')->store('credentials', 'public');
+
+        Credential::create([
+            'user_id' => $user->id,
+            'file_path' => $filePath,
+            'type' => 'bir_form', // Set type as 'bir_form'
         ]);
-    
-        $user = User::create([
-            'first_name' => $validated['first_name'],
-            'last_name' => $validated['last_name'],
-            'middle_name' => $validated['middle_name'],
-            'user_type' => $validated['user_type'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'status' => $validated['user_type'] === 'retailer' ? 'approved' : 'pending',
-        ]);
-
-        if ($request->hasFile('credentials')) {
-            $filePath = $request->file('credentials')->store('credentials', 'public');
-
-            // Store file path in the credentials table
-            Credential::create([
-                'user_id' => $user->id,
-                'file_path' => $filePath,
-            ]);
-        }
-
-        if ($request->hasFile('credentials2')) {
-            $filePath2 = $request->file('credentials2')->store('credentials', 'public');
-            Credential::create([
-                'user_id'   => $user->id,
-                'file_path' => $filePath2,
-            ]);
-        }
-
-        event(new Registered($user));
-
-        Auth::login($user);
-
-        // Send appropriate emails based on user type
-        // if ($user->user_type === 'distributor') {
-        //     Mail::to($user->email)->send(new DistributorRegistrationMail($user));
-        //     return redirect()->route('verification.notice');
-        // } else {
-        //     Mail::to($user->email)->send(new RetailerRegistrationMail($user));
-
-        // Either redirect to verification notice (to enforce email verification)
-        return redirect()->route('verification.notice');
-
-        // Or keep the current behavior to skip verification for retailers
-        // return redirect(route('retailers.dashboard', absolute: false));
-
     }
+
+    // Save the second credential (SEC Document) if applicable
+    if ($request->hasFile('credentials2')) {
+        $filePath2 = $request->file('credentials2')->store('credentials', 'public');
+
+        Credential::create([
+            'user_id' => $user->id,
+            'file_path' => $filePath2,
+            'type' => 'sec_document', // Set type as 'sec_document'
+        ]);
+    }
+
+    return redirect()->route('login')->with('success', 'Registration successful. Please wait for approval.');
+}
 
     /**
      * Display the approval waiting view.

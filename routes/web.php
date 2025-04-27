@@ -147,6 +147,8 @@ Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function (
     Route::delete('/admin/product/{id}/remove', [AdminProductController::class, 'removeProduct'])->name('removeProduct');
     Route::get('/admin/dashboard/chart-data', [AdminDashboardController::class, 'getChartData'])->name('dashboard.chart-data');
 
+    Route::get('/admin/distributors/{distributorId}/credentials/{credentialId}/download', [Distributor::class, 'downloadCredential'])->name('downloadCredential');
+    
     Route::get('admin/retailers/credentials', [AdminRetailerController::class, 'retailerCredentials'])->name('retailers.credentials');
     Route::post('admin/retailers/{id}/approve-credentials', [AdminRetailerController::class, 'approveCredentials'])->name('retailers.approve-credentials');
     Route::post('admin/retailers/{id}/reject-credentials', [AdminRetailerController::class, 'rejectCredentials'])->name('retailers.reject-credentials');
