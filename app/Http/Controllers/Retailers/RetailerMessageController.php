@@ -118,49 +118,34 @@ class RetailerMessageController extends Controller
 
 
     public function getUnreadCount()
-    {
-        try {
-            // Get authenticated user ID
-            $userId = Auth::id();
+{
+    try {
+        // Get authenticated user ID
+        $userId = Auth::id();
 
-            // Get the distinct sender IDs for debugging
-            $distinctSenders = Message::where('receiver_id', $userId)
-                ->where('is_read', false)
-                ->select('sender_id')
-                ->distinct()
-                ->get()
-                ->pluck('sender_id');
+        // Count unique senders who have sent unread messages
+        $unreadSendersCount = Message::where('receiver_id', $userId)
+            ->where('is_read', false)
+            ->select('sender_id')
+            ->distinct()
+            ->count();
 
-            // Count unique senders who have sent unread messages
-            $unreadSendersCount = $distinctSenders->count();
+        return response()->json([
+            'success' => true,
+            'unread_count' => $unreadSendersCount,
+            'count' => $unreadSendersCount
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Error fetching unread message count: ' . $e->getMessage());
 
-            // For debugging: Get total unread messages too
-            $totalUnreadCount = Message::where('receiver_id', $userId)
-                ->where('is_read', false)
-                ->count();
-
-            // Log the values for debugging
-            Log::debug("Unread senders: " . $distinctSenders->join(', '));
-            Log::debug("Unread senders count: $unreadSendersCount, Total unread messages: $totalUnreadCount");
-
-            return response()->json([
-                'success' => true,
-                'unread_count' => $unreadSendersCount,
-                'count' => $unreadSendersCount,
-                'debug_total_messages' => $totalUnreadCount,
-                'debug_senders' => $distinctSenders->toArray()
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error fetching unread message count: ' . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error fetching unread messages: ' . $e->getMessage(),
-                'count' => 0,
-                'unread_count' => 0
-            ]);
-        }
+        return response()->json([
+            'success' => false,
+            'message' => 'Error fetching unread messages',
+            'count' => 0,
+            'unread_count' => 0
+        ]);
     }
+}
 
     public function markAsRead(Request $request)
     {

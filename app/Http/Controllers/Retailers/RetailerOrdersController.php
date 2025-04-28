@@ -557,6 +557,7 @@ class RetailerOrdersController extends Controller
             ]);
 
             $user = Auth::user();
+            
 
             if ($request->input('delivery_option') === 'default') {
                 if (!$user->retailerProfile || !$user->retailerProfile->barangay_name) {
@@ -876,15 +877,6 @@ class RetailerOrdersController extends Controller
         return view('retailers.profile.my-purchase', compact('orders'));
     }
 
-    public function show(Order $order)
-    {
-        if ($order->user_id !== Auth::id()) {
-            abort(403);
-        }
-
-        return view('retailers.orders.show', compact('order'));
-    }
-
     public function getOrderDetails(Order $order)
     {
         if ($order->user_id !== Auth::id()) {
@@ -1021,5 +1013,23 @@ class RetailerOrdersController extends Controller
             ->paginate(10);
 
         return view('retailers.orders.purchase-history', compact('orders'));
+    }
+
+
+    public function show(Order $order)
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Load all necessary relationships for the order details page
+        $order->load([
+            'orderDetails.product',
+            'distributor',
+            'payment',
+            'delivery'
+        ]);
+
+        return view('retailers.orders.show', compact('order'));
     }
 }

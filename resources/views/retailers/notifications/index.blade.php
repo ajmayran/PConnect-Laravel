@@ -93,11 +93,9 @@
                                                     </form>
                                                 @endif
 
-                                                <!-- Add conditional links based on notification type -->
                                                 @if (isset($notification->type) && isset($notification->related_id))
                                                     @if ($notification->type == 'order_status' && isset($notification->related_id))
-                                                        <a href="javascript:void(0)"
-                                                            onclick="openOrderModal({{ $notification->related_id }})"
+                                                        <a href="{{ route('retailers.orders.show', $notification->related_id) }}"
                                                             class="flex items-center text-xs text-green-600 hover:text-green-800">
                                                             <svg class="w-4 h-4 mr-1" fill="none"
                                                                 stroke="currentColor" viewBox="0 0 24 24">
@@ -109,37 +107,7 @@
                                                                     d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
                                                                 </path>
                                                             </svg>
-                                                            View Order
-                                                        </a>
-                                                    @elseif($notification->type == 'new_product' && isset($notification->data['product_id']))
-                                                        <a href="{{ route('retailers.product.show', $notification->data['product_id']) }}"
-                                                            class="flex items-center text-xs text-green-600 hover:text-green-800">
-                                                            <svg class="w-4 h-4 mr-1" fill="none"
-                                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                                                </path>
-                                                            </svg>
-                                                            View Product
-                                                        </a>
-                                                    @elseif($notification->type == 'payment_update' && isset($notification->related_id))
-                                                        <a href="{{ route('retailers.payments.show', $notification->related_id) }}"
-                                                            class="flex items-center text-xs text-green-600 hover:text-green-800">
-                                                            <svg class="w-4 h-4 mr-1" fill="none"
-                                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                                                </path>
-                                                            </svg>
-                                                            View Payment
+                                                            View Order Details
                                                         </a>
                                                     @endif
                                                 @endif

@@ -1,5 +1,4 @@
 <x-app-layout>
-
     <x-dashboard-nav />
     <x-slot name="header">
         <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
@@ -17,6 +16,41 @@
                     <span class="text-sm text-gray-500">Edit your profile</span>
                 </div>
             </div>
+            
+            <!-- Profile Completion Status -->
+            @php
+                $profileComplete = true;
+                $missingFields = [];
+                
+                if (!isset($user->retailerProfile) || !$user->retailerProfile) {
+                    $profileComplete = false;
+                    $missingFields = ['business name', 'phone number', 'barangay', 'street address'];
+                } else {
+                    if (empty($user->retailerProfile->business_name)) {
+                        $profileComplete = false;
+                        $missingFields[] = 'business name';
+                    }
+                    if (empty($user->retailerProfile->phone)) {
+                        $profileComplete = false;
+                        $missingFields[] = 'phone number';
+                    }
+                    if (empty($user->retailerProfile->barangay)) {
+                        $profileComplete = false;
+                        $missingFields[] = 'barangay';
+                    }
+                    if (empty($user->retailerProfile->street)) {
+                        $profileComplete = false;
+                        $missingFields[] = 'street address';
+                    }
+                }
+            @endphp
+
+            @if (!$profileComplete)
+                <div class="p-4 mb-4 border-l-4 rounded-md text-amber-700 bg-amber-100 border-amber-500">
+                    <p class="font-medium">Your profile is incomplete!</p>
+                    <p>Please complete the following information to enable full functionality: {{ implode(', ', $missingFields) }}.</p>
+                </div>
+            @endif
 
             <div class="p-4 bg-white shadow sm:p-8 sm:rounded-lg">
                 <header>

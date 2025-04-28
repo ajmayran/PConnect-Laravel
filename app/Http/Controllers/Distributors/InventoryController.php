@@ -9,9 +9,74 @@ use App\Models\Stock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Services\NotificationService;
 
 class InventoryController extends Controller
 {
+
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
+    public function checkExpiringBatches()
+    {
+        $daysThreshold = 30; // Configure how many days before expiry to notify
+        $today = now();
+        $thresholdDate = $today->copy()->addDays($daysThreshold);
+
+        $this->info("Checking for expiring batches at {$today->format('Y-m-d H:i:s')}...");
+
+        // Get all expiring batches grouped by distributor
+        $expiringBatches = ProductBatch::with(['product.distributor.user'])
+            ->where('expiry_date', '>', $today)
+            ->where('expiry_date', '<=', $thresholdDate)
+            ->whereNull('expiry_notification_sent') // Track notifications already sent
+            ->get()
+            ->groupBy('product.distributor.id');
+
+        foreach ($expiringBatches as $distributorId => $batches) {
+            // Get the distributor user ID for sending notification
+            $distributorUserId = $batches->first()->product->distributor->user_id;
+
+            // Group batches by product for a more organized notification
+            $groupedByProduct = $batches->groupBy('product_id');
+
+            foreach ($groupedByProduct as $productId => $productBatches) {
+                $product = $productBatches->first()->product;
+                $batchCount = $productBatches->count();
+                $earliestExpiry = $productBatches->min('expiry_date');
+
+                // Create notification for each product with expiring batches
+                $this->notificationService->create(
+                    $distributorUserId,
+                    'expiring_batches',
+                    [
+                        'title' => 'Expiring Product Batches Alert',
+                        'message' => "{$batchCount} batch(es) of {$product->product_name} will expire by " .
+                            $earliestExpiry->format('M d, Y') . ". Please check your inventory.",
+                        'product_id' => $productId,
+                        'batch_count' => $batchCount,
+                        'earliest_expiry' => $earliestExpiry->format('Y-m-d')
+                    ],
+                    $productId
+                );
+
+                // Mark these batches as notified
+                foreach ($productBatches as $batch) {
+                    $batch->update(['expiry_notification_sent' => now()]);
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Expiring batch notifications sent successfully'
+        ]);
+    }
+
     public function index(Request $request)
     {
 

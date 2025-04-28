@@ -56,7 +56,7 @@ class ProfileController extends Controller
     {
         $request->validate([
             'business_name' => ['nullable', 'string', 'max:255'],
-            'phone' => ['nullable', 'numeric', 'digits:11'],
+            'phone' => ['required', 'string', 'regex:/^[0-9]{11}$/'],
             'city' => ['nullable', 'string', 'max:10'],
             'province' => ['nullable', 'string', 'max:10'],
             'region' => ['nullable', 'string', 'max:10'],
@@ -146,5 +146,35 @@ class ProfileController extends Controller
 
         // If no file or file doesn't exist
         return redirect()->back()->with('error', 'File not found or inaccessible.');
+    }
+
+    public function checkProfileComplete()
+    {
+        $user = Auth::user();
+        $isComplete = false;
+
+        if ($user->user_type === 'retailer' && $user->retailerProfile) {
+            // Define what constitutes a complete profile
+            $requiredFields = [
+                'business_name',
+                'phone',
+                'barangay',
+                'street'
+            ];
+
+            $profileComplete = true;
+            foreach ($requiredFields as $field) {
+                if (empty($user->retailerProfile->$field)) {
+                    $profileComplete = false;
+                    break;
+                }
+            }
+
+            $isComplete = $profileComplete;
+        }
+
+        return response()->json([
+            'isComplete' => $isComplete
+        ]);
     }
 }

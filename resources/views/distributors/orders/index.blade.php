@@ -59,6 +59,16 @@
                     </div>
                 </form>
             </div>
+            <!-- Order History Link -->
+            <div class="flex justify-end flex-1">
+                <a href="{{ route('distributors.orders.history') }}" 
+                   class="px-4 py-2 text-sm font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">
+                    <span class="flex items-center gap-2">
+                        <i class="bi bi-clock-history"></i>
+                        Order History
+                    </span>
+                </a>
+            </div>
         </div>
 
         @if (request('status') === 'processing')

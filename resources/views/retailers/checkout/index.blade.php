@@ -169,29 +169,6 @@
     </div>
     @include('components.footer')
 
-    @if (session('success'))
-        <script>
-            Swal.fire({
-                title: 'Success!',
-                text: '{{ session('success') }}',
-                icon: 'success',
-                timer: 3000,
-                showConfirmButton: false
-            });
-        </script>
-    @endif
-
-    @if (session('error'))
-        <script>
-            Swal.fire({
-                title: 'Error!',
-                text: '{{ session('error') }}',
-                icon: 'error',
-                timer: 3000,
-                showConfirmButton: false
-            });
-        </script>
-    @endif
 
     <script>
         // Toggle display of new address input based on radio selection.

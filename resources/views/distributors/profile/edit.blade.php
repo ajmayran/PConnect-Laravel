@@ -9,7 +9,7 @@
                             aria-current="page">Company Profile</a>
                     </li>
                     <li class="mr-2">
-                             <a href="{{ route('distributors.profile.orders-settings') }}"
+                        <a href="{{ route('distributors.profile.orders-settings') }}"
                             class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300">
                             Orders</a>
                     </li>
@@ -77,10 +77,15 @@
                                     Company Phone
                                 </label>
                                 <input id="company_phone_number" name="company_phone_number" type="tel" required
-                                    autofocus autocomplete="company_phone_number" pattern="[0-9]+"
-                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                    autofocus autocomplete="company_phone_number" pattern="[0-9]{11}"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, ''); validatePhoneNumber(this);"
                                     value="{{ old('company_phone_number', Auth::user()->distributor->company_phone_number ?? '') }}"
                                     class="block w-full mt-1 border-gray-300 rounded-md shadow-sm dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600">
+                                @error('company_phone_number')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                                <p id="phone_error" class="hidden mt-1 text-sm text-red-600">Phone number must be
+                                    exactly 11 digits</p>
                                 <p class="mt-1 text-xs text-gray-500">Please enter 11 digit numbers</p>
                             </div>
 
@@ -285,6 +290,26 @@
                 defaultOption.value = '';
                 defaultOption.textContent = defaultText;
                 dropdown.appendChild(defaultOption);
+            }
+
+            function validatePhoneNumber(input) {
+                const phoneError = document.getElementById('phone_error');
+                if (input.value.length > 0 && input.value.length !== 11) {
+                    phoneError.classList.remove('hidden');
+                } else {
+                    phoneError.classList.add('hidden');
+                }
+            }
+
+            // Add this to the DOMContentLoaded event
+            const phoneInput = document.getElementById('company_phone_number');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function() {
+                    validatePhoneNumber(this);
+                });
+
+                // Also validate on page load
+                validatePhoneNumber(phoneInput);
             }
 
             // Load barangays for Zamboanga City automatically

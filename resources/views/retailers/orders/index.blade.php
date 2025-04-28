@@ -40,9 +40,8 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach ($orders as $order)
                             <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-6 py-4">
                                     <div class="text-sm font-medium text-gray-900">{{ $order->formatted_order_id }}</div>
-                                    <div class="text-xs text-gray-500">{{ $order->created_at->format('M d, Y') }}</div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="text-sm text-gray-900">{{ $order->distributor->company_name }}</div>

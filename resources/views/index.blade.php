@@ -254,7 +254,7 @@
                     <h3 class="text-base font-bold text-center md:text-lg">Reachwell</h3>
                     <p class="text-sm text-center">20 Items</p>
                 </a>
-                <a href="./auth/login.php" class="flex flex-col items-center p-3 bg-gray-100 rounded-lg md:p-6">
+                <a href="{{ route('login') }}" class="flex flex-col items-center p-3 bg-gray-100 rounded-lg md:p-6">
                     <img src="{{ asset('img/Distrubutors/gm.png') }}" alt="Distributor 3"
                         class="w-3/4 mb-2 md:mb-4">
                     <h3 class="text-base font-bold text-center md:text-lg">Glenmark Trading</h3>

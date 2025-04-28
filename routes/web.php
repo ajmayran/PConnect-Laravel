@@ -171,7 +171,7 @@ Route::middleware(['auth', 'verified', 'checkRole:retailer', 'check.distributor.
     Route::get('profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
     Route::get('profile/my-purchase', [RetailerOrdersController::class, 'myPurchases'])->name('profile.my-purchase');
     Route::get('/profile/{order}/order-details', [RetailerORdersController::class, 'getOrderDetails'])->name('profile.order-details');
-
+    Route::get('/profile/check-complete', [App\Http\Controllers\ProfileController::class, 'checkProfileComplete'])->name('profile.check-complete');
 
     // Message Routes
     Route::get('/messages', [App\Http\Controllers\Retailers\RetailerMessageController::class, 'index'])->name('messages.index');

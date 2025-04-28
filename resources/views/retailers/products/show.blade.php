@@ -406,6 +406,45 @@
                 event.preventDefault();
                 if (!validateQuantity()) return;
 
+                // Check if profile is complete first
+                fetch('{{ route('retailers.profile.check-complete') }}', {
+                        method: 'GET',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.isComplete) {
+                            // Profile is incomplete, show warning
+                            Swal.fire({
+                                title: 'Profile Incomplete',
+                                text: 'Please complete your profile information before making a purchase.',
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#10B981',
+                                cancelButtonColor: '#6B7280',
+                                confirmButtonText: 'Complete Profile',
+                                cancelButtonText: 'Cancel'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = '{{ route('retailers.profile.edit') }}';
+                                }
+                            });
+                            return;
+                        }
+
+                        // If profile is complete, proceed with checkout
+                        proceedToCheckout();
+                    })
+                    .catch(error => {
+                        console.error('Error checking profile:', error);
+                        showError("Error!", "Unable to verify profile completeness.");
+                    });
+            }
+
+            function proceedToCheckout() {
                 Swal.fire({
                     title: 'Proceed to Checkout?',
                     text: "You'll be redirected to complete your purchase.",

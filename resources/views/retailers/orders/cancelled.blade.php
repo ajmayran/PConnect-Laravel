@@ -3,9 +3,9 @@
     <div class="container max-w-full px-4 py-8 mx-auto">
         <div class="flex items-center justify-between mb-8 ml-4">
             <h1 class="text-3xl font-bold text-gray-900">Cancelled/Rejected Orders</h1>
-            <a href="{{ route('retailers.orders.index') }}"
-                class="px-4 py-2 font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
-                Back to Orders
+            <a href="{{ route('retailers.orders.unpaid') }}"
+                class="px-4 py-2 font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                Unpaid Orders
             </a>
         </div>
 
@@ -49,10 +49,9 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach ($orders as $order)
                             <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-6 py-4">
                                     <div class="text-sm font-medium text-gray-900">{{ $order->formatted_order_id }}
                                     </div>
-                                    <div class="text-xs text-gray-500">{{ $order->created_at->format('M d, Y') }}</div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="text-sm text-gray-900">{{ $order->distributor->company_name }}</div>
