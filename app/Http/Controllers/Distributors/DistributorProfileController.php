@@ -151,7 +151,7 @@ class DistributorProfileController extends Controller
             'city' => ['nullable', 'string', 'max:10'],
             'barangay' => ['nullable', 'string', 'max:20'],
             'street' => ['nullable', 'string', 'max:255'],
-            'company_phone_number' => ['required', 'numeric', 'max:11'],
+            'company_phone_number' => ['required', 'numeric', 'digits:11'],
             'company_profile_image' => ['nullable', 'image', 'max:2048'],
         ]);
 

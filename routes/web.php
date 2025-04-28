@@ -228,7 +228,7 @@ Route::middleware(['auth', 'verified', 'checkRole:retailer', 'check.distributor.
     Route::post('/orders/{order}/request-return', [RetailerOrdersController::class, 'requestReturn'])->name('orders.request-return');
     Route::get('/return-items/{returnId}', [ReturnRequestController::class, 'getReturnItems']);
     Route::get('/return-proof-images/{returnId}', [ReturnRequestController::class, 'getProofImages']);
-
+    Route::get('/profile/{order}/exchange-details', [RetailerOrdersController::class, 'getExchangeDetails'])->name('retailers.orders.exchange-details');
 
     //Nav Routes
     Route::get('/all-distributors', [AllDistributorController::class, 'index'])->name('all-distributor');
@@ -289,7 +289,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::post('/toggle-order-acceptance', [OrderController::class, 'toggleOrderAcceptance'])->name('distributors.toggle-order-acceptance');
     Route::post('/orders/{order}/edit', [OrderController::class, 'editOrderQuantity'])->name('distributors.orders.edit');
     Route::get('/orders/{order}/detail', [OrderController::class, 'getOrderDetail'])->name('orders.detail');
-    
+    Route::get('/orders/history', [OrderController::class, 'history'])->name('distributors.orders.history');
 
     // Order QR Routes
     Route::get('/orders/{order}/qrcode', [OrderQrController::class, 'showQrCode'])->name('distributors.orders.qrcode');

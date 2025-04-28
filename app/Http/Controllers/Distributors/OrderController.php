@@ -488,4 +488,25 @@ class OrderController extends Controller
             ]);
         }
     }
+
+
+    public function history(Request $request)
+    {
+        $distributorId = Auth::user()->distributor->id;
+
+        // Fetch completed and delivered orders
+        $orders = Order::where('distributor_id', $distributorId)
+            ->whereIn('status', ['completed', 'delivered']) // Filter by completed and delivered statuses
+            ->when($request->search, function ($query) use ($request) {
+                $query->where('order_id', 'like', '%' . $request->search . '%')
+                    ->orWhereHas('user', function ($q) use ($request) {
+                        $q->where(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', '%' . $request->search . '%');
+                    });
+            })
+            ->with(['user', 'orderDetails.product'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('distributors.orders.history', compact('orders'));
+    }
 }
