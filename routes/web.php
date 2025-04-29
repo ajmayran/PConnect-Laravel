@@ -153,6 +153,9 @@ Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function (
     Route::post('admin/retailers/{id}/reject-credentials', [AdminRetailerController::class, 'rejectCredentials'])->name('retailers.reject-credentials');
     Route::post('admin/retailers/{id}/reject-credentials', [AdminRetailerController::class, 'rejectCredential'])->name('retailers.reject-credentials');
 
+    Route::get('/admin/distributors/{distributorId}/credentials/{credentialId}/download', [Distributor::class, 'downloadCredential'])->name('downloadCredential');
+
+    
     // Subcription Routes
     Route::get('/admin/subscriptions', [App\Http\Controllers\Admin\SubscriptionController::class, 'index'])->name('subscriptions.index');
     Route::get('/admin/subscriptions/{id}', [App\Http\Controllers\Admin\SubscriptionController::class, 'show'])->name('subscriptions.show');
