@@ -3,120 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subscription Page</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .custom-border {
-            border: 3px solid #dcfce7;
-        }
-        .custom-border-active {
-            border: 2px solid #16a34a;
-        }
-    </style>
+    <title>Distributor Subscription</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
-<body class="bg-gray-50 font-sans min-h-screen flex flex-col pt-16">
+<body class="flex flex-col min-h-screen pt-16 font-sans bg-gray-50">
     <div class="flex-grow">
-        <div class="container mx-auto p-8">
+        <div class="container p-8 mx-auto">
             <div class="flex flex-col items-center justify-center mb-8 text-center">
-
-                <h1 class="text-4xl font-bold mt-4 text-gray-800">Pricing Plans for Every Need</h1>
-                <p class="text-gray-500 mt-2">Choose a plan that works best for you and your Company.</p>
-            </div>
-            <div class="flex justify-center mb-6">
-                <button id="monthly" class="px-6 py-3 rounded-full bg-white text-gray-700 mr-4 border custom-border hover:bg-green-500 hover:text-white transition-colors font-medium shadow-md">Monthly</button>
-                <button id="yearly" class="px-6 py-3 rounded-full bg-white text-gray-700 border custom-border hover:bg-green-500 hover:text-white transition-colors font-medium shadow-md">Yearly</button>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-white rounded-lg p-6 shadow-lg custom-border plan hover:shadow-xl transition-shadow duration-300">
-                    <h2 class="text-2xl font-bold mb-3 text-gray-800">Standard</h2>
-                    <p class="text-gray-500 mb-5">Perfect for individuals and small teams.</p>
-                    <div class="text-4xl font-extrabold text-green-500 mb-2">₱</div>
-                    <p class="text-sm text-gray-400 mb-6">Billed Annually</p>
-                    <h3 class="font-semibold text-lg mb-3 text-gray-700">What's Included?</h3>
-                    <ul class="list-none space-y-3 mb-6">
-                        <li class="flex items-center">
-                            <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span class="text-gray-600">1 Legal Policy</span>
-                        </li>
-                        <li class="flex items-center">
-                            <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span class="text-gray-600">4 Policy Edits</span>
-                        </li>
-                        <li class="flex items-center">
-                            <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span class="text-gray-600">Privacy Regulation Monitoring</span>
-                        </li>
-                        <li class="flex items-center">
-                            <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span class="text-gray-600">Normal Support</span>
-                        </li>
-                    </ul>
-                    <button class="w-full py-3 px-5 rounded-full bg-gradient-to-r from-green-400 to-green-500 text-white font-semibold shadow-lg hover:from-green-500 hover:to-green-600 transition-all transform hover:scale-105">Get Started</button>
-                    <button class="w-full py-2 mt-3 text-green-500 font-medium hover:text-green-600 hover:underline transition-colors">Learn more</button>
-                </div>
-
-                <div class="bg-white rounded-lg p-6 shadow-lg custom-border plan hover:shadow-xl transition-shadow duration-300 relative">
-                    <div class="absolute top-0 right-0 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg">POPULAR</div>
-                    <h2 class="text-2xl font-bold mb-3 text-gray-800">Premium</h2>
-                    <p class="text-gray-500 mb-5">Perfect for big companies and larger teams.</p>
-                    <div class="text-4xl font-extrabold text-green-500 mb-2">₱</div>
-                    <p class="text-sm text-gray-400 mb-6">Billed Annually</p>
-                    <h3 class="font-semibold text-lg mb-3 text-gray-700">What's Included?</h3>
-                    <ul class="list-none space-y-3 mb-6">
-                        <li class="flex items-center">
-                            <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span class="text-gray-600">2 Legal Policy</span>
-                        </li>
-                        <li class="flex items-center">
-                            <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span class="text-gray-600">10 Policy Edits</span>
-                        </li>
-                        <li class="flex items-center">
-                            <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span class="text-gray-600">Privacy Regulation Monitoring</span>
-                        </li>
-                        <li class="flex items-center">
-                            <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span class="text-gray-600">Premium Support</span>
-                        </li>
-                    </ul>
-                    <button class="w-full py-3 px-5 rounded-full bg-gradient-to-r from-green-400 to-green-500 text-white font-semibold shadow-lg hover:from-green-500 hover:to-green-600 transition-all transform hover:scale-105">Get Started</button>
-                    <button class="w-full py-2 mt-3 text-green-500 font-medium hover:text-green-600 hover:underline transition-colors">Learn more</button>
-                </div>
-
-                <div class="bg-white rounded-lg p-6 shadow-lg custom-border plan hover:shadow-xl transition-shadow duration-300 relative">
-                    <div class="absolute top-0 right-0 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg">POPULAR</div>
-                    <h2 class="text-2xl font-bold mb-3 text-gray-800">Deluxe</h2>
-                    <p class="text-gray-500 mb-5">Perfect for small companies and small teams.</p>
-                    <div class="text-4xl font-extrabold text-green-500 mb-2">₱</div>
-                    <p class="text-sm text-gray-400 mb-6">Billed Annually</p>
-                    <h3 class="font-semibold text-lg mb-3 text-gray-700">What's Included?</h3>
-                    <ul class="list-none space-y-3 mb-6">
-                        <li class="flex items-center">
-                            <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span class="text-gray-600">2 Legal Policy</span>
-                        </li>
-                        <li class="flex items-center">
-                            <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span class="text-gray-600">10 Policy Edits</span>
-                        </li>
-                        <li class="flex items-center">
-                            <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span class="text-gray-600">Privacy Regulation Monitoring</span>
-                        </li>
-                        <li class="flex items-center">
-                            <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span class="text-gray-600">Premium Support</span>
-                        </li>
-                    </ul>
-                    <button class="w-full py-3 px-5 rounded-full bg-gradient-to-r from-green-400 to-green-500 text-white font-semibold shadow-lg hover:from-green-500 hover:to-green-600 transition-all transform hover:scale-105">Get Started</button>
-                    <button class="w-full py-2 mt-3 text-green-500 font-medium hover:text-green-600 hover:underline transition-colors">Learn more</button>
+                <h1 class="mt-4 text-4xl font-bold text-gray-800">Distributor Subscription Plans</h1>
+                <p class="max-w-xl mt-2 text-gray-500">
+                    Congratulations! You have <span class="font-bold text-green-600">1 month free access</span> as a new distributor.<br>
+                    To continue using all features after your trial, please choose a subscription plan below.
+                </p>
+                <div class="mt-4">
+                    <a href="{{ route('distributors.dashboard') }}" class="px-6 py-3 font-semibold text-green-600 transition-all transform bg-white border-2 border-green-500 rounded-full shadow-md hover:bg-green-50 hover:scale-105">
+                        Skip and Start Using Your Free Month
+                    </a>
                 </div>
             </div>
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <!-- 3 Months -->
+                <div class="flex flex-col items-center p-6 bg-white border-2 border-green-100 rounded-lg shadow-lg">
+                    <h2 class="mb-2 text-2xl font-bold text-gray-800">3 Months</h2>
+                    <div class="mb-2 text-5xl font-extrabold text-green-500">₱399</div>
+                    <p class="mb-4 text-gray-500">Full access for 3 months</p>
+                    <button onclick="payWithPaymongo(399, '3_months')" class="w-full px-5 py-3 font-semibold text-white transition-all transform rounded-full shadow-lg bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 hover:scale-105">
+                        Subscribe
+                    </button>
+                </div>
+                <!-- 6 Months -->
+                <div class="flex flex-col items-center p-6 bg-white border-2 border-green-400 rounded-lg shadow-lg">
+                    <h2 class="mb-2 text-2xl font-bold text-gray-800">6 Months</h2>
+                    <div class="mb-2 text-5xl font-extrabold text-green-500">₱649</div>
+                    <p class="mb-4 text-gray-500">Full access for 6 months</p>
+                    <button onclick="payWithPaymongo(649, '6_months')" class="w-full px-5 py-3 font-semibold text-white transition-all transform rounded-full shadow-lg bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 hover:scale-105">
+                        Subscribe
+                    </button>
+                </div>
+                <!-- 1 Year -->
+                <div class="flex flex-col items-center p-6 bg-white border-2 border-green-600 rounded-lg shadow-lg">
+                    <h2 class="mb-2 text-2xl font-bold text-gray-800">1 Year</h2>
+                    <div class="mb-2 text-5xl font-extrabold text-green-500">₱999</div>
+                    <p class="mb-4 text-gray-500">Full access for 12 months</p>
+                    <button onclick="payWithPaymongo(999, '1_year')" class="w-full px-5 py-3 font-semibold text-white transition-all transform rounded-full shadow-lg bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 hover:scale-105">
+                        Subscribe
+                    </button>
+                </div>
+            </div>
+            <div id="paymongo-redirect" class="hidden mt-8 text-lg font-semibold text-center text-blue-600"></div>
         </div>
     </div>
-    <!-- Include Footer -->
-    @include('components.footer')
+
+    <script>
+        function payWithPaymongo(amount, plan) {
+            // Display loading message
+            document.getElementById('paymongo-redirect').textContent = "Processing your request...";
+            document.getElementById('paymongo-redirect').classList.remove('hidden');
+            
+            fetch("{{ route('distributors.subscription.paymongo') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    amount: amount,
+                    plan: plan
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.checkout_url) {
+                    document.getElementById('paymongo-redirect').textContent = "Redirecting to payment gateway...";
+                    window.location.href = data.checkout_url;
+                } else {
+                    document.getElementById('paymongo-redirect').textContent = "Error: " + (data.message || "Could not process payment");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('paymongo-redirect').textContent = "Error: Could not connect to payment service";
+            });
+        }
+    </script>
 </body>
 </html>

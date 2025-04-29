@@ -32,6 +32,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'status',
         'profile_completed',
         'rejection_reason',
+        'has_seen_subscription_page',
     ];
 
     protected $casts = [

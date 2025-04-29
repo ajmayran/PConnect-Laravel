@@ -3,41 +3,76 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 
 class VerifyEmailController extends Controller
 {
     /**
-     * Mark the authenticated user's email address as verified.
+     * Mark the user's email address as verified.
      */
-    public function __invoke(EmailVerificationRequest $request): RedirectResponse
+    public function __invoke(Request $request)
     {
-        // First, check if the email is already verified
-        if ($request->user()->hasVerifiedEmail()) {
-            if ($request->user()->user_type === 'distributor') {
-                return redirect()->route('auth.approval-waiting');
+        // Get user from request parameters instead of relying on session
+        $user = User::find($request->route('id'));
+
+        if (!$user) {
+            return redirect('/login')->with('error', 'User not found.');
+        }
+
+        // Check if the email hash matches
+        if (!hash_equals(sha1($user->email), $request->route('hash'))) {
+            return redirect('/login')->with('error', 'Invalid verification link.');
+        }
+
+        // Check if already verified
+        if ($user->hasVerifiedEmail()) {
+            // Log in the user if not already authenticated
+            if (!Auth::check()) {
+                Auth::login($user);
             }
-            
-            // For retailers with already verified email, redirect to retailer dashboard
-            return redirect()->route('retailers.dashboard');
+
+            return $this->redirectBasedOnUserType($user)
+                ->with('info', 'Email already verified. Welcome back!');
         }
 
-        // Mark email as verified and fire the event
-        if ($request->user()->markEmailAsVerified()) {
-            event(new Verified($request->user()));
+        // Mark email as verified
+        if ($user->markEmailAsVerified()) {
+            event(new Verified($user));
         }
 
-        // Handle user type specific redirections
-        if ($request->user()->user_type === 'distributor') {
-            return redirect()->route('auth.approval-waiting')
-                ->with('message', 'Email verified! Please wait for admin approval.');
+        // Log in the user after verification
+        Auth::login($user);
+
+        // Regenerate session to ensure security
+        Session::regenerate();
+
+        return $this->redirectBasedOnUserType($user)
+            ->with('verified', true)
+            ->with('success', 'Email verified successfully!');
+    }
+
+    /**
+     * Redirect based on user type.
+     */
+    protected function redirectBasedOnUserType(User $user): RedirectResponse
+    {
+        // If distributor, check approval status
+        if ($user->user_type === 'distributor') {
+            if ($user->status === 'approved') {
+                return $user->profile_completed 
+                    ? redirect()->route('distributors.dashboard')
+                    : redirect()->route('distributors.setup');
+            }
+            return redirect()->route('auth.approval-waiting');
         }
-        
-        // For retailers, redirect directly to retailer dashboard instead of HOME
-        return redirect()->route('retailers.dashboard')
-            ->with('verified', true);
+
+        // For retailers
+        return redirect()->route('retailers.dashboard');
     }
 }

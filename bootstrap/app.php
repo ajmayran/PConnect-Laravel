@@ -10,6 +10,7 @@ use App\Http\Middleware\CheckRetailerCredentials;
 use App\Http\Middleware\EnsureProfileIsCompleted;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use App\Http\Middleware\CheckSubscription;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'checkRole'  => CheckRole::class,
             'check.distributor.block' => CheckDistributorBlock::class,
             'check.retailer.credentials' => CheckRetailerCredentials::class,
+            'check.subscription' => CheckSubscription::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

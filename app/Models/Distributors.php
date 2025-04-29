@@ -108,4 +108,19 @@ class Distributors extends Model
 
         return date('h:i A', strtotime($this->cut_off_time));
     }
+
+    public function subscriptions()
+    {
+        // Change from 'distributors_id' (what Laravel assumes) to 'distributor_id' (your actual column name)
+        return $this->hasMany(DistributorSubscription::class, 'distributor_id');
+    }
+
+public function getActiveSubscriptionAttribute()
+{
+    return $this->subscriptions()
+        ->where('status', 'active')
+        ->where('expires_at', '>', now())
+        ->orderBy('expires_at', 'desc')
+        ->first();
+}
 }

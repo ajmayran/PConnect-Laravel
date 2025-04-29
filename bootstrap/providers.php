@@ -7,4 +7,5 @@ return [
     App\Providers\MailServiceProvider::class,
     App\Providers\NotificationServiceProvider::class,
     Barryvdh\DomPDF\ServiceProvider::class,
+
 ];

@@ -94,8 +94,21 @@ class DistributorProfileController extends Controller
         }
 
         DB::table('users')
-            ->where('id', Auth::id())
-            ->update(['profile_completed' => true]);
+        ->where('id', Auth::id())
+        ->update(['profile_completed' => true]);
+    
+    // Refresh user model to get updated values from database
+    $user = User::find($user->id);
+
+    // When the profile is completed, redirect to subscription page if they haven't seen it yet
+    if (!$user->has_seen_subscription_page) {
+        // Mark the user as having seen the subscription page
+        $user->has_seen_subscription_page = true;
+        $user->save();
+
+        return redirect()->route('distributors.subscription')
+            ->with('success', 'Your profile has been completed! Now choose a subscription plan.');
+    }
 
         return redirect()->route('distributors.dashboard')->with('success', 'Welcome to PConnect, Distributor!');
     }

@@ -51,5 +51,6 @@ class Kernel extends HttpKernel
         'profile.completed' => \App\Http\Middleware\EnsureProfileIsCompleted::class,
         'check.distributor.block' => \App\Http\Middleware\CheckDistributorBlock::class,
         'check.retailer.credentials' => \App\Http\Middleware\CheckRetailerCredentials::class,
+        'checkSubscription' => \App\Http\Middleware\CheckSubscription::class,     
     ];
 }

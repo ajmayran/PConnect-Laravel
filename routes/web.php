@@ -67,17 +67,18 @@ use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Distributors\DistributorRefundController;
 use App\Http\Controllers\Distributors\ExchangeController;
 
+Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
+    ->middleware(['throttle:6,1'])
+    ->name('verification.verify');
+
 Route::middleware('auth')->group(function () {
-    // Email verification routes - these are already in your file
+    // Keep these routes inside auth middleware
     Route::get('verify-email', EmailVerificationPromptController::class)->name('verification.notice');
-
-    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
-
-    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])->middleware('throttle:6,1')->name('verification.send');
-
-    // Also add the approval-waiting route for authenticated users
+    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
+    
     Route::get('approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])->name('auth.approval-waiting');
-
     Route::get('application-rejected', [RegisteredUserController::class, 'applicationRejected'])->name('auth.application-rejected');
 });
 
@@ -151,6 +152,13 @@ Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function (
     Route::post('admin/retailers/{id}/approve-credentials', [AdminRetailerController::class, 'approveCredentials'])->name('retailers.approve-credentials');
     Route::post('admin/retailers/{id}/reject-credentials', [AdminRetailerController::class, 'rejectCredentials'])->name('retailers.reject-credentials');
     Route::post('admin/retailers/{id}/reject-credentials', [AdminRetailerController::class, 'rejectCredential'])->name('retailers.reject-credentials');
+
+    // Subcription Routes
+    Route::get('/admin/subscriptions', [App\Http\Controllers\Admin\SubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::get('/admin/subscriptions/{id}', [App\Http\Controllers\Admin\SubscriptionController::class, 'show'])->name('subscriptions.show');
+    Route::post('/admin/subscriptions/{id}/extend', [App\Http\Controllers\Admin\SubscriptionController::class, 'extend'])->name('subscriptions.extend');
+    Route::post('/admin/subscriptions/{id}/cancel', [App\Http\Controllers\Admin\SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
+
 });
 
 
@@ -254,7 +262,7 @@ Route::middleware(['auth', 'verified', 'checkRole:retailer', 'check.distributor.
 
 
 // Distributor Routes
-Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'profile.completed'])->group(function () {
+Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'profile.completed', 'check.subscription'])->group(function () {
     Route::get('/distributors/setup', [DistributorProfileController::class, 'setup'])->name('distributors.setup');
     Route::post('/profile/setup', [DistributorProfileController::class, 'updateSetup'])->name('profile.updateSetup');
     Route::get('/profile', [DistributorProfileController::class, 'edit'])->name('distributors.profile.edit');
@@ -409,7 +417,17 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     // Ticket Routes
     Route::get('/tickets/create', [DistributorTicketController::class, 'create'])->name('distributors.tickets.create');
     Route::post('/tickets', [DistributorTicketController::class, 'store'])->name('distributors.tickets.store');
+
+    // Subscription Routes
+    Route::get('/subscription', [App\Http\Controllers\Distributors\SubscriptionController::class, 'index'])->name('distributors.subscription');
+    Route::get('/subscription/show', [App\Http\Controllers\Distributors\SubscriptionController::class, 'show'])->name('distributors.subscription.show');
+    Route::post('/subscription/paymongo', [App\Http\Controllers\Distributors\SubscriptionController::class, 'createPaymongoCheckout'])->name('distributors.subscription.paymongo');
+    Route::get('/subscription/success/{reference}', [App\Http\Controllers\Distributors\SubscriptionController::class, 'handleSuccess'])->name('distributors.subscription.success');
+    Route::get('/subscription/cancel/{reference}', [App\Http\Controllers\Distributors\SubscriptionController::class, 'handleCancel'])->name('distributors.subscription.cancel');
 });
+
+
+Route::post('/webhooks/paymongo', [App\Http\Controllers\WebhookController::class, 'handlePaymongoWebhook'])->name('webhooks.paymongo');
 
 // Social Authentication Routes
 
@@ -428,8 +446,3 @@ Route::get('barangays/{cityCode}', [AddressController::class, 'getBarangays']);
 Route::get('/api/debug/zamboanga', [AddressController::class, 'debugZamboangaData']);
 require __DIR__ . '/auth.php';
 
-
-//Distributor Subscription Route
-Route::get('/subscription', function () {
-    return view('distributors.subscription');
-});

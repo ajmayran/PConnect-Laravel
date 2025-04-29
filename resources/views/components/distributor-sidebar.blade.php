@@ -137,6 +137,21 @@
         </div>
     </a>
 
+    <a href="{{ route('distributors.subscription.show') }}"
+        class="flex items-center px-4 py-1 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer {{ request()->routeIs('distributors.subscription.*') ? 'bg-green-600' : 'hover:bg-green-600' }}">
+        <div class="flex items-center">
+            <iconify-icon icon="mdi:crown" class="text-xl icon"></iconify-icon>
+            <span class="ml-4 font-normal text-gray-200">Subscription</span>
+            @if (Auth::user()->distributor->activeSubscription)
+                <span class="ml-2 px-1.5 py-0.5 text-xs font-medium bg-green-600 text-white rounded-full">
+                    {{ ucfirst(str_replace('_', ' ', Auth::user()->distributor->activeSubscription->plan ?? 'Free')) }}
+                </span>
+            @else
+                <span class="ml-2 px-1.5 py-0.5 text-xs font-medium bg-yellow-500 text-white rounded-full">Free</span>
+            @endif
+        </div>
+    </a>
+
     <div
         class="flex items-center px-4 py-2 mt-2 ml-2 text-white duration-300 rounded-md cursor-pointer hover:bg-green-600">
 
