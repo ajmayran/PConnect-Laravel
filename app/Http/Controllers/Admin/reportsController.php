@@ -9,33 +9,33 @@ use App\Models\Order; // Import the Order model
 class reportsController extends Controller
 {
     public function reports(Request $request)
-{
-    $timeRange = $request->input('time_range', '1_month'); // Default to 1 month
+    {
+        $timeRange = $request->input('time_range', '1_month'); // Default to 1 month
 
-    // Determine the start date based on the selected time range
-    $startDate = match ($timeRange) {
-        '24_hours' => now()->subDay(),
-        '1_week' => now()->subWeek(),
-        '1_month' => now()->subMonth(),
-        '1_year' => now()->subYear(),
-        default => now()->subMonth(),
-    };
+        // Determine the start date based on the selected time range
+        $startDate = match ($timeRange) {
+            '24_hours' => now()->subDay(),
+            '1_week' => now()->subWeek(),
+            '1_month' => now()->subMonth(),
+            '1_year' => now()->subYear(),
+            default => now()->subMonth(),
+        };
 
-    // Fetch aggregated data
-    $reports = Order::selectRaw('
-        orders.distributor_id,
-        COUNT(orders.id) as total_orders,
-        SUM(order_details.quantity) as total_products_sold,
-        SUM(order_details.subtotal) as total_revenue
-    ')
-    ->join('order_details', 'orders.id', '=', 'order_details.order_id')
-    ->where('orders.created_at', '>=', $startDate)
-    ->groupBy('orders.distributor_id')
-    ->with(['distributor']) // Eager-load distributor relationship
-    ->get();
+        // Fetch paginated data
+        $reports = Order::selectRaw('
+            orders.distributor_id,
+            COUNT(orders.id) as total_orders,
+            SUM(order_details.quantity) as total_products_sold,
+            SUM(order_details.subtotal) as total_revenue
+        ')
+        ->join('order_details', 'orders.id', '=', 'order_details.order_id')
+        ->where('orders.created_at', '>=', $startDate)
+        ->groupBy('orders.distributor_id')
+        ->with(['distributor']) // Eager-load distributor relationship
+        ->paginate(10); // Paginate with 10 items per page
 
-    return view('admin.reports.index', compact('reports', 'timeRange'));
-}
+        return view('admin.reports.index', compact('reports', 'timeRange'));
+    }
 
     public function show($id)
     {

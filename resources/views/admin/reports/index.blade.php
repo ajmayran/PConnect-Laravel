@@ -49,6 +49,18 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Pagination Links -->
+                    <div class="mt-4">
+                        {{ $reports->links() }}
+                    </div>
+
+                    <!-- No reports message -->
+                    @if ($reports->isEmpty())
+                        <div class="mt-4 text-center">
+                            <p class="text-gray-500">No reports available for the selected time range.</p>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
