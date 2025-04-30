@@ -230,6 +230,7 @@ Route::middleware(['auth', 'verified', 'checkRole:retailer', 'check.distributor.
     Route::get('/check-return-request-status/{orderId}', [ReturnRequestController::class, 'checkReturnRequestStatus'])->name('check-return-request-status');
     Route::get('/orders/refund-track', [RetailerOrdersController::class, 'trackRefund'])->name('orders.refund-track');
     Route::get('/orders/purchase-history', [RetailerOrdersController::class, 'purchaseHistory'])->name('orders.purchase-history');
+    Route::get('/orders/returned-history', [RetailerOrdersController::class, 'returnedHistory'])->name('.orders.returned-history');
 
     Route::get('/orders/{order}', [RetailerOrdersController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/cancel', [RetailerOrdersController::class, 'cancelOrder'])->name('orders.cancel');

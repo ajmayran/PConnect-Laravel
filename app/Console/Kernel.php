@@ -23,6 +23,8 @@ class Kernel extends ConsoleKernel
         
         // Database maintenance tasks (weekly on Sunday at 1 AM)
         $schedule->command('db:backup')->weekly()->sundays()->at('1:00');
+
+        $schedule->command('batches:check-expiring')->dailyAt('8:00');
     }
 
     /**
@@ -34,4 +36,6 @@ class Kernel extends ConsoleKernel
 
         require base_path('routes/console.php');
     }
+
+    
 }

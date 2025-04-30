@@ -97,14 +97,15 @@
                                 <label for="phone" class="block text-sm font-medium text-gray-700">
                                     Phone
                                 </label>
-                                <input id="phone" name="phone" type="text" required autofocus pattern="[0-9]+"
-                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')" autocomplete="phone"
+                                <input id="phone" name="phone" type="text" required autofocus pattern="[0-9]{11}"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, ''); validatePhoneNumber(this);" 
+                                    autocomplete="phone"
                                     value="{{ old('phone', $user->retailerProfile->phone ?? '') }}"
                                     class="block w-full mt-1 border-gray-300 rounded-md shadow-sm dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600">
                                 @error('phone')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
-                                <p class="mt-1 text-xs text-gray-500">Please enter 11 digit numbers</p>
+                                <p id="phone_error" class="hidden mt-1 text-sm text-red-600">Phone number must be exactly 11 digits</p>
                             </div>
 
                             <div class="mb-4">
@@ -334,6 +335,26 @@
                     });
             }
         });
+
+        function validatePhoneNumber(input) {
+    const phoneError = document.getElementById('phone_error');
+    if (input.value.length > 0 && input.value.length !== 11) {
+        phoneError.classList.remove('hidden');
+    } else {
+        phoneError.classList.add('hidden');
+    }
+}
+
+// Add this to your DOMContentLoaded event
+const phoneInput = document.getElementById('phone');
+if (phoneInput) {
+    phoneInput.addEventListener('input', function() {
+        validatePhoneNumber(this);
+    });
+    
+    // Also validate on page load
+    validatePhoneNumber(phoneInput);
+}
     </script>
 </x-app-layout>
 <x-footer />

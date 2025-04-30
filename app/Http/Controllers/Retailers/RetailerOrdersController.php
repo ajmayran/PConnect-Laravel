@@ -557,7 +557,7 @@ class RetailerOrdersController extends Controller
             ]);
 
             $user = Auth::user();
-            
+
 
             if ($request->input('delivery_option') === 'default') {
                 if (!$user->retailerProfile || !$user->retailerProfile->barangay_name) {
@@ -887,6 +887,7 @@ class RetailerOrdersController extends Controller
         return view('retailers.profile.order-details', compact('order'));
     }
 
+    // Modify your existing showOrderDetails method to include return info
     public function showOrderDetails($orderId)
     {
         try {
@@ -909,10 +910,31 @@ class RetailerOrdersController extends Controller
 
             $html = view('retailers.profile.order-details', compact('order'))->render();
 
+            // Check for return info if the order is returned or refunded
+            $returnInfo = null;
+            if (in_array($order->status, ['returned', 'refunded'])) {
+                $returnRequest = $order->returnRequests()->latest()->first();
+                $refund = $order->refunds()->latest()->first();
+
+                if ($returnRequest) {
+                    $returnInfo = [
+                        'status' => $order->status,
+                        'date' => $order->status_updated_at ? $order->status_updated_at->format('M d, Y') : $order->updated_at->format('M d, Y'),
+                        'reason' => $returnRequest->reason,
+                        'solution' => $returnRequest->preferred_solution
+                    ];
+
+                    if ($refund) {
+                        $returnInfo['amount'] = number_format($refund->amount, 2);
+                    }
+                }
+            }
+
             return response()->json([
                 'html' => $html,
                 'order_id' => $order->formatted_order_id,
-                'distributor_id' => $order->distributor_id
+                'distributor_id' => $order->distributor_id,
+                'return_info' => $returnInfo
             ]);
         } catch (\Exception $e) {
             Log::error('Error loading order details: ' . $e->getMessage(), [
@@ -927,6 +949,8 @@ class RetailerOrdersController extends Controller
             ], 500);
         }
     }
+
+
     public function trackOrder(Request $request)
     {
         $trackingNumber = $request->tracking_number;
@@ -1031,5 +1055,37 @@ class RetailerOrdersController extends Controller
         ]);
 
         return view('retailers.orders.show', compact('order'));
+    }
+
+    public function returnedHistory(Request $request)
+    {
+        $user = Auth::user();
+        $filter = $request->get('filter', 'all');
+        $search = $request->get('search');
+
+        $query = Order::where('user_id', $user->id)
+            ->whereIn('status', ['returned', 'refunded'])
+            ->with(['distributor', 'returnRequests', 'refunds']);
+
+        // Apply search filter
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('formatted_order_id', 'like', "%{$search}%")
+                    ->orWhereHas('distributor', function ($subquery) use ($search) {
+                        $subquery->where('company_name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Apply status filter
+        if ($filter === 'returned') {
+            $query->where('status', 'returned');
+        } elseif ($filter === 'refunded') {
+            $query->where('status', 'refunded');
+        }
+
+        $orders = $query->latest()->paginate(10);
+
+        return view('retailers.orders.returned-history', compact('orders'));
     }
 }

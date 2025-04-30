@@ -30,12 +30,5 @@
                 Cancelled | Rejected
             </a>
         </li>
-        <li class="w-full">
-            <a href="{{ route('retailers.orders.returned') }}"
-               class="inline-block w-full px-4 py-3 {{ request()->routeIs('retailers.orders.returned') ? 'text-white bg-green-600 hover:bg-green-700' : 'bg-white hover:text-gray-700 hover:bg-gray-50' }}">
-                Request Return
-            </a>
-        </li>
-
     </ul>
 </nav>

@@ -4,7 +4,7 @@
         <div class="flex justify-center mb-6">
             <img src="{{ asset('img/Pconnect Logo.png') }}" alt="PConnect Logo" class="w-auto h-16">
         </div>
-        
+
         <!-- Email Verification Message -->
         <div class="p-4 mb-6 border-l-4 border-green-500 rounded-md bg-green-50">
             <div class="flex">
@@ -75,4 +75,15 @@
             </form>
         </div>
     </div>
+
+    <!-- JavaScript for Redirect -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            @auth
+                if ({{ auth()->user()->hasVerifiedEmail() ? 'true' : 'false' }}) {
+                    window.location.href = "{{ route(auth()->user()->user_type . '.dashboard') }}";
+                }
+            @endauth
+        });
+    </script>
 </x-guest-layout>

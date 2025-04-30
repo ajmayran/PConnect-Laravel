@@ -13,11 +13,6 @@
                             class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300">
                             Orders</a>
                     </li>
-                    <li class="mr-2">
-                        <a href=""
-                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300">
-                            Notifications</a>
-                    </li>
                 </ul>
             </div>
             <div class="p-4 bg-white shadow sm:p-8 sm:rounded-lg">
@@ -86,7 +81,6 @@
                                 @enderror
                                 <p id="phone_error" class="hidden mt-1 text-sm text-red-600">Phone number must be
                                     exactly 11 digits</p>
-                                <p class="mt-1 text-xs text-gray-500">Please enter 11 digit numbers</p>
                             </div>
 
                             <div class="mb-4">

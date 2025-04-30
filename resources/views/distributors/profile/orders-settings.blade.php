@@ -13,11 +13,6 @@
                             class="inline-block p-4 text-green-600 border-b-2 border-green-500 rounded-t-lg active"
                             aria-current="page">Orders</a>
                     </li>
-                    <li class="mr-2">
-                        <a href=""
-                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300">
-                            Notifications</a>
-                    </li>
                 </ul>
             </div>
             <div class="p-4 bg-white shadow sm:p-8 sm:rounded-lg">

@@ -76,9 +76,11 @@
                         <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                             Quantity</th>
                         <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                            Supplier</th>
+                        <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                             Updated By</th>
                         <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                            Notes</th>
+                            Remarks</th>
                         <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                             Date</th>
                     </tr>
@@ -131,6 +133,11 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">{{ $movement->quantity }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">
+                                    {{ $movement->batch ? $movement->batch->supplier : 'N/A' }}
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">

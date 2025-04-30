@@ -113,48 +113,6 @@
                         @endif
                     </div>
                 </div>
-
-                <div class="p-4 mt-6 bg-white shadow sm:p-8 sm:rounded-lg">
-                    <header>
-                        <h2 class="text-lg font-medium text-gray-900">
-                            {{ __('Notification Preferences') }}
-                        </h2>
-                        <p class="mt-1 text-sm text-gray-600">
-                            {{ __("Control which types of notifications you'd like to receive.") }}
-                        </p>
-                    </header>
-
-                    <div class="mt-6 space-y-4">
-                        <!-- Notification preferences section -->
-                        <div class="flex items-center justify-between p-4 border border-gray-200 rounded-md">
-                            <div>
-                                <h3 class="text-sm font-medium text-gray-900">Order Notifications</h3>
-                                <p class="text-xs text-gray-500">Notifications about new and updated orders</p>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" checked class="sr-only peer">
-                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                            </label>
-                        </div>
-                        
-                        <div class="flex items-center justify-between p-4 border border-gray-200 rounded-md">
-                            <div>
-                                <h3 class="text-sm font-medium text-gray-900">Payment Notifications</h3>
-                                <p class="text-xs text-gray-500">Notifications about payment confirmations and issues</p>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" checked class="sr-only peer">
-                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="flex justify-end mt-6">
-                        <x-primary-button>
-                            {{ __('Save Preferences') }}
-                        </x-primary-button>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

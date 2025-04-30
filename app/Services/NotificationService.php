@@ -129,7 +129,7 @@ class NotificationService
                 'title' => 'Order Returned',
                 'message' => "Your order {$formattedOrderId} return has been processed."
             ],
-        ];  
+        ];
 
         // Define status-specific messages and titles for distributors
         $distributorMessages = [
@@ -450,5 +450,33 @@ class NotificationService
         ];
 
         return $this->create($distributorId, 'return_request', $distributorData, $order->id);
+    }
+
+    public function createExpiry($userId, $type, array $data, $relatedId = null)
+    {
+        try {
+            $notification = Notification::create([
+                'user_id' => $userId,
+                'type' => $type,
+                'data' => $data,
+                'is_read' => false,
+                'related_id' => $relatedId,
+            ]);
+
+            Log::info('Creating expiry notification', [
+                'user_id' => $userId,
+                'type' => $type,
+                'data' => $data,
+                'related_id' => $relatedId
+            ]);
+            
+            // Optionally broadcast the notification
+            event(new NewNotification($notification));
+
+            return $notification;
+        } catch (\Exception $e) {
+            Log::error('Failed to create notification: ' . $e->getMessage());
+            return null;
+        }
     }
 }

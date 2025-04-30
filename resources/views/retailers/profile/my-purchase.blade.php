@@ -21,8 +21,8 @@
                         </div>
 
                         <div class="flex gap-4">
-                            <a href="{{ route('retailers.orders.refund-track') }}"
-                                class="text-blue-600 hover:text-blue-800 hover:underline">Track Refund</a>
+                            <a href="{{ route('retailers.orders.returned') }}"
+                                class="text-blue-600 hover:text-blue-800 hover:underline">Return Order</a>
                             <a href="{{ route('retailers.orders.purchase-history') }}"
                                 class="text-blue-600 hover:text-blue-800 hover:underline">Purchase History</a>
                         </div>
