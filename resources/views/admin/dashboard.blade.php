@@ -1,3 +1,4 @@
+<!-- filepath: c:\Users\EMMAN\Documents\PConnect-Laravel\resources\views\admin\dashboard.blade.php -->
 <x-app-layout>
     <main class="w-full md:w-[calc(100%-256px)] md:ml-64 bg-gray-50 min-h-screen transition-all main">
         <!-- Mobile menu button -->
@@ -19,27 +20,24 @@
             <div class="p-6 mb-6 text-white rounded-lg shadow-md bg-gradient-to-r from-green-400 to-blue-500">
                 <h2 class="text-2xl font-bold">Welcome back, {{ Auth::user()->first_name }}!</h2>
                 <p class="mt-1 text-white/80">Here's what's happening with your platform today.</p>
+                <!-- Download Dashboard Button -->
+                <button id="downloadDashboardButton" class="px-4 py-2 mt-4 text-white bg-blue-600 rounded hover:bg-blue-700">
+                    Download Dashboard
+                </button>
             </div>
 
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 gap-6 mb-6 md:grid-cols-2 lg:grid-cols-4">
-                <!-- Active Retailers -->
-                <div class="p-6 transition-all bg-white border border-gray-100 rounded-lg shadow-md hover:shadow-lg">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <div class="mb-1 text-2xl font-bold">{{ $activeRetailersCount }}</div>
-                            <div class="text-sm font-medium text-gray-500">Active Retailers</div>
-                        </div>
-                        <div class="p-3 text-white bg-blue-500 rounded-full">
-                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                                </path>
-                            </svg>
+            <!-- Dashboard Content Wrapper -->
+            <div id="dashboardContent">
+                <div class="grid grid-cols-1 gap-6 mb-6 md:grid-cols-2 lg:grid-cols-4">
+                    <!-- Active Retailers -->
+                    <div class="p-6 transition-all bg-white border border-gray-100 rounded-lg shadow-md hover:shadow-lg">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="mb-1 text-2xl font-bold">{{ $activeRetailersCount }}</div>
+                                <div class="text-sm font-medium text-gray-500">Active Retailers</div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
                 <!-- Active Orders -->
                 <div class="p-6 transition-all bg-white border border-gray-100 rounded-lg shadow-md hover:shadow-lg">
@@ -187,6 +185,8 @@
 
     <!-- Include Chart.js from CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <!-- Include Admin Dashboard Scripts -->
     @vite(['resources/js/admin_dash.js'])
 
@@ -197,7 +197,36 @@
             const closeSidebarBtn = document.getElementById('close-sidebar');
             const sidebar = document.getElementById('admin-sidebar');
             const backdrop = document.getElementById('sidebar-backdrop');
+            function downloadDashboard() {
+            html2canvas(dashboardContent, { scale: 2 }).then(canvas => {
+                const imageData = canvas.toDataURL('image/png'); // Convert the canvas to an image
 
+                // Create a PDF
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4'); // Portrait, millimeters, A4 size
+
+                // Calculate dimensions to fit the image in the PDF
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+                // Add the image to the PDF
+                pdf.addImage(imageData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+                // Download the PDF
+                pdf.save('dashboard.pdf');
+            }).catch(error => {
+                console.error('Error generating PDF:', error);
+            });
+        }
+
+        if (downloadDashboardButton) {
+            // Remove any existing event listeners to avoid duplication
+            downloadDashboardButton.removeEventListener('click', downloadDashboard);
+
+            // Attach the event listener
+            downloadDashboardButton.addEventListener('click', downloadDashboard);
+        }
+        
             function openSidebar() {
                 sidebar.classList.remove('-translate-x-full');
                 backdrop.classList.remove('hidden');

@@ -16,7 +16,8 @@ class DistributorSubscription extends Model
         'reference_number',
         'starts_at',
         'expires_at',
-        'status'
+        'status',
+        'amount',
     ];
 
     protected $dates = [

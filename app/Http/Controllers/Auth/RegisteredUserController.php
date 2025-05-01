@@ -57,6 +57,8 @@ class RegisteredUserController extends Controller
             'credentials' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
             'credentials2' => ['required_if:user_type,distributor', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'email.unique' => 'The email is already taken. Please use a different email.', // Custom error message
         ]);
     
         $user = User::create([

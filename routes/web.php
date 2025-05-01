@@ -153,6 +153,11 @@ Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function (
     Route::post('admin/retailers/{id}/reject-credentials', [AdminRetailerController::class, 'rejectCredentials'])->name('retailers.reject-credentials');
     Route::post('admin/retailers/{id}/reject-credentials', [AdminRetailerController::class, 'rejectCredential'])->name('retailers.reject-credentials');
 
+    // Reports Routes
+    Route::get('/admin/reports', [App\Http\Controllers\Admin\reportsController::class, 'reports'])->name('reports.index');    
+    Route::get('/admin/reports/download-pdf', [App\Http\Controllers\Admin\reportsController::class, 'downloadPdf'])->name('reports.downloadPdf');
+
+
     // Subcription Routes
     Route::get('/admin/subscriptions', [App\Http\Controllers\Admin\SubscriptionController::class, 'index'])->name('subscriptions.index');
     Route::get('/admin/subscriptions/{id}', [App\Http\Controllers\Admin\SubscriptionController::class, 'show'])->name('subscriptions.show');
