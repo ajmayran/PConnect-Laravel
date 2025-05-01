@@ -1,4 +1,3 @@
-<!-- filepath: c:\xampp\htdocs\PConnect-Laravel\resources\views\retailers\profile\order-details.blade.php -->
 <div class="space-y-6">
     <!-- Header Section -->
     <div class="flex items-center justify-between pb-4 border-b">
@@ -16,10 +15,19 @@
                     Payment Status: {{ ucfirst($order->payment->payment_status) }}
                 </span>
             @endif
-            @if ($order->delivery && $order->delivery->status)
+            
+            <!-- Delivery Status Badge - only for regular orders -->
+            @if (!$order->is_multi_address && isset($order->delivery))
                 <span
-                    class="px-3 py-1 text-sm rounded-full {{ $order->delivery->status === 'delivered' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }}">
+                    class="px-3 py-1 text-sm rounded-full {{ in_array($order->delivery->status, ['delivered', 'completed']) ? 'bg-green-100 text-green-800' : ($order->delivery->status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800') }}">
                     Delivery Status: {{ ucfirst(str_replace('_', ' ', $order->delivery->status)) }}
+                </span>
+            @endif
+
+            <!-- Multi-address badge -->
+            @if ($order->is_multi_address)
+                <span class="px-3 py-1 text-sm font-medium text-white bg-purple-600 rounded-full">
+                    Multiple Delivery Addresses
                 </span>
             @endif
         </div>
@@ -107,7 +115,188 @@
     </div>
 
     <!-- Delivery Information -->
-    @if ($order->orderDetails->first()->delivery_address)
+    @if ($order->is_multi_address)
+        <div class="p-6 border border-gray-200 rounded-lg">
+            <h4 class="mb-4 text-base font-medium text-gray-900">Delivery Information</h4>
+
+            <!-- Show badge for multi-address -->
+            <div class="px-4 py-3 mb-4 border border-purple-200 rounded-lg bg-purple-50">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span class="font-medium text-purple-800">Multiple Delivery Addresses</span>
+                </div>
+                <p class="mt-1 text-sm text-purple-700 ml-7">
+                    This order is being delivered to multiple addresses as specified below.
+                </p>
+            </div>
+
+            <!-- Multi-address details -->
+            <div class="mt-4 space-y-4">
+                @php
+                    // First try to get deliveries if they exist (for accepted orders)
+                    $deliveries = \App\Models\Delivery::where('order_id', $order->id)->get();
+
+                    // If no deliveries yet (for pending orders), get item deliveries directly
+                    $showItemDeliveries = $deliveries->isEmpty() && $order->status == 'pending';
+                    if ($showItemDeliveries) {
+                        $orderItemDeliveries = \App\Models\OrderItemDelivery::whereHas('orderDetail', function (
+                            $query,
+                        ) use ($order) {
+                            $query->where('order_id', $order->id);
+                        })
+                            ->with(['address', 'orderDetail.product'])
+                            ->get();
+
+                        // Group by address
+                        $groupedItemDeliveries = $orderItemDeliveries->groupBy('address_id');
+                    }
+                @endphp
+
+                @if ($deliveries->isNotEmpty())
+                    @foreach ($deliveries as $index => $delivery)
+                        <div
+                            class="p-4 border border-gray-200 rounded-lg {{ $index % 2 == 0 ? 'bg-gray-50' : 'bg-white' }}">
+                            <h5 class="mb-2 font-medium text-gray-900">Delivery Location {{ $index + 1 }}</h5>
+
+                            <!-- Delivery address -->
+                            <div class="flex items-start mb-3">
+                                <svg class="flex-shrink-0 w-5 h-5 mt-1 text-gray-400" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <p class="ml-3 text-sm text-gray-600">
+                                    @if ($delivery->address)
+                                        {{ $delivery->address->barangay_name }},
+                                        {{ $delivery->address->street ?? 'No street specified' }}
+                                    @else
+                                        Address information not available
+                                    @endif
+                                </p>
+                            </div>
+
+                            <!-- Delivery status -->
+                            <div class="flex items-start mb-3">
+                                <svg class="flex-shrink-0 w-5 h-5 mt-1 text-gray-400" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <div class="ml-3">
+                                    <p class="text-sm text-gray-600">Status:
+                                        <span
+                                            class="font-medium {{ $delivery->status === 'delivered' ? 'text-green-600' : 'text-blue-600' }}">
+                                            {{ ucfirst(str_replace('_', ' ', $delivery->status)) }}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Items for this delivery -->
+                            <div class="mt-3">
+                                <p class="mb-2 text-sm font-medium text-gray-700">Items in this delivery:</p>
+                                <ul class="pl-5 mt-1 space-y-1 text-sm list-disc">
+                                    @php
+                                        $itemDeliveries = \App\Models\OrderItemDelivery::where(
+                                            'delivery_id',
+                                            $delivery->id,
+                                        )->get();
+                                    @endphp
+
+                                    @foreach ($itemDeliveries as $itemDelivery)
+                                        <li class="text-gray-600">
+                                            @if ($itemDelivery->orderDetail && $itemDelivery->orderDetail->product)
+                                                {{ $itemDelivery->orderDetail->product->product_name }}
+                                                <span class="text-gray-500">(Qty: {{ $itemDelivery->quantity }})</span>
+                                            @else
+                                                Product information not available
+                                            @endif
+                                        </li>
+                                    @endforeach
+
+                                    @if ($itemDeliveries->isEmpty())
+                                        <li class="text-gray-500">No items found for this delivery</li>
+                                    @endif
+                                </ul>
+                            </div>
+                        </div>
+                    @endforeach
+                @elseif ($showItemDeliveries && $groupedItemDeliveries->count() > 0)
+                    @foreach ($groupedItemDeliveries as $addressId => $items)
+                        @php
+                            $address = $items->first()->address;
+                            $index = $loop->index;
+                        @endphp
+                        <div
+                            class="p-4 border border-gray-200 rounded-lg {{ $index % 2 == 0 ? 'bg-gray-50' : 'bg-white' }}">
+                            <h5 class="mb-2 font-medium text-gray-900">Delivery Location {{ $index + 1 }}</h5>
+
+                            <!-- Delivery address -->
+                            <div class="flex items-start mb-3">
+                                <svg class="flex-shrink-0 w-5 h-5 mt-1 text-gray-400" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <p class="ml-3 text-sm text-gray-600">
+                                    @if ($address)
+                                        {{ $address->barangay_name }}, {{ $address->street ?? 'No street specified' }}
+                                    @else
+                                        Address information not available
+                                    @endif
+                                </p>
+                            </div>
+
+                            <!-- Pending status for all items -->
+                            <div class="flex items-start mb-3">
+                                <svg class="flex-shrink-0 w-5 h-5 mt-1 text-gray-400" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <div class="ml-3">
+                                    <p class="text-sm text-gray-600">Status:
+                                        <span class="font-medium text-blue-600">
+                                            Pending
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Items for this address -->
+                            <div class="mt-3">
+                                <p class="mb-2 text-sm font-medium text-gray-700">Items for this location:</p>
+                                <ul class="pl-5 mt-1 space-y-1 text-sm list-disc">
+                                    @foreach ($items as $item)
+                                        <li class="text-gray-600">
+                                            @if ($item->orderDetail && $item->orderDetail->product)
+                                                {{ $item->orderDetail->product->product_name }}
+                                                <span class="text-gray-500">(Qty: {{ $item->quantity }})</span>
+                                            @else
+                                                Product information not available
+                                            @endif
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    @endforeach
+                @else
+                    <p class="text-sm text-gray-500">No delivery information available yet.</p>
+                @endif
+            </div>
+        </div>
+    @elseif ($order->orderDetails->first()->delivery_address)
         <div class="p-6 border border-gray-200 rounded-lg">
             <h4 class="mb-4 text-base font-medium text-gray-900">Delivery Information</h4>
             <div class="space-y-2">
@@ -121,6 +310,25 @@
                     </svg>
                     <p class="ml-3 text-sm text-gray-600">{{ $order->orderDetails->first()->delivery_address }}</p>
                 </div>
+
+                @if ($order->delivery)
+                    <div class="flex items-start mt-3">
+                        <svg class="flex-shrink-0 w-5 h-5 mt-1 text-gray-400" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div class="ml-3">
+                            <p class="text-sm text-gray-600">Status:
+                                <span
+                                    class="font-medium {{ $order->delivery->status === 'delivered' ? 'text-green-600' : 'text-blue-600' }}">
+                                    {{ ucfirst(str_replace('_', ' ', $order->delivery->status)) }}
+                                </span>
+                            </p>
+
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     @endif

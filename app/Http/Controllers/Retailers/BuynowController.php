@@ -168,7 +168,7 @@ class BuynowController extends Controller
     
         Log::info('Direct purchase data found in placeOrder: ', $directPurchase);
     
-        // Validate the checkout form - now includes is_multi_address and multi_address fields
+        // Validate the checkout form
         $validated = $request->validate([
             'delivery_option' => 'required_if:is_multi_address,0|in:default,saved',
             'selected_address_id' => 'required_if:delivery_option,saved|exists:addresses,id',
@@ -180,38 +180,45 @@ class BuynowController extends Controller
     
         $user = Auth::user();
         $product = Product::findOrFail($directPurchase['product_id']);
-    
-        // Check stock again to ensure it's still available
-        if ($product->stock_quantity < $directPurchase['quantity']) {
-            return redirect()->back()->with('error', 'Product is out of stock or insufficient quantity available.');
-        }
-    
+     
         // Determine if we're using multiple addresses
         $isMultiAddress = $request->has('is_multi_address') && $request->input('is_multi_address') == 1;
         
         // Get default address ID for regular orders or for reference
-        $defaultAddressId = null;
+        $addressId = null;
+        $deliveryAddress = null;
         
-        if ($request->input('delivery_option') === 'default') {
-            if (!$user->retailerProfile) {
-                return redirect()->back()->with('error', 'Please complete your profile with a default address.');
+        if (!$isMultiAddress) {
+            if ($request->input('delivery_option') === 'default') {
+                if (!$user->retailerProfile) {
+                    return redirect()->back()->with('error', 'Please complete your profile with a default address.');
+                }
+                
+                $defaultAddress = $user->retailerProfile->defaultAddress;
+                if (!$defaultAddress) {
+                    return redirect()->back()->with('error', 'No default address found. Please add an address in your profile.');
+                }
+                
+                $addressId = $defaultAddress->id;
+                $deliveryAddress = $defaultAddress->barangay_name . 
+                ($defaultAddress->street ? ', ' . $defaultAddress->street : '');
+            } 
+            elseif ($request->input('delivery_option') === 'saved') {
+                $addressId = $request->input('selected_address_id');
+                
+                // Get the address object and format the delivery address string
+                $savedAddress = \App\Models\Address::find($addressId);
+                if ($savedAddress) {
+                    $deliveryAddress = $savedAddress->barangay_name . 
+                        ($savedAddress->street ? ', ' . $savedAddress->street : '');
+                }
             }
-            
-            $defaultAddress = $user->retailerProfile->defaultAddress;
-            if (!$defaultAddress) {
-                return redirect()->back()->with('error', 'No default address found. Please add an address in your profile.');
-            }
-            
-            $defaultAddressId = $defaultAddress->id;
-        } 
-        elseif ($request->input('delivery_option') === 'saved') {
-            $defaultAddressId = $request->input('selected_address_id');
         }
     
         DB::beginTransaction();
     
         try {
-            // Create the order - use the final subtotal which includes any discounts
+            // Create the order with proper address handling based on type
             $order = Order::create([
                 'user_id' => $user->id,
                 'distributor_id' => $directPurchase['distributor_id'],
@@ -219,7 +226,6 @@ class BuynowController extends Controller
                 'status' => 'pending',
                 'status_updated_at' => now(),
                 'is_multi_address' => $isMultiAddress,
-                'address_id' => $isMultiAddress ? null : $defaultAddressId, // Store address_id for non-multiple address orders
             ]);
     
             // Include free items in the quantity
@@ -234,10 +240,11 @@ class BuynowController extends Controller
                 'subtotal' => $directPurchase['final_subtotal'] ?? $directPurchase['subtotal'],
                 'discount_amount' => $directPurchase['discount_amount'] ?? 0,
                 'free_items' => $directPurchase['free_items'] ?? 0,
-                'applied_discount' => $directPurchase['applied_discount'] ?? null
+                'applied_discount' => $directPurchase['applied_discount'] ?? null,
+                'delivery_address' => !$isMultiAddress ? $deliveryAddress : null // Store address for regular orders
             ]);
     
-            // Handle multi-address delivery assignments if enabled
+            // Only create OrderItemDelivery records for multi-address orders
             if ($isMultiAddress) {
                 // Validate the total quantity matches
                 $totalAssignedQuantity = 0;
@@ -249,31 +256,27 @@ class BuynowController extends Controller
                     throw new \Exception("Total assigned quantity ({$totalAssignedQuantity}) does not match the order quantity ({$totalQuantity})");
                 }
                 
-                // Store the multi-address data in the database
+                // Create OrderItemDelivery records for each address
                 foreach ($request->input('multi_address') as $addressData) {
                     // Get the address ID for this assignment
                     $multiAddressId = $addressData['address_id'];
                     if ($multiAddressId === 'default') {
-                        $multiAddressId = $defaultAddressId;
+                        // Get default address ID if "default" was selected
+                        if (!$user->retailerProfile || !$user->retailerProfile->defaultAddress) {
+                            throw new \Exception("Default address not found for multi-address delivery");
+                        }
+                        $multiAddressId = $user->retailerProfile->defaultAddress->id;
                     }
                     
-                    // Create OrderItemDelivery record with NULL delivery_id (will be filled when order is accepted)
                     \App\Models\OrderItemDelivery::create([
                         'order_details_id' => $orderDetail->id,
                         'address_id' => $multiAddressId,
                         'quantity' => $addressData['quantity'],
-                        'delivery_id' => null, // Will be set when order is accepted and delivery is created
+                        'delivery_id' => null, // Will be set when order is accepted
                     ]);
                 }
-            } else {
-                // For non-multi-address orders, create a single OrderItemDelivery entry
-                \App\Models\OrderItemDelivery::create([
-                    'order_details_id' => $orderDetail->id,
-                    'address_id' => $defaultAddressId,
-                    'quantity' => $totalQuantity,
-                    'delivery_id' => null, // Will be set when order is accepted
-                ]);
             }
+            // No need to create OrderItemDelivery for regular orders - address is in the order table
     
             $product->save();
     

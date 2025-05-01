@@ -12,10 +12,10 @@ class OrderDetails extends Model
         'quantity',
         'price',
         'subtotal',
-        'delivery_address',
         'discount_amount',
         'free_items',
-        'applied_discount'
+        'applied_discount',
+        'delivery_address'
     ];
 
     public function order()
@@ -32,4 +32,5 @@ class OrderDetails extends Model
     {
         return $this->hasMany(OrderItemDelivery::class);
     }
+    
 }

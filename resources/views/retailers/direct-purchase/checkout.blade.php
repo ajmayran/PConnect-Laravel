@@ -144,12 +144,18 @@
 
                             <!-- Saved addresses selector (hidden by default) -->
                             <div id="savedAddressesContainer" class="hidden mt-2 ml-6">
-                                @if($user->retailerProfile && $user->retailerProfile->addresses && $user->retailerProfile->addresses->count() > 0)
-                                    @foreach($user->retailerProfile->addresses as $address)
+                                @php
+                                    $nonDefaultAddresses = $user->retailerProfile && $user->retailerProfile->addresses ? 
+                                        $user->retailerProfile->addresses->filter(function($address) {
+                                            return !$address->is_default;
+                                        }) : collect();
+                                @endphp
+                                
+                                @if($nonDefaultAddresses->count() > 0)
+                                    @foreach($nonDefaultAddresses as $address)
                                         <div class="flex items-center mb-2">
                                             <input type="radio" id="address_{{ $address->id }}" 
                                                 name="selected_address_id" value="{{ $address->id }}"
-                                                {{ $address->is_default ? 'checked' : '' }}
                                                 class="form-radio">
                                             <label for="address_{{ $address->id }}" class="ml-2">
                                                 {{ $address->label }}: {{ $address->barangay_name }}, {{ $address->street }}
@@ -157,7 +163,7 @@
                                         </div>
                                     @endforeach
                                 @else
-                                    <p class="text-sm text-gray-500">No saved addresses found. Please add an address in your profile.</p>
+                                    <p class="text-sm text-gray-500">No additional saved addresses found. Please add an address in your profile.</p>
                                 @endif
                             </div>
 
@@ -249,30 +255,6 @@
     </div>
     @include('components.footer')
 
-    @if (session('success'))
-        <script>
-            Swal.fire({
-                title: 'Success!',
-                text: '{{ session('success') }}',
-                icon: 'success',
-                timer: 3000,
-                showConfirmButton: false
-            });
-        </script>
-    @endif
-
-    @if (session('error'))
-        <script>
-            Swal.fire({
-                title: 'Error!',
-                text: '{{ session('error') }}',
-                icon: 'error',
-                timer: 3000,
-                showConfirmButton: false
-            });
-        </script>
-    @endif
-
     <script>
         // Variables for quantity validation
         const totalQuantity = {{ $directPurchase['quantity'] }};
@@ -281,7 +263,6 @@
         // Toggle display based on radio selection
         const defaultAddressRadio = document.getElementById("default_address");
         const savedAddressRadio = document.getElementById("saved_address");
-
         const savedAddressesContainer = document.getElementById("savedAddressesContainer");
         
         // Multi-address related elements
@@ -292,35 +273,87 @@
         const quantityErrorMessage = document.getElementById("quantityErrorMessage");
         
         // Handle radio button changes
-        newAddressRadio.addEventListener("change", function() {
+        defaultAddressRadio.addEventListener("change", function() {
             if (this.checked) {
-                newAddressInput.classList.remove("hidden");
                 savedAddressesContainer.classList.add("hidden");
             }
         });
-
+        
         savedAddressRadio.addEventListener("change", function() {
             if (this.checked) {
                 savedAddressesContainer.classList.remove("hidden");
             }
         });
-
+    
         // Toggle multi-address section
         enableMultiAddressCheckbox.addEventListener("change", function() {
             if (this.checked) {
                 multiAddressSection.classList.remove("hidden");
                 // Disable other delivery options
-                newAddressRadio.disabled = true;
                 defaultAddressRadio.disabled = true;
                 savedAddressRadio.disabled = true;
             } else {
                 multiAddressSection.classList.add("hidden");
                 // Enable other delivery options
-                newAddressRadio.disabled = false;
                 defaultAddressRadio.disabled = false;
                 savedAddressRadio.disabled = false;
             }
         });
+        
+        // Check if address is already selected
+        function isAddressAlreadySelected(addressId) {
+            const addressSelects = document.querySelectorAll('[name^="multi_address"][name$="[address_id]"]');
+            let count = 0;
+            
+            addressSelects.forEach(select => {
+                if (select.value === addressId) {
+                    count++;
+                }
+            });
+            
+            return count > 1;
+        }
+        
+        // Add change event listener to address selects
+        function addAddressSelectListeners() {
+            const addressSelects = document.querySelectorAll('[name^="multi_address"][name$="[address_id]"]');
+            
+            addressSelects.forEach(select => {
+                if (!select.hasAddressListener) {
+                    select.addEventListener('change', function() {
+                        validateAddressSelections();
+                    });
+                    select.hasAddressListener = true;
+                }
+            });
+        }
+        
+        // Validate address selections to ensure no duplicates
+        function validateAddressSelections() {
+            const addressSelects = document.querySelectorAll('[name^="multi_address"][name$="[address_id]"]');
+            const usedAddresses = {};
+            let hasError = false;
+            
+            // Reset previous errors
+            document.querySelectorAll('.address-error').forEach(el => el.remove());
+            
+            addressSelects.forEach(select => {
+                const addressId = select.value;
+                
+                if (usedAddresses[addressId]) {
+                    hasError = true;
+                    // Add error message
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'text-sm text-red-600 mt-1 address-error';
+                    errorDiv.textContent = 'This address is already used in another location';
+                    select.parentNode.appendChild(errorDiv);
+                } else {
+                    usedAddresses[addressId] = true;
+                }
+            });
+            
+            return !hasError;
+        }
         
         // Add location button functionality
         addLocationBtn.addEventListener("click", function() {
@@ -376,7 +409,15 @@
             
             splitQuantityContainer.appendChild(newLocationDiv);
             validateTotalQuantity();
+            
+            // Add address change listeners to new selects
+            addAddressSelectListeners();
         });
+        
+        // Initialize address select listeners for the first location
+        window.onload = function() {
+            addAddressSelectListeners();
+        };
         
         // Remove location function
         window.removeLocation = function(id) {
@@ -385,6 +426,7 @@
                 locationDiv.remove();
                 locationCount--;
                 validateTotalQuantity();
+                validateAddressSelections(); // Re-validate after removing
             }
         };
         
@@ -409,14 +451,14 @@
         // Add validation to the first quantity input
         document.querySelector('[name="multi_address[0][quantity]"]').addEventListener('change', validateTotalQuantity);
         
-
         // Form submission validation
         const orderForm = document.getElementById("orderForm");
         orderForm.addEventListener("submit", function(e) {
             e.preventDefault();
-
+    
             // Validate multi-address quantities if enabled
             if (enableMultiAddressCheckbox.checked) {
+                // Validate quantities
                 if (!validateTotalQuantity()) {
                     Swal.fire({
                         title: 'Invalid Quantities',
@@ -425,8 +467,18 @@
                     });
                     return;
                 }
+                
+                // Validate unique addresses
+                if (!validateAddressSelections()) {
+                    Swal.fire({
+                        title: 'Duplicate Addresses',
+                        text: 'Each delivery location must have a unique address',
+                        icon: 'error',
+                    });
+                    return;
+                }
             }
-            // Check if new address is selected but no barangay is chosen
+    
             Swal.fire({
                 title: 'Confirm Order?',
                 text: 'Do you want to place this order?',

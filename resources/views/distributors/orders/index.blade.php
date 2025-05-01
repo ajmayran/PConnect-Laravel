@@ -133,6 +133,7 @@
                                 data-details='@json($order->orderDetails)'
                                 data-delivery-address="{{ $order->orderDetails->first()->delivery_address ?? '' }}"
                                 data-created-at="{{ $order->created_at->setTimezone('Asia/Manila')->format('F d, Y h:i A') }}"
+                                data-is-multi-address="{{ $order->is_multi_address ? '1' : '0' }}"
                                 class="transition-colors cursor-pointer hover:bg-gray-50">
                                 <td class="px-4 py-3">{{ $order->formatted_order_id }}</td>
                                 <td class="px-4 py-3">
@@ -168,183 +169,8 @@
             </div>
         @endif
     </div>
+    @include('distributors.orders.indexmodal')
 
-    <!-- Main Order Modal -->
-    <div id="orderModal"
-        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
-        <div class="w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl md:w-3/4 sm:w-3/4">
-            <!-- Modal Header -->
-            <div class="sticky top-0 z-10 flex items-center justify-between p-4 bg-white border-b">
-                <h2 class="text-xl font-bold text-gray-800" id="modalTitle">Order Details</h2>
-                <button onclick="closeModal()"
-                    class="p-2 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                        </path>
-                    </svg>
-                </button>
-            </div>
-
-            <div id="modalContent" class="p-6">
-                <!-- Modal Content (Products and retailer profile) is generated dynamically -->
-            </div>
-
-            <!-- Modal Footer with Accept, Reject, and Close buttons -->
-            <div class="sticky bottom-0 flex justify-end gap-4 p-4 bg-white border-t">
-                <div id="actionButtons">
-                    <button onclick="acceptOrder()"
-                        class="px-4 py-2 font-medium text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700">
-                        Accept
-                    </button>
-                    <button onclick="openRejectModal()"
-                        class="px-4 py-2 font-medium text-white transition-colors bg-red-600 rounded-lg hover:bg-red-700">
-                        Reject
-                    </button>
-                </div>
-                <!-- Add QR Code Button -->
-                <a id="qrCodeButton" href="#"
-                    class="px-4 py-2 font-medium text-white transition-colors bg-blue-500 rounded-lg hover:bg-blue-600">
-                    QR Code
-                </a>
-                <button onclick="openEditOrderModal()"
-                    class="px-4 py-2 font-medium text-white transition-colors bg-yellow-500 rounded-lg hover:bg-yellow-600">
-                    Edit Order
-                </button>
-                <button onclick="closeModal()"
-                    class="px-4 py-2 font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Reject Reason Modal -->
-    <div id="rejectModal"
-        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
-        <div class="w-11/12 max-w-md bg-white rounded-lg shadow-xl">
-            <div class="p-4 border-b">
-                <h2 class="text-xl font-bold text-gray-800">Reject Order</h2>
-            </div>
-            <div class="p-4">
-                <p class="mb-2 text-gray-700">Select a rejection reason:</p>
-                <div>
-                    <label class="flex items-center mb-2">
-                        <input type="radio" name="reject_reason_option" value="Out of stock" class="mr-2"
-                            onchange="checkRejectOther(this)">
-                        Out of stock
-                    </label>
-                    <label class="flex items-center mb-2">
-                        <input type="radio" name="reject_reason_option" value="Price mismatch" class="mr-2"
-                            onchange="checkRejectOther(this)">
-                        Price mismatch
-                    </label>
-                    <label class="flex items-center">
-                        <input type="radio" name="reject_reason_option" value="Other" class="mr-2"
-                            onchange="checkRejectOther(this)">
-                        Other
-                    </label>
-                </div>
-                <textarea id="rejectOtherReason" class="hidden w-full p-2 mt-2 border rounded"
-                    placeholder="Enter custom rejection reason..."></textarea>
-            </div>
-            <div class="flex justify-end gap-2 p-4 border-t">
-                <button onclick="submitRejectOrder()"
-                    class="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700">
-                    Submit
-                </button>
-                <button onclick="closeRejectModal()"
-                    class="px-4 py-2 text-white bg-gray-600 rounded hover:bg-gray-700">
-                    Cancel
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="batchQrModal"
-        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
-        <div class="w-11/12 max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl md:w-2/3">
-            <!-- Modal Header -->
-            <div class="sticky top-0 z-10 flex items-center justify-between p-4 bg-white border-b">
-                <h2 class="text-xl font-bold text-gray-800">Generate Batch QR Codes</h2>
-                <button onclick="closeBatchQrModal()"
-                    class="p-2 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Modal Content -->
-            <div class="p-6">
-                <div class="mb-4">
-                    <p class="mb-2 text-gray-700">Select the orders you want to generate QR codes for:</p>
-                    <div class="overflow-y-auto max-h-[40vh] border rounded-lg">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="sticky top-0 bg-gray-50">
-                                <tr>
-                                    <th class="w-10 px-4 py-3">
-                                        <input type="checkbox" id="selectAll"
-                                            class="border-gray-300 rounded cursor-pointer"
-                                            onchange="toggleAllCheckboxes()">
-                                    </th>
-                                    <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">Order
-                                        ID</th>
-                                    <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">
-                                        Retailer</th>
-                                    <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">Date
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200" id="batchOrdersList">
-                                <!-- Orders will be populated here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="flex justify-between mt-6">
-                    <p class="text-sm text-gray-600"><span id="selectedCount">0</span> orders selected</p>
-                    <div class="space-x-2">
-                        <button onclick="generateSelectedQrCodes()" id="generateQrButton" disabled
-                            class="px-4 py-2 font-medium text-white transition-colors bg-blue-500 rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-600">
-                            Generate QR Codes
-                        </button>
-                        <button onclick="closeBatchQrModal()"
-                            class="px-4 py-2 font-medium text-gray-700 transition-colors border border-gray-300 rounded-lg hover:bg-gray-50">
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Order Modal -->
-    <div id="editOrderModal"
-        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
-        <div class="w-11/12 max-w-2xl bg-white rounded-lg shadow-xl">
-            <div class="p-4 border-b">
-                <h2 class="text-xl font-bold text-gray-800">Edit Order</h2>
-            </div>
-            <div class="p-4">
-                <form id="editOrderForm">
-                    <div id="editOrderItems" class="space-y-4">
-                        <!-- Order items will be dynamically populated here -->
-                    </div>
-                    <div class="flex justify-end gap-2 mt-4">
-                        <button type="button" onclick="submitEditOrder()"
-                            class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
-                            Save Changes
-                        </button>
-                        <button type="button" onclick="closeEditOrderModal()"
-                            class="px-4 py-2 text-white bg-gray-600 rounded hover:bg-gray-700">
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
     <!-- Hidden Forms for Accept and Reject -->
     <form id="acceptForm" method="POST" class="hidden">
@@ -360,37 +186,24 @@
         var storageBaseUrl = "{{ asset('storage') }}";
         var currentOrderId = null;
 
-        function openModal(row) {
-            var orderId = row.getAttribute('data-order-id');
-            var formattedOrderId = row.querySelector('td:first-child').textContent.trim();
-            var orderStatus = row.getAttribute('data-status');
-            currentOrderId = orderId;
-            var retailer = JSON.parse(row.getAttribute('data-retailer'));
-            var details = JSON.parse(row.getAttribute('data-details'));
-            var dateTime = row.getAttribute('data-created-at');
-            var deliveryAddress = row.getAttribute('data-delivery-address');
-
-            document.getElementById('modalTitle').innerText = 'Order ' + formattedOrderId;
-
-            let modalHtml = `
-        <div class="space-y-6">
-            <!-- Products Section -->
-            <div class="overflow-hidden bg-white rounded-lg shadow">
-                <div class="p-4 border-b bg-gray-50">
-                    <h3 class="text-lg font-semibold text-gray-800">Products Ordered</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Product</th>
-                                <th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Price</th>
-                                <th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Quantity</th>
-                                <th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-    `;
+  
+        function buildProductsTable(details) {
+            let html = `
+                <div class="mb-6 overflow-hidden bg-white rounded-lg shadow">
+                    <div class="p-4 border-b bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-800">Products Ordered</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Product</th>
+                                    <th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Price</th>
+                                    <th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Quantity</th>
+                                    <th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">`;
 
             let totalAmount = 0;
             details.forEach(function(detail) {
@@ -398,67 +211,258 @@
                 const discountedPrice = detail.discount_amount > 0 ?
                     (detail.product.price - (detail.discount_amount / detail.quantity)).toFixed(2) :
                     originalPrice;
-                modalHtml += `
-            <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3">
-                    <div class="flex items-center gap-3">
-                        <img src="${detail.product.image ? storageBaseUrl + '/' + detail.product.image : 'img/default-product.jpg'}" 
-                             alt="${detail.product.product_name}" 
-                             class="object-cover w-16 h-16 rounded-lg" />
-                        <span class="font-medium text-gray-800">${detail.product.product_name}</span>
-                    </div>
-                </td>
-                <td class="px-4 py-3">
-                    ${detail.discount_amount > 0
-                        ? `<span class="text-xs text-gray-500 line-through">₱${originalPrice}</span><br>
-                               <span class="text-green-600">₱${discountedPrice}</span>`
-                        : `₱${originalPrice}`}
-                </td>
-                <td class="px-4 py-3">${detail.quantity}</td>
-                <td class="px-4 py-3 font-medium text-blue-600">₱${parseFloat(detail.subtotal).toFixed(2)}</td>
-            </tr>
-        `;
+                    
+                html += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-3">
+                                <img src="${detail.product.image ? storageBaseUrl + '/' + detail.product.image : '/img/default-product.jpg'}" 
+                                    alt="${detail.product.product_name}" 
+                                    class="object-cover w-16 h-16 rounded-lg" />
+                                <span class="font-medium text-gray-800">${detail.product.product_name}</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3">
+                            ${detail.discount_amount > 0
+                                ? `<span class="text-xs text-gray-500 line-through">₱${originalPrice}</span><br>
+                                <span class="text-green-600">₱${discountedPrice}</span>`
+                                : `₱${originalPrice}`}
+                        </td>
+                        <td class="px-4 py-3">
+                            ${detail.quantity}
+                            ${detail.free_items > 0 ? `<span class="text-sm text-green-600">+${detail.free_items} free</span>` : ''}
+                        </td>
+                        <td class="px-4 py-3 font-medium text-blue-600">₱${parseFloat(detail.subtotal).toFixed(2)}</td>
+                    </tr>
+                `;
                 totalAmount += parseFloat(detail.subtotal);
             });
 
-            modalHtml += `
-                        </tbody>
-                        <tfoot class="bg-gray-50">
-                            <tr>
-                                <td colspan="3" class="px-4 py-3 font-medium text-right text-gray-700">Total Amount:</td>
-                                <td colspan="3" class="px-4 py-3 font-bold text-blue-600">₱${totalAmount.toFixed(2)}</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Retailer Profile Section -->
-       <div class="p-4 bg-white rounded-lg shadow">
-            <div class="flex items-start space-x-4">
-                <div class="flex-shrink-0">
-                         <a href="/retailers/${retailer.id}">
-                        <img src="${retailer.retailer_profile?.profile_picture ? storageBaseUrl + '/' + retailer.retailer_profile.profile_picture : 'img/default-avatar.jpg'}" 
-                             alt="Profile" 
-                             class="object-cover w-16 h-16 rounded-full shadow hover:opacity-80" />
-                    </a>
-                </div>
-                <div>
-                    <a href="/retailers/${retailer.id}" class="hover:underline">
-                        <h4 class="text-lg font-medium text-gray-800">${retailer.first_name} ${retailer.last_name}</h4>
-                    </a>
-                    <p class="text-sm text-gray-600">${retailer.email}</p>
-                    <p class="text-sm text-gray-600">${retailer.retailer_profile?.phone || 'No phone number'}</p>
-                    <p class="text-sm text-gray-600">${deliveryAddress || 'No delivery address'}</p>
-                </div>
-            </div>
-        </div>
+            html += `
+                            </tbody>
+                            <tfoot class="bg-gray-50">
+                                <tr>
+                                    <td colspan="3" class="px-4 py-3 font-medium text-right text-gray-700">Total Amount:</td>
+                                    <td colspan="1" class="px-4 py-3 font-bold text-blue-600">₱${totalAmount.toFixed(2)}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
             `;
 
-            document.getElementById('modalContent').innerHTML = modalHtml;
-            document.getElementById('orderModal').classList.remove('hidden');
+            return html;
+        }
 
+        function openModal(row) {
+            // Extract order data from row attributes
+            const orderId = row.getAttribute('data-order-id');
+            const formattedOrderId = row.querySelector('td:first-child').textContent.trim();
+            const orderStatus = row.getAttribute('data-status');
+            const retailer = JSON.parse(row.getAttribute('data-retailer'));
+            const details = JSON.parse(row.getAttribute('data-details'));
+            const dateTime = row.getAttribute('data-created-at');
+            const deliveryAddress = row.getAttribute('data-delivery-address');
+            
+            // Store the current order ID for other functions
+            currentOrderId = orderId;
+            
+            // Update modal title
+            document.getElementById('modalTitle').innerText = 'Order ' + formattedOrderId;
+            
+            // Show loading state
+            document.getElementById('modalContent').innerHTML = 
+                '<div class="flex items-center justify-center p-12"><div class="w-12 h-12 border-t-2 border-b-2 border-green-500 rounded-full animate-spin"></div></div>';
+            document.getElementById('orderModal').classList.remove('hidden');
+            
+            // Create the products table HTML
+            const productsHtml = buildProductsTable(details);
+            
+            // Make sure we're correctly checking is_multi_address
+            // Check directly on the row data attribute
+            const isMultiAddress = row.hasAttribute('data-is-multi-address') ? 
+                row.getAttribute('data-is-multi-address') === '1' : false;
+            
+            console.log('Order ID:', orderId, 'is multi-address:', isMultiAddress);
+            
+            // Always fetch delivery information for multi-address orders
+            if (isMultiAddress || orderStatus !== 'pending') {
+                fetchDeliveryAddresses(orderId, productsHtml, retailer, deliveryAddress, orderStatus);
+            } else {
+                // For pending regular orders, just render the basic information
+                renderModalContent(productsHtml, null, retailer, deliveryAddress, orderStatus, false);
+            }
+        }
+ 
+        function fetchDeliveryAddresses(orderId, productsHtml, retailer, deliveryAddress, orderStatus) {
+        fetch(`/orders/${orderId}/deliveries`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Delivery data received:', data);
+
+                if (data.success) {
+                    const isMultiAddress = data.is_multi_address;
+                    const deliveriesHtml = buildDeliveriesSection(data.deliveries, isMultiAddress);
+
+                    // Render the modal with the fetched data
+                    renderModalContent(productsHtml, deliveriesHtml, retailer, deliveryAddress, orderStatus, isMultiAddress);
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: data.message || 'Failed to load delivery information.',
+                        icon: 'error',
+                        confirmButtonColor: '#d33',
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching delivery addresses:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: error.message || 'An unexpected error occurred.',
+                    icon: 'error',
+                    confirmButtonColor: '#d33',
+                });
+            });
+    }
+
+        function buildDeliveriesSection(deliveries, isMultiAddress) {
+            if (!deliveries || deliveries.length === 0) return '';
+
+            let html = `
+                <div class="mb-6 overflow-hidden bg-white rounded-lg shadow">
+                    <div class="flex items-center justify-between p-4 border-b bg-purple-50">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-purple-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <h3 class="text-lg font-semibold text-purple-800">Delivery Information</h3>
+                        </div>
+                        ${isMultiAddress ? 
+                            `<span class="inline-flex items-center px-3 py-1 text-xs font-medium text-purple-800 bg-purple-200 rounded-full">
+                                Multiple Delivery Addresses
+                            </span>` : ''}
+                    </div>
+                    <div class="p-4 space-y-4">`;
+
+            deliveries.forEach((delivery, index) => {
+                html += `
+                    <div class="p-4 border rounded-lg ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}">
+                        ${isMultiAddress ? `<h4 class="mb-2 font-medium text-gray-900 text-md">Delivery Location ${index + 1}</h4>` : ''}
+                        
+                        <!-- Delivery Address -->
+                        <div class="flex items-start mb-3">
+                            <svg class="flex-shrink-0 w-5 h-5 mt-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <p class="ml-3 text-sm text-gray-600">
+                                ${delivery.address ? 
+                                    `${delivery.address.barangay_name || delivery.address.barangay || ''}${delivery.address.street ? ', ' + delivery.address.street : ''}` : 
+                                    'Address information not available'}
+                            </p>
+                        </div>
+                        
+                        <!-- Delivery Status -->
+                        ${delivery.status ? `
+                        <div class="flex items-start mb-3">
+                            <svg class="flex-shrink-0 w-5 h-5 mt-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div class="ml-3">
+                                <p class="text-sm text-gray-600">Status: 
+                                    <span class="font-medium ${delivery.status === 'delivered' ? 'text-green-600' : 'text-blue-600'}">
+                                        ${delivery.status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <!-- Products for this delivery -->
+                        <div class="mt-3">
+                            <p class="text-sm font-medium text-gray-700">Products for this location:</p>
+                            <ul class="mt-1 ml-5 space-y-1 list-disc">`;
+                            
+                if (delivery.items && delivery.items.length > 0) {
+                    delivery.items.forEach(item => {
+                        html += `
+                            <li class="text-sm text-gray-600">
+                                ${item.product_name} <span class="text-gray-500">(Qty: ${item.quantity})</span>
+                            </li>`;
+                    });
+                } else {
+                    html += `<li class="text-sm text-gray-500">No products specified</li>`;
+                }
+                            
+                html += `
+                            </ul>
+                        </div>
+                    </div>`;
+            });
+
+            html += `
+                    </div>
+                </div>`;
+                
+            return html;
+        }
+        function renderModalContent(productsHtml, deliveriesHtml, retailer, deliveryAddress, orderStatus, isMultiAddress) {
+            // Create retailer profile section
+            const retailerHtml = `
+                <div class="p-4 bg-white rounded-lg shadow">
+                    <div class="flex flex-col md:flex-row">
+                        <div class="flex items-start space-x-4 ${isMultiAddress ? 'md:w-1/2' : ''}">
+                            <div class="flex-shrink-0">
+                                <a href="/retailers/${retailer.id}">
+                                    <img src="${retailer.retailer_profile?.profile_picture ? storageBaseUrl + '/' + retailer.retailer_profile.profile_picture : '/img/default-avatar.jpg'}" 
+                                        alt="Profile" 
+                                        class="object-cover w-16 h-16 rounded-full shadow hover:opacity-80" />
+                                </a>
+                            </div>
+                            <div>
+                                <a href="/retailers/${retailer.id}" class="hover:underline">
+                                    <h4 class="text-lg font-medium text-gray-800">${retailer.first_name} ${retailer.last_name}</h4>
+                                </a>
+                                <p class="text-sm text-gray-600">${retailer.email}</p>
+                                <p class="text-sm text-gray-600">${retailer.retailer_profile?.phone || 'No phone number'}</p>
+                                
+                                <!-- Address display logic based on order status and type -->
+                                ${isMultiAddress ? 
+                                `<div class="flex items-center mt-1 text-purple-700">
+                                    <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                                    </svg>
+                                    <span class="font-medium">Multiple Delivery Addresses</span>
+                                </div>` : 
+                                `<div class="mt-2">
+                                    <p class="text-sm font-medium text-gray-600">Delivery Address:</p>
+                                    <p class="text-sm text-gray-600">${deliveryAddress || 'Address not specified'}</p>
+                                </div>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Remove the delivery info HTML for regular orders - only use for multi-address orders
+            const finalHtml = `
+                <div class="space-y-6">
+                    ${productsHtml}
+                    ${deliveriesHtml || ''}
+                    ${retailerHtml}
+                </div>
+            `;
+            
+            document.getElementById('modalContent').innerHTML = finalHtml;
+            
             // Show or hide action buttons based on order status
             const actionButtons = document.getElementById('actionButtons');
             if (orderStatus === 'pending') {
@@ -470,10 +474,18 @@
             // Show QR code button only for processing orders
             const qrCodeButton = document.getElementById('qrCodeButton');
             if (orderStatus === 'processing') {
-                qrCodeButton.href = `/orders/${orderId}/qrcode`;
+                qrCodeButton.href = `/orders/${currentOrderId}/qrcode`;
                 qrCodeButton.classList.remove('hidden');
             } else {
                 qrCodeButton.classList.add('hidden');
+            }
+            
+            // Show edit order button only for processing orders
+            const editOrderButton = document.getElementById('editOrderButton');
+            if (orderStatus === 'processing') {
+                editOrderButton.classList.remove('hidden');
+            } else {
+                editOrderButton.classList.add('hidden');
             }
         }
 

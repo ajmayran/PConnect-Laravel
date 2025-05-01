@@ -313,6 +313,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::post('/orders/{order}/edit', [OrderController::class, 'editOrderQuantity'])->name('distributors.orders.edit');
     Route::get('/orders/{order}/detail', [OrderController::class, 'getOrderDetail'])->name('orders.detail');
     Route::get('/orders/history', [OrderController::class, 'history'])->name('distributors.orders.history');
+    Route::get('/orders/{order}/deliveries', [OrderController::class, 'getOrderDeliveries'])->name('distributors.orders.deliveries');
 
     // Order QR Routes
     Route::get('/orders/{order}/qrcode', [OrderQrController::class, 'showQrCode'])->name('distributors.orders.qrcode');

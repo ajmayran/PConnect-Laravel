@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\Stock;
 use App\Models\Payment;
 use App\Models\Product;
+use App\Models\OrderDetails;
 use App\Models\Delivery;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -35,22 +36,17 @@ class OrderController extends Controller
 
         // Order by different columns based on status
         if ($status === self::STATUS_PENDING) {
-            // For pending orders, show oldest first (first come, first served)
             $query = $query->oldest();
         } else if ($status === self::STATUS_PROCESSING) {
-            // For processing orders, show latest status_updated_at first
             $query = $query->orderBy('status_updated_at', 'desc');
         } else {
-            // For other statuses (rejected, etc.), show latest created first
             $query = $query->latest();
         }
 
         // Apply search
         if ($search) {
             $query->where(function ($query) use ($search) {
-                // Search in order_id
                 $query->where('order_id', 'like', "%{$search}%")
-                    // Join and search in user table
                     ->orWhereHas('user', function ($q) use ($search) {
                         $q->where(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%");
                     });
@@ -62,7 +58,6 @@ class OrderController extends Controller
         if (request()->has('search') || request()->has('status')) {
             $orders->appends(request()->only(['search', 'status']));
         }
-
 
         return view('distributors.orders.index', compact('orders'));
     }
@@ -79,6 +74,7 @@ class OrderController extends Controller
 
         try {
             DB::transaction(function () use ($order) {
+                // Stock deduction logic - 
                 foreach ($order->orderDetails as $detail) {
                     $product = $detail->product;
                     $quantityRemaining = $detail->quantity;
@@ -133,13 +129,13 @@ class OrderController extends Controller
                             $quantityRemaining -= $quantityToTake;
                         }
                     } else {
-                        Stock::create([ 
+                        Stock::create([
                             'product_id' => $product->id,
                             'batch_id' => null,
                             'type' => 'out',
                             'quantity' => $detail->quantity,
                             'user_id' => Auth::id(),
-                            'notes' => 'Order   ' . $order->formatted_order_id . ' accepted',
+                            'notes' => 'Order ' . $order->formatted_order_id . ' accepted',
                             'stock_updated_at' => now()
                         ]);
                     }
@@ -147,25 +143,79 @@ class OrderController extends Controller
                     $product->update(['stock_updated_at' => now()]);
                 }
 
+                // Update order status
                 $order->status = self::STATUS_PROCESSING;
                 $order->status_updated_at = now();
                 $order->save();
 
-                $trackingNumber = 'TRK-' . strtoupper(uniqid());
-                Delivery::create([
-                    'order_id' => $order->id,
-                    'tracking_number' => $trackingNumber,
-                    'status' => 'pending',
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]);
+                // HANDLE DELIVERY CREATION BASED ON MULTI-ADDRESS STATUS
+                if ($order->is_multi_address) {
+                    // For multi-address orders, create a delivery for each unique address
+                    // and link the OrderItemDelivery records to these deliveries
+                    $orderItemDeliveries = \App\Models\OrderItemDelivery::with(['address', 'orderDetail'])
+                        ->whereHas('orderDetail', function ($query) use ($order) {
+                            $query->where('order_id', $order->id);
+                        })
+                        ->get();
 
+                    if ($orderItemDeliveries->isEmpty()) {
+                        throw new \Exception("No delivery addresses found for this multi-address order");
+                    }
+
+                    // Group by address_id to create one delivery per unique address
+                    $deliveriesByAddress = [];
+
+                    foreach ($orderItemDeliveries as $itemDelivery) {
+                        $addressId = $itemDelivery->address_id;
+
+                        // Create a delivery for this address if not already created
+                        if (!isset($deliveriesByAddress[$addressId])) {
+                            $delivery = Delivery::create([
+                                'order_id' => $order->id,
+                                'address_id' => $addressId,
+                                'status' => 'pending',
+                                'created_at' => now(),
+                                'updated_at' => now()
+                            ]);
+
+                            $deliveriesByAddress[$addressId] = $delivery;
+                        }
+
+                        // Update the OrderItemDelivery with the new delivery_id
+                        $itemDelivery->update([
+                            'delivery_id' => $deliveriesByAddress[$addressId]->id
+                        ]);
+                    }
+                } else {
+                    // For regular single-address orders, create one delivery for the entire order
+                    // Get address information from the order details
+                    $orderDetail = $order->orderDetails->first();
+                    $addressId = null;
+
+                        // Try to find an address for the retailer
+                    if ($order->user && $order->user->retailerProfile && $order->user->retailerProfile->defaultAddress) {
+                        $addressId = $order->user->retailerProfile->defaultAddress->id;
+                    } else {
+                        // You may need to handle this case differently if no default address is found
+                        Log::warning('No default address found for user ID: ' . $order->user_id . ' on order: ' . $order->id);
+                    }
+                    $delivery = Delivery::create([
+                        'order_id' => $order->id,
+                        'address_id' => $addressId, // Use the found address ID or null
+                        'status' => 'pending',
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
+
+                // Create payment record
                 Payment::create([
                     'order_id' => $order->id,
                     'distributor_id' => $order->distributor_id,
                     'payment_status' => 'pending',
                 ]);
 
+                // Send notification
                 app(NotificationService::class)->orderStatusChanged(
                     $order->id,
                     'processing',
@@ -250,10 +300,16 @@ class OrderController extends Controller
 
     public function getOrderDetails($id)
     {
-        $order = Order::with(['user.retailer_profile', 'orderDetails.product'])->findOrFail($id);
+        $order = Order::with([
+            'user.retailer_profile',
+            'orderDetails.product',
+            'deliveries.address',
+            'deliveries.itemDeliveries.orderDetail.product'
+        ])->findOrFail($id);
+
         $html = view('distributors.orders.order-details-content', [
-            'orderDetails'   => $order->orderDetails,
-            'retailer'       => $order->user,
+            'orderDetails' => $order->orderDetails,
+            'retailer' => $order->user,
             'storageBaseUrl' => asset('storage')
         ])->render();
 
@@ -508,5 +564,107 @@ class OrderController extends Controller
             ->paginate(10);
 
         return view('distributors.orders.history', compact('orders'));
+    }
+
+    public function getOrderDeliveries(Order $order)
+    {
+        try {
+            if ($order->status === self::STATUS_PENDING) {
+                if ($order->is_multi_address) {
+                    // Existing multi-address order logic
+                    $orderItemDeliveries = \App\Models\OrderItemDelivery::with(['address', 'orderDetail.product'])
+                        ->whereHas('orderDetail', function ($query) use ($order) {
+                            $query->where('order_id', $order->id);
+                        })
+                        ->get();
+
+                    $deliveries = $orderItemDeliveries->map(function ($item) {
+                        $address = $item->address;
+
+                        // Fetch barangay name if available
+                        if ($address && $address->barangay) {
+                            $barangay = DB::table('barangays')->where('code', $address->barangay)->first();
+                            $address->barangay_name = $barangay ? $barangay->name : $address->barangay;
+                        }
+
+                        return [
+                            'address' => $address,
+                            'items' => [
+                                [
+                                    'product_name' => $item->orderDetail->product->product_name ?? 'Product not found',
+                                    'quantity' => $item->quantity,
+                                ]
+                            ],
+                            'status' => 'pending',
+                            'tracking_number' => null,
+                        ];
+                    });
+                } else {
+                    // For regular pending orders with delivery_address in OrderDetails
+                    $orderDetail = $order->orderDetails->first();
+
+                    if ($orderDetail && $orderDetail->delivery_address) {
+                        // Create a virtual address object with the text address
+                        $deliveryAddressObject = [
+                            'barangay_name' => $orderDetail->delivery_address,
+                            'street' => ''
+                        ];
+
+                        $deliveries = [[
+                            'address' => $deliveryAddressObject,
+                            'items' => $order->orderDetails->map(function ($detail) {
+                                return [
+                                    'product_name' => $detail->product->product_name ?? 'Product not found',
+                                    'quantity' => $detail->quantity,
+                                ];
+                            })->toArray(),
+                            'status' => 'pending',
+                            'tracking_number' => null,
+                        ]];
+                    } else {
+                        $deliveries = []; // No delivery address found
+                    }
+                }
+            } else {
+                $deliveries = \App\Models\Delivery::with(['address', 'itemDeliveries.orderDetail.product'])
+                    ->where('order_id', $order->id)
+                    ->get()
+                    ->map(function ($delivery) {
+                        $address = $delivery->address;
+
+                        // Fetch barangay name if available
+                        if ($address && $address->barangay) {
+                            $barangay = DB::table('barangays')->where('code', $address->barangay)->first();
+                            $address->barangay_name = $barangay ? $barangay->name : $address->barangay;
+                        }
+
+                        $items = $delivery->itemDeliveries->map(function ($itemDelivery) {
+                            return [
+                                'product_name' => $itemDelivery->orderDetail->product->product_name ?? 'Product not found',
+                                'quantity' => $itemDelivery->quantity,
+                            ];
+                        });
+
+                        return [
+                            'address' => $address,
+                            'items' => $items,
+                            'status' => $delivery->status,
+                            'tracking_number' => $delivery->tracking_number,
+                        ];
+                    });
+            }
+
+            return response()->json([
+                'success' => true,
+                'is_multi_address' => $order->is_multi_address,
+                'deliveries' => $deliveries,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching deliveries: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load delivery information.',
+            ], 500);
+        }
     }
 }
