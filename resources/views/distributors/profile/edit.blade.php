@@ -84,56 +84,47 @@
                             </div>
 
                             <div class="mb-4">
-                                <label for="address" class="block mb-2 text-sm font-medium text-gray-700">
-                                    Address
-                                </label>
-                                <input type="hidden" id="region" name="region" value="09">
-                                <input type="hidden" id="province" name="province" value="097300">
-                                <input type="hidden" id="city" name="city" value="093170">
-
-                                <div class="mb-4">
-                                    <label for="barangay"
-                                        class="block text-sm font-medium text-gray-700">Barangay</label>
-
-                                    <!-- Current barangay display section -->
-                                    <div id="barangayDisplaySection"
-                                        class="flex items-center mt-1 {{ Auth::user()->distributor && Auth::user()->distributor->barangay ? '' : 'hidden' }}">
-                                        <span id="currentBarangayDisplay"
-                                            class="inline-block px-3 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-md">
-                                            {{ Auth::user()->distributor && Auth::user()->distributor->barangay ? Auth::user()->distributor->barangay : 'Loading...' }}
-                                        </span>
-                                        <button type="button" id="changeBarangayBtn"
-                                            class="px-3 py-1 ml-3 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                            Change
-                                        </button>
-                                    </div>
-
-                                    <!-- Select dropdown -->
-                                    <div id="barangaySelectSection"
-                                        class="{{ Auth::user()->distributor && Auth::user()->distributor->barangay ? 'hidden' : '' }}">
-                                        <select id="barangay" name="barangay"
-                                            class="block w-full mt-1 border-gray-300 rounded-md shadow-sm dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600">
-                                            <option value="">Select Barangay</option>
-                                        </select>
-
-                                        <!-- Cancel button (only shown when changing) -->
-                                        <button type="button" id="cancelBarangayBtn"
-                                            class="hidden px-3 py-1 mt-2 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500">
-                                            Cancel
-                                        </button>
-                                    </div>
-
-                                    <!-- Hidden input to store the actual barangay code -->
-                                    <input type="hidden" id="barangayCode" name="barangay"
-                                        value="{{ Auth::user()->distributor ? Auth::user()->distributor->barangay ?? '' : '' }}">
+                                <label for="barangay"
+                                    class="block text-sm font-medium text-gray-700">Barangay</label>
+                            
+                                <!-- Current barangay display section -->
+                                <div id="barangayDisplaySection"
+                                    class="flex items-center mt-1 {{ Auth::user()->distributor && Auth::user()->distributor->defaultAddress && Auth::user()->distributor->defaultAddress->barangay ? '' : 'hidden' }}">
+                                    <span id="currentBarangayDisplay"
+                                        class="inline-block px-3 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-md">
+                                        {{ Auth::user()->distributor && Auth::user()->distributor->defaultAddress && Auth::user()->distributor->defaultAddress->barangay ? Auth::user()->distributor->defaultAddress->barangay_name : 'Loading...' }}
+                                    </span>
+                                    <button type="button" id="changeBarangayBtn"
+                                        class="px-3 py-1 ml-3 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        Change
+                                    </button>
                                 </div>
-
-                                <div class="mb-4">
-                                    <label for="street" class="block text-sm font-medium text-gray-700">Street
-                                        Address</label>
-                                    <textarea id="street" name="street" autocomplete="street"
-                                        class="block w-full mt-1 border-gray-300 rounded-md shadow-sm dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600">{{ old('street', Auth::user()->distributor->street ?? '') }}</textarea>
+                            
+                                <!-- Select dropdown -->
+                                <div id="barangaySelectSection"
+                                    class="{{ Auth::user()->distributor && Auth::user()->distributor->defaultAddress && Auth::user()->distributor->defaultAddress->barangay ? 'hidden' : '' }}">
+                                    <select id="barangay" name="barangay"
+                                        class="block w-full mt-1 border-gray-300 rounded-md shadow-sm dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600">
+                                        <option value="">Select Barangay</option>
+                                    </select>
+                            
+                                    <!-- Cancel button (only shown when changing) -->
+                                    <button type="button" id="cancelBarangayBtn"
+                                        class="hidden px-3 py-1 mt-2 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                                        Cancel
+                                    </button>
                                 </div>
+                            
+                                <!-- Hidden input to store the actual barangay code -->
+                                <input type="hidden" id="barangayCode" name="barangay"
+                                    value="{{ Auth::user()->distributor && Auth::user()->distributor->defaultAddress ? Auth::user()->distributor->defaultAddress->barangay ?? '' : '' }}">
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="street" class="block text-sm font-medium text-gray-700">Street
+                                    Address</label>
+                                <textarea id="street" name="street" autocomplete="street"
+                                    class="block w-full mt-1 border-gray-300 rounded-md shadow-sm dark:border-gray-300 dark:bg-white dark:text-gray-900 focus:border-gray-500 dark:focus:border-green-500 focus:ring-green-400 dark:focus:ring-green-600">{{ old('street', Auth::user()->distributor && Auth::user()->distributor->defaultAddress ? Auth::user()->distributor->defaultAddress->street ?? '' : '') }}</textarea>
                             </div>
 
                             <x-primary-button type="submit">{{ __('Save') }}</x-primary-button>
@@ -224,8 +215,8 @@
             const barangaySelectSection = document.getElementById('barangaySelectSection');
             const currentBarangayDisplay = document.getElementById('currentBarangayDisplay');
             const barangayCodeInput = document.getElementById('barangayCode');
-            const savedBarangay =
-                '{{ Auth::user()->distributor ? Auth::user()->distributor->barangay ?? '' : '' }}';
+            const savedBarangay = 
+                '{{ Auth::user()->distributor && Auth::user()->distributor->defaultAddress ? Auth::user()->distributor->defaultAddress->barangay ?? '' : '' }}';
 
             changeBarangayBtn.addEventListener('click', function() {
                 barangayDisplaySection.classList.add('hidden');
@@ -367,7 +358,7 @@
 
                         // If there's a previously saved value, select it
                         const savedBarangay =
-                            '{{ old('barangay', Auth::user()->distributor->barangay ?? '') }}';
+                            '{{ old('barangay', Auth::user()->distributor && Auth::user()->distributor->defaultAddress ? Auth::user()->distributor->defaultAddress->barangay ?? '' : '') }}';
                         console.log('Saved barangay code:', savedBarangay);
 
                         if (savedBarangay) {
@@ -375,6 +366,7 @@
                             const selectedOption = Array.from(barangaySelect.options).find(opt => opt.value ===
                                 savedBarangay);
                             if (selectedOption) {
+                                barangaySelect.value = savedBarangay;
                                 currentBarangayDisplay.textContent = selectedOption.textContent;
 
                                 // Make sure the display section is visible if we have a saved barangay

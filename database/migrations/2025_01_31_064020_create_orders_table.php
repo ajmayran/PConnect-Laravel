@@ -19,6 +19,7 @@ return new class extends Migration
                 ->default('pending');
             $table->text('reject_reason')->nullable();
             $table->text('cancel_reason')->nullable();
+            $table->boolean('is_multi_address')->default(false);
             $table->timestamp('status_updated_at');
             $table->timestamps();
 
@@ -32,7 +33,6 @@ return new class extends Migration
             $table->decimal('price', 10, 2);
             $table->integer('quantity');
             $table->decimal('subtotal', 10, 2);
-            $table->string('delivery_address');
             $table->decimal('discount_amount', 10, 2)->default(0);
             $table->integer('free_items')->default(0);
             $table->string('applied_discount')->nullable();

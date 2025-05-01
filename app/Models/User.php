@@ -82,7 +82,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Product::class, 'user_id');
     }
-
+    
     public function retailerProfile()
     {
         return $this->hasOne(RetailerProfile::class, 'user_id');

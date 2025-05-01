@@ -49,37 +49,24 @@ class ProfileController extends Controller
         return back()->with('success', 'Profile information updated successfully!');
     }
 
-    /**
-     * Update the retailer's profile information.
-     */
     public function updateRetailerProfile(Request $request): RedirectResponse
     {
         $request->validate([
             'business_name' => ['nullable', 'string', 'max:255'],
             'phone' => ['required', 'string', 'regex:/^[0-9]{11}$/'],
-            'city' => ['nullable', 'string', 'max:10'],
-            'province' => ['nullable', 'string', 'max:10'],
-            'region' => ['nullable', 'string', 'max:10'],
-            'barangay' => ['nullable', 'string', 'max:20'],
-            'street' => ['nullable', 'string', 'max:255'],
             'profile_picture' => ['nullable', 'image', 'max:2048'],
         ]);
-
+    
         $retailerProfile = $request->user()->retailerProfile;
-
+    
         if (!$retailerProfile) {
             $retailerProfile = new RetailerProfile();
             $retailerProfile->user_id = $request->user()->id;
         }
-
+    
         $retailerProfile->business_name = $request->business_name;
         $retailerProfile->phone = $request->phone;
-        $retailerProfile->city = $request->city;
-        $retailerProfile->province = $request->province;
-        $retailerProfile->region = $request->region;
-        $retailerProfile->barangay = $request->barangay;
-        $retailerProfile->street = $request->street;
-
+    
         if ($request->hasFile('profile_picture')) {
             // Delete the old picture if it exists
             if ($retailerProfile->profile_picture) {
@@ -91,14 +78,14 @@ class ProfileController extends Controller
             $path = Storage::disk('public')->putFileAs('retailers_profile', $request->file('profile_picture'), $fileName);
             $retailerProfile->profile_picture = $path;
         }
-
+    
         $retailerProfile->save();
-
-        // Update profile_completed status to true
+    
+        // Update profile_completed status if business name and phone are filled
         $user = $request->user();
-        $user->profile_completed = true;
+        $user->profile_completed = !empty($retailerProfile->business_name) && !empty($retailerProfile->phone);
         $user->save();
-
+    
         return back()->with('success', 'Retailer profile updated successfully!');
     }
 
@@ -152,27 +139,35 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
         $isComplete = false;
-
+    
         if ($user->user_type === 'retailer' && $user->retailerProfile) {
             // Define what constitutes a complete profile
-            $requiredFields = [
+            $requiredProfileFields = [
                 'business_name',
-                'phone',
-                'barangay',
-                'street'
+                'phone'
             ];
-
+            
+            // Check profile fields
             $profileComplete = true;
-            foreach ($requiredFields as $field) {
+            foreach ($requiredProfileFields as $field) {
                 if (empty($user->retailerProfile->$field)) {
                     $profileComplete = false;
                     break;
                 }
             }
-
+            
+            // Check if there's a default address with required fields
+            if ($profileComplete) {
+                $address = $user->retailerProfile->defaultAddress;
+                
+                if (!$address || empty($address->barangay) || empty($address->street)) {
+                    $profileComplete = false;
+                }
+            }
+    
             $isComplete = $profileComplete;
         }
-
+    
         return response()->json([
             'isComplete' => $isComplete
         ]);

@@ -133,7 +133,7 @@ class OrderController extends Controller
                             $quantityRemaining -= $quantityToTake;
                         }
                     } else {
-                        Stock::create([
+                        Stock::create([ 
                             'product_id' => $product->id,
                             'batch_id' => null,
                             'type' => 'out',

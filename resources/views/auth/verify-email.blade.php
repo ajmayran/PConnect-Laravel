@@ -77,13 +77,5 @@
     </div>
 
     <!-- JavaScript for Redirect -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            @auth
-                if ({{ auth()->user()->hasVerifiedEmail() ? 'true' : 'false' }}) {
-                    window.location.href = "{{ route(auth()->user()->user_type . '.dashboard') }}";
-                }
-            @endauth
-        });
-    </script>
+
 </x-guest-layout>

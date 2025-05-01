@@ -76,8 +76,11 @@
                     <div class="mt-4">
                         <p><strong>Business Name:</strong> {{ $user->retailerProfile->business_name ?? 'N/A' }}</p>
                         <p><strong>Phone:</strong> {{ $user->retailerProfile->phone ?? 'N/A' }}</p>
-                        <p><strong>Address:</strong>
-                            @if ($user->retailerProfile)
+                        <p><strong>Default Address:</strong>
+                            @if ($user->retailerProfile && $user->retailerProfile->defaultAddress)
+                                {{ $user->retailerProfile->defaultAddress->barangay_name }},
+                                {{ $user->retailerProfile->defaultAddress->street ?? '' }}
+                            @elseif ($user->retailerProfile)
                                 {{ $user->retailerProfile->barangay_name }},
                                 {{ $user->retailerProfile->street ?? '' }}
                             @else
@@ -112,41 +115,127 @@
                         <input type="hidden" name="total_amount" value="{{ $directPurchase['final_subtotal'] ?? $directPurchase['subtotal'] }}">
 
                         <div class="flex flex-col space-y-4">
+                            <!-- Standard delivery options -->
                             <div class="flex items-center">
                                 <input type="radio" id="default_address" name="delivery_option" value="default"
                                     checked class="form-radio">
                                 <label for="default_address" class="ml-2">
                                     Use my default address:
-                                    <span
-                                        class="font-medium">{{ $user->retailerProfile->barangay_name }},{{ $user->retailerProfile->street ?? '' }}</span>
+                                    <span class="font-medium">
+                                        @if ($user->retailerProfile && $user->retailerProfile->defaultAddress)
+                                            {{ $user->retailerProfile->defaultAddress->barangay_name }},
+                                            {{ $user->retailerProfile->defaultAddress->street ?? '' }}
+                                        @elseif ($user->retailerProfile)
+                                            {{ $user->retailerProfile->barangay_name }},
+                                            {{ $user->retailerProfile->street ?? '' }}
+                                        @else
+                                            N/A
+                                        @endif
+                                    </span>
                                 </label>
                             </div>
+
+                            <!-- Use saved addresses option -->
                             <div class="flex items-center">
-                                <input type="radio" id="new_address" name="delivery_option" value="other"
+                                <input type="radio" id="saved_address" name="delivery_option" value="saved"
                                     class="form-radio">
-                                <label for="new_address" class="ml-2">Deliver to a different address</label>
+                                <label for="saved_address" class="ml-2">Use a saved address</label>
                             </div>
-                            <!-- New address input, hidden by default -->
-                            <div id="newAddressInput" class="hidden space-y-3">
-                                <div>
-                                    <label for="new_barangay"
-                                        class="block text-sm font-medium text-gray-700">Barangay</label>
-                                    <select id="new_barangay" name="new_barangay"
-                                        class="block w-full px-3 py-2 mt-1 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                                        <option value="">Select Barangay</option>
-                                    </select>
+
+                            <!-- Saved addresses selector (hidden by default) -->
+                            <div id="savedAddressesContainer" class="hidden mt-2 ml-6">
+                                @if($user->retailerProfile && $user->retailerProfile->addresses && $user->retailerProfile->addresses->count() > 0)
+                                    @foreach($user->retailerProfile->addresses as $address)
+                                        <div class="flex items-center mb-2">
+                                            <input type="radio" id="address_{{ $address->id }}" 
+                                                name="selected_address_id" value="{{ $address->id }}"
+                                                {{ $address->is_default ? 'checked' : '' }}
+                                                class="form-radio">
+                                            <label for="address_{{ $address->id }}" class="ml-2">
+                                                {{ $address->label }}: {{ $address->barangay_name }}, {{ $address->street }}
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <p class="text-sm text-gray-500">No saved addresses found. Please add an address in your profile.</p>
+                                @endif
+                            </div>
+
+                            <!-- Multi-Address Option -->
+                            <div class="pt-4 mt-6 border-t border-gray-200">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="enable_multi_address" name="is_multi_address" value="1"
+                                        class="w-5 h-5 text-green-600 form-checkbox" 
+                                        {{ $directPurchase['final_subtotal'] < 5000 ? 'disabled' : '' }}>
+                                    <label for="enable_multi_address" class="ml-2 font-medium">
+                                        Split Order for Multiple Addresses
+                                    </label>
+                                </div>
+                                
+                                @if($directPurchase['final_subtotal'] < 5000)
+                                    <p class="mt-1 text-sm text-orange-600 ml-7">
+                                        Your order must be at least ₱5,000 to qualify for multiple address delivery.
+                                    </p>
+                                @else
+                                    <p class="mt-1 text-sm text-gray-600 ml-7">
+                                        You can split this order and deliver to multiple addresses.
+                                    </p>
+                                @endif
+                            </div>
+
+                            <!-- Multi-Address Selection (initially hidden) -->
+                            <div id="multiAddressSection" class="hidden pt-4 mt-4 space-y-4 border-t border-gray-200">
+                                <h3 class="text-lg font-medium">Split Order Quantities</h3>
+                                <p class="text-sm text-gray-600">
+                                    For product: <strong>{{ $directProduct->product_name }}</strong> 
+                                    (Total Quantity: {{ $directPurchase['quantity'] }})
+                                </p>
+
+                                <div id="splitQuantityContainer" class="space-y-4">
+                                    <!-- First delivery address section (always shown) -->
+                                    <div class="p-4 border rounded-lg bg-gray-50">
+                                        <h4 class="font-medium">Delivery Location 1</h4>
+                                        
+                                        <div class="mt-2">
+                                            <label class="block text-sm font-medium text-gray-700">Address</label>
+                                            <select name="multi_address[0][address_id]" 
+                                                class="block w-full px-3 py-2 mt-1 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                                <option value="default">Default Address</option>
+                                                @if($user->retailerProfile && $user->retailerProfile->addresses && $user->retailerProfile->addresses->count() > 0)
+                                                    @foreach($user->retailerProfile->addresses as $address)
+                                                        <option value="{{ $address->id }}">
+                                                            {{ $address->label }}: {{ $address->barangay_name }}, {{ $address->street }}
+                                                        </option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="mt-2">
+                                            <label class="block text-sm font-medium text-gray-700">Quantity</label>
+                                            <input type="number" name="multi_address[0][quantity]" min="1" 
+                                                max="{{ $directPurchase['quantity'] }}" 
+                                                value="{{ $directPurchase['quantity'] }}"
+                                                class="block w-full px-3 py-2 mt-1 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Additional delivery locations will be added dynamically -->
                                 </div>
 
-                                <div>
-                                    <label for="new_street" class="block text-sm font-medium text-gray-700">Street
-                                        Address</label>
-                                    <textarea id="new_street" name="new_street" rows="2"
-                                        class="block w-full px-3 py-2 mt-1 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                                        placeholder="Enter street address"></textarea>
+                                <!-- Add more locations button -->
+                                <div class="text-center">
+                                    <button type="button" id="addLocationBtn"
+                                        class="px-4 py-2 text-sm text-green-600 border border-green-600 rounded-lg hover:bg-green-50">
+                                        + Add Another Delivery Location
+                                    </button>
                                 </div>
-
-                                <input type="hidden" id="new_delivery_address" name="new_delivery_address"
-                                    value="">
+                                
+                                <div class="text-sm text-red-600">
+                                    <span id="quantityErrorMessage" class="hidden">
+                                        Total quantity must equal {{ $directPurchase['quantity'] }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <button type="submit"
@@ -185,118 +274,159 @@
     @endif
 
     <script>
-        // Toggle display of new address input based on radio selection.
-        const newAddressRadio = document.getElementById("new_address");
+        // Variables for quantity validation
+        const totalQuantity = {{ $directPurchase['quantity'] }};
+        let locationCount = 1;
+        
+        // Toggle display based on radio selection
         const defaultAddressRadio = document.getElementById("default_address");
-        const newAddressInput = document.getElementById("newAddressInput");
+        const savedAddressRadio = document.getElementById("saved_address");
 
+        const savedAddressesContainer = document.getElementById("savedAddressesContainer");
+        
+        // Multi-address related elements
+        const enableMultiAddressCheckbox = document.getElementById("enable_multi_address");
+        const multiAddressSection = document.getElementById("multiAddressSection");
+        const addLocationBtn = document.getElementById("addLocationBtn");
+        const splitQuantityContainer = document.getElementById("splitQuantityContainer");
+        const quantityErrorMessage = document.getElementById("quantityErrorMessage");
+        
+        // Handle radio button changes
         newAddressRadio.addEventListener("change", function() {
             if (this.checked) {
                 newAddressInput.classList.remove("hidden");
+                savedAddressesContainer.classList.add("hidden");
             }
         });
 
-        defaultAddressRadio.addEventListener("change", function() {
+        savedAddressRadio.addEventListener("change", function() {
             if (this.checked) {
-                newAddressInput.classList.add("hidden");
+                savedAddressesContainer.classList.remove("hidden");
             }
         });
 
+        // Toggle multi-address section
+        enableMultiAddressCheckbox.addEventListener("change", function() {
+            if (this.checked) {
+                multiAddressSection.classList.remove("hidden");
+                // Disable other delivery options
+                newAddressRadio.disabled = true;
+                defaultAddressRadio.disabled = true;
+                savedAddressRadio.disabled = true;
+            } else {
+                multiAddressSection.classList.add("hidden");
+                // Enable other delivery options
+                newAddressRadio.disabled = false;
+                defaultAddressRadio.disabled = false;
+                savedAddressRadio.disabled = false;
+            }
+        });
+        
+        // Add location button functionality
+        addLocationBtn.addEventListener("click", function() {
+            if (locationCount >= 3) {
+                Swal.fire({
+                    title: 'Limit Reached',
+                    text: 'You can only deliver to a maximum of 3 locations.',
+                    icon: 'warning',
+                });
+                return;
+            }
+            
+            locationCount++;
+            
+            const newLocationDiv = document.createElement('div');
+            newLocationDiv.className = 'border rounded-lg p-4 bg-gray-50';
+            newLocationDiv.id = `location-${locationCount}`;
+            
+            newLocationDiv.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <h4 class="font-medium">Delivery Location ${locationCount}</h4>
+                    <button type="button" onclick="removeLocation(${locationCount})" 
+                        class="text-red-600 hover:text-red-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="mt-2">
+                    <label class="block text-sm font-medium text-gray-700">Address</label>
+                    <select name="multi_address[${locationCount-1}][address_id]" 
+                        class="block w-full px-3 py-2 mt-1 border rounded-lg multi-address-select focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option value="default">Default Address</option>
+                        @if($user->retailerProfile && $user->retailerProfile->addresses && $user->retailerProfile->addresses->count() > 0)
+                            @foreach($user->retailerProfile->addresses as $address)
+                                <option value="{{ $address->id }}">
+                                    {{ $address->label }}: {{ $address->barangay_name }}, {{ $address->street }}
+                                </option>
+                            @endforeach
+                        @endif
+                    </select>
+                </div>
+                
+                <div class="mt-2">
+                    <label class="block text-sm font-medium text-gray-700">Quantity</label>
+                    <input type="number" name="multi_address[${locationCount-1}][quantity]" min="1" 
+                        max="${totalQuantity}" value="1"
+                        class="block w-full px-3 py-2 mt-1 border rounded-lg multi-quantity-input focus:outline-none focus:ring-2 focus:ring-green-500"
+                        onchange="validateTotalQuantity()">
+                </div>
+            `;
+            
+            splitQuantityContainer.appendChild(newLocationDiv);
+            validateTotalQuantity();
+        });
+        
+        // Remove location function
+        window.removeLocation = function(id) {
+            const locationDiv = document.getElementById(`location-${id}`);
+            if (locationDiv) {
+                locationDiv.remove();
+                locationCount--;
+                validateTotalQuantity();
+            }
+        };
+        
+        // Validate total quantities match the original order
+        function validateTotalQuantity() {
+            const quantityInputs = document.querySelectorAll('.multi-quantity-input, [name="multi_address[0][quantity]"]');
+            let currentTotal = 0;
+            
+            quantityInputs.forEach(input => {
+                currentTotal += parseInt(input.value) || 0;
+            });
+            
+            if (currentTotal !== totalQuantity) {
+                quantityErrorMessage.classList.remove('hidden');
+                return false;
+            } else {
+                quantityErrorMessage.classList.add('hidden');
+                return true;
+            }
+        }
+        
+        // Add validation to the first quantity input
+        document.querySelector('[name="multi_address[0][quantity]"]').addEventListener('change', validateTotalQuantity);
+        
+
+        // Form submission validation
         const orderForm = document.getElementById("orderForm");
         orderForm.addEventListener("submit", function(e) {
             e.preventDefault();
-            Swal.fire({
-                title: 'Confirm Order?',
-                text: 'Do you want to place this order?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, place order',
-                cancelButtonText: 'No, cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    orderForm.submit();
-                }
-            });
-        });
 
-        // Load barangays when selecting "different address" option
-        if (newAddressRadio) {
-            // Add to your existing event listener
-            newAddressRadio.addEventListener("change", function() {
-                if (this.checked) {
-                    newAddressInput.classList.remove("hidden");
-                    loadBarangays();
-                }
-            });
-
-            const newBarangaySelect = document.getElementById("new_barangay");
-            const newStreetInput = document.getElementById("new_street");
-            const newDeliveryAddressInput = document.getElementById("new_delivery_address");
-
-            // Function to load barangays
-            function loadBarangays() {
-                fetch('/barangays/093170')
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        // Clear previous options
-                        newBarangaySelect.innerHTML = '<option value="">Select Barangay</option>';
-
-                        // Add options
-                        data.forEach(barangay => {
-                            const option = document.createElement('option');
-                            option.value = barangay.code;
-                            option.textContent = barangay.name;
-                            option.setAttribute('data-name', barangay.name);
-                            newBarangaySelect.appendChild(option);
-                        });
-                    })
-                    .catch(error => {
-                        console.error('Error loading barangays:', error);
-                    });
-            }
-
-            // Update hidden input when either barangay or street changes
-            newBarangaySelect.addEventListener('change', updateNewDeliveryAddress);
-            newStreetInput.addEventListener('input', updateNewDeliveryAddress);
-
-            function updateNewDeliveryAddress() {
-                const selectedOption = newBarangaySelect.options[newBarangaySelect.selectedIndex];
-                const barangayName = selectedOption.textContent;
-                const street = newStreetInput.value;
-
-                if (barangayName && barangayName !== 'Select Barangay') {
-                    newDeliveryAddressInput.value = street ? `${barangayName}, ${street}` : barangayName;
-                } else {
-                    newDeliveryAddressInput.value = street;
-                }
-            }
-        }
-
-        // Add form validation to original submit handler
-        orderForm.addEventListener("submit", function(e) {
-            e.preventDefault();
-
-            // Check if new address is selected but no barangay is chosen
-            if (newAddressRadio.checked) {
-                const newBarangaySelect = document.getElementById("new_barangay");
-                if (newBarangaySelect.value === "") {
+            // Validate multi-address quantities if enabled
+            if (enableMultiAddressCheckbox.checked) {
+                if (!validateTotalQuantity()) {
                     Swal.fire({
-                        title: 'Missing Information',
-                        text: 'Please select a barangay for your delivery address',
-                        icon: 'warning',
+                        title: 'Invalid Quantities',
+                        text: `Total quantity across all locations must equal ${totalQuantity}`,
+                        icon: 'error',
                     });
                     return;
                 }
-
-                // Ensure the hidden field is updated
-                updateNewDeliveryAddress();
             }
-
+            // Check if new address is selected but no barangay is chosen
             Swal.fire({
                 title: 'Confirm Order?',
                 text: 'Do you want to place this order?',

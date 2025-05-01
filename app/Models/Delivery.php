@@ -10,11 +10,12 @@ class Delivery extends Model
     protected $fillable = [
         'order_id',
         'truck_id',
+        'address_id',
         'tracking_number',
         'estimated_delivery',
         'status',
-        'exchange_for_return_id',  
-        'is_exchange_delivery',         
+        'exchange_for_return_id',
+        'is_exchange_delivery',
         'delivered_at'
     ];
 
@@ -57,5 +58,10 @@ class Delivery extends Model
     public function returnRequest()
     {
         return $this->belongsTo(ReturnRequest::class, 'exchange_for_return_id');
+    }
+
+    public function itemDeliveries()
+    {
+        return $this->hasMany(OrderItemDelivery::class);
     }
 }

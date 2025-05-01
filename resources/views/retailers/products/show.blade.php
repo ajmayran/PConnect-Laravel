@@ -406,7 +406,7 @@
                 event.preventDefault();
                 if (!validateQuantity()) return;
 
-                // Check if profile is complete first
+                // Check if profile is complete first   
                 fetch('{{ route('retailers.profile.check-complete') }}', {
                         method: 'GET',
                         headers: {

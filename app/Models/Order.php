@@ -15,6 +15,7 @@ class Order extends Model
         'status_updated_at',
         'reject_reason',
         'cancel_reason',
+        'is_multi_address',
     ];
 
     protected $casts = [

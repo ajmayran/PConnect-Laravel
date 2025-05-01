@@ -22,7 +22,7 @@
                 <div>
                     <h1 class="text-xl font-bold text-gray-800 sm:text-2xl">{{ $distributor->company_name }}</h1>
                     <p class="text-sm text-gray-600 sm:text-base">
-                        {{ $distributor->barangay_name }}, {{ $distributor->street }}</p>
+                        {{ $distributor->defaultAddress ? $distributor->defaultAddress->barangay_name.', '.$distributor->defaultAddress->street : 'No address provided' }}</p>
 
                     <!-- Follower Info -->
                     <div class="flex items-center mt-2">

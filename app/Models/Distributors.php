@@ -16,41 +16,19 @@ class Distributors extends Model
         'company_email',
         'company_phone_number',
         'profile_completed',
-        'region',
-        'province',
-        'city',
-        'barangay',
-        'street',
         'company_profile_image',
         'cut_off_time',
     ];
 
 
-    public function getBarangayNameAttribute()
+    public function addresses()
     {
-        if (!$this->barangay) {
-            return 'N/A';
-        }
+        return $this->morphMany(Address::class, 'addressable');
+    }
     
-        static $barangays = [];
-    
-        if (!isset($barangays[$this->barangay])) {
-         
-            $barangay = DB::table('barangays')->where('code', $this->barangay)->first();
-            if (!$barangay) {
-                $barangay = DB::table('barangays')->where('name', $this->barangay)->first();
-                
-                // If found by name, we should update the record to use the code instead
-                if ($barangay) {
-                    \Illuminate\Support\Facades\Log::info("Barangay found by name: {$this->barangay}, code should be: {$barangay->code}");
-                    // You could update the record here if needed
-                }
-            }
-            
-            $barangays[$this->barangay] = $barangay ? $barangay->name : $this->barangay;
-        }
-    
-        return $barangays[$this->barangay];
+    public function defaultAddress()
+    {
+        return $this->morphOne(Address::class, 'addressable')->where('is_default', true);
     }
 
     public function user(): BelongsTo

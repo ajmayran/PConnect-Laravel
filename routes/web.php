@@ -53,6 +53,7 @@ use App\Http\Controllers\Retailers\RetailerProductController;
 use App\Http\Controllers\Distributors\ReturnRequestController;
 use App\Http\Controllers\Retailers\DistributorFollowController;
 use App\Http\Controllers\Retailers\RetailerDashboardController;
+use App\Http\Controllers\Retailers\RetailerAddressController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Distributors\RetailerActionsController;
 use App\Http\Controllers\Distributors\RetailerProfileController;
@@ -77,7 +78,7 @@ Route::middleware('auth')->group(function () {
     Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
         ->middleware('throttle:6,1')
         ->name('verification.send');
-    
+
     Route::get('approval-waiting', [RegisteredUserController::class, 'approvalWaiting'])->name('auth.approval-waiting');
     Route::get('application-rejected', [RegisteredUserController::class, 'applicationRejected'])->name('auth.application-rejected');
 });
@@ -154,7 +155,7 @@ Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function (
     Route::post('admin/retailers/{id}/reject-credentials', [AdminRetailerController::class, 'rejectCredential'])->name('retailers.reject-credentials');
 
     // Reports Routes
-    Route::get('/admin/reports', [App\Http\Controllers\Admin\reportsController::class, 'reports'])->name('reports.index');    
+    Route::get('/admin/reports', [App\Http\Controllers\Admin\reportsController::class, 'reports'])->name('reports.index');
     Route::get('/admin/reports/download-pdf', [App\Http\Controllers\Admin\reportsController::class, 'downloadPdf'])->name('reports.downloadPdf');
 
 
@@ -163,7 +164,6 @@ Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function (
     Route::get('/admin/subscriptions/{id}', [App\Http\Controllers\Admin\SubscriptionController::class, 'show'])->name('subscriptions.show');
     Route::post('/admin/subscriptions/{id}/extend', [App\Http\Controllers\Admin\SubscriptionController::class, 'extend'])->name('subscriptions.extend');
     Route::post('/admin/subscriptions/{id}/cancel', [App\Http\Controllers\Admin\SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
-
 });
 
 
@@ -171,6 +171,13 @@ Route::middleware(['auth', 'checkRole:admin'])->name('admin.')->group(function (
 // Retailer Routes
 Route::middleware(['auth', 'verified', 'checkRole:retailer', 'check.distributor.block', 'check.retailer.credentials'])->name('retailers.')->prefix('retailers')->group(function () {
     Route::get('/dashboard', [RetailerDashboardController::class, 'index'])->name('dashboard');
+
+    // Address Routes
+    Route::get('/address', [RetailerAddressController::class, 'index'])->name('address.index');
+    Route::post('/address', [RetailerAddressController::class, 'store'])->name('address.store');
+    Route::put('/address/{address}', [RetailerAddressController::class, 'update'])->name('address.update');
+    Route::delete('/address/{address}', [RetailerAddressController::class, 'destroy'])->name('address.destroy');
+    Route::patch('/address/{address}/set-default', [RetailerAddressController::class, 'setDefault'])->name('address.set-default');
 
     // Ticket Routes
     Route::get('/tickets/create', [RetailerTicketController::class, 'create'])->name('tickets.create');
@@ -389,7 +396,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::get('/refunds', [DistributorRefundController::class, 'index'])->name('distributors.refunds.index');
     Route::post('/refunds/process/{id}', [DistributorRefundController::class, 'processRefund'])->name('distributors.refunds.process');
     Route::post('/refunds/complete/{id}', [DistributorRefundController::class, 'completeRefund'])->name('distributors.refunds.complete');
-    
+
 
     // Exchanges
     Route::get('/exchanges', [ExchangeController::class, 'index'])->name('distributors.exchanges.index');
@@ -467,4 +474,3 @@ Route::get('barangays/{cityCode}', [AddressController::class, 'getBarangays']);
 
 Route::get('/api/debug/zamboanga', [AddressController::class, 'debugZamboangaData']);
 require __DIR__ . '/auth.php';
-

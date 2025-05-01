@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Distributors;
+use App\Models\Address;
 
 class DistributorSeeder extends Seeder
 {
@@ -23,17 +24,26 @@ class DistributorSeeder extends Seeder
         ]);
 
         // Create a corresponding distributor record
-        Distributors::create([
+        $distributor = Distributors::create([
             'user_id' => $user->id,
             'company_name' => 'Test Company',
             'company_email' => 'testcompany@example.com',
             'company_profile_image' => '', // Set to empty string for testing
-            'region' => '',
-            'province' => '',
-            'city' => '',
-            'barangay' => 'Test Barangay',
-            'street' => 'Test Street',
             'company_phone_number' => '1234567890'
         ]);
+
+        // Create an address for the distributor
+        $address = new Address([
+            'region' => '09', // Region IX - Zamboanga Peninsula
+            'province' => '097300', // Zamboanga del Sur
+            'city' => '093170', // City of Zamboanga
+            'barangay' => '09317001', // Ayala barangay 
+            'street' => 'Test Street, Building 123',
+            'is_default' => true,
+            'label' => 'Company Address'
+        ]);
+
+        // Save address using the relationship
+        $distributor->addresses()->save($address);
     }
 }

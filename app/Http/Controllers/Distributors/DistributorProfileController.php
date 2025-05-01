@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Distributors;
 
 use view;
 use App\Models\User;
+use App\Models\Address;
 use App\Models\Distributors;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -66,30 +67,59 @@ class DistributorProfileController extends Controller
             $distributor->user_id = $user->id;
             $distributor->company_name = $request->company_name;
             $distributor->company_email = $request->company_email;
-            $distributor->region = $request->region;
-            $distributor->province = $request->province;
-            $distributor->city = $request->city;
-            $distributor->barangay = $request->barangay;
-            $distributor->street = $request->street;
             $distributor->company_phone_number = $request->company_phone_number;
             $distributor->company_profile_image = $imagePath;
             $distributor->save();
+            
+            // Create the address for this distributor
+            $address = new Address([
+                'region' => $request->region,
+                'province' => $request->province,
+                'city' => $request->city,
+                'barangay' => $request->barangay,
+                'street' => $request->street,
+                'is_default' => true,
+                'label' => 'Company Address'
+            ]);
+            
+            $distributor->addresses()->save($address);
+            
         } else {
             $distributor = $user->distributor;
-            $distributor->update($request->only([
-                'company_name',
-                'company_email',
-                'region',
-                'province',
-                'city',
-                'barangay',
-                'street',
-                'company_phone_number',
-            ]));
+            $distributor->update([
+                'company_name' => $request->company_name,
+                'company_email' => $request->company_email,
+                'company_phone_number' => $request->company_phone_number,
+            ]);
 
             if ($imagePath) {
                 $distributor->company_profile_image = $imagePath;
                 $distributor->save();
+            }
+            
+            // Update or create the address
+            $address = $distributor->defaultAddress;
+            
+            if ($address) {
+                $address->update([
+                    'region' => $request->region,
+                    'province' => $request->province,
+                    'city' => $request->city,
+                    'barangay' => $request->barangay,
+                    'street' => $request->street,
+                ]);
+            } else {
+                $address = new Address([
+                    'region' => $request->region,
+                    'province' => $request->province,
+                    'city' => $request->city,
+                    'barangay' => $request->barangay,
+                    'street' => $request->street,
+                    'is_default' => true,
+                    'label' => 'Company Address'
+                ]);
+                
+                $distributor->addresses()->save($address);
             }
         }
 
@@ -97,18 +127,18 @@ class DistributorProfileController extends Controller
         ->where('id', Auth::id())
         ->update(['profile_completed' => true]);
     
-    // Refresh user model to get updated values from database
-    $user = User::find($user->id);
+        // Refresh user model to get updated values from database
+        $user = User::find($user->id);
 
-    // When the profile is completed, redirect to subscription page if they haven't seen it yet
-    if (!$user->has_seen_subscription_page) {
-        // Mark the user as having seen the subscription page
-        $user->has_seen_subscription_page = true;
-        $user->save();
+        // When the profile is completed, redirect to subscription page if they haven't seen it yet
+        if (!$user->has_seen_subscription_page) {
+            // Mark the user as having seen the subscription page
+            $user->has_seen_subscription_page = true;
+            $user->save();
 
-        return redirect()->route('distributors.subscription')
-            ->with('success', 'Your profile has been completed! Now choose a subscription plan.');
-    }
+            return redirect()->route('distributors.subscription')
+                ->with('success', 'Your profile has been completed! Now choose a subscription plan.');
+        }
 
         return redirect()->route('distributors.dashboard')->with('success', 'Welcome to PConnect, Distributor!');
     }
@@ -119,14 +149,19 @@ class DistributorProfileController extends Controller
     public function edit()
     {
         $user = Auth::user();
-
-        if ($user->distributor && $user->distributor->barangay) {
-            // Fetch barangay name from DB if needed
-            $barangay = DB::table('barangays')->where('code', $user->distributor->barangay)->first();
-            if ($barangay) {
-                $user->distributor->barangay_name = $barangay->name;
-            } else {
-                $user->distributor->barangay_name = 'Unknown';
+        
+        // Get the distributor's address
+        if ($user->distributor) {
+            $address = $user->distributor->defaultAddress;
+            
+            if ($address && $address->barangay) {
+                // Fetch barangay name from DB
+                $barangay = DB::table('barangays')->where('code', $address->barangay)->first();
+                if ($barangay) {
+                    $address->barangay_name = $barangay->name;
+                } else {
+                    $address->barangay_name = 'Unknown';
+                }
             }
         }
 
@@ -177,11 +212,6 @@ class DistributorProfileController extends Controller
 
         $distributorProfile->company_name = $request->company_name;
         $distributorProfile->company_email = $request->company_email;
-        $distributorProfile->region = $request->region;
-        $distributorProfile->province = $request->province;
-        $distributorProfile->city = $request->city;
-        $distributorProfile->barangay = $request->barangay;
-        $distributorProfile->street = $request->street;
         $distributorProfile->company_phone_number = $request->company_phone_number;
 
         if ($request->hasFile('company_profile_image')) {
@@ -197,6 +227,31 @@ class DistributorProfileController extends Controller
         }
 
         $distributorProfile->save();
+        
+        // Update or create address
+        $address = $distributorProfile->defaultAddress;
+        
+        if ($address) {
+            $address->update([
+                'region' => $request->region,
+                'province' => $request->province,
+                'city' => $request->city,
+                'barangay' => $request->barangay,
+                'street' => $request->street,
+            ]);
+        } else {
+            $address = new Address([
+                'region' => $request->region,
+                'province' => $request->province,
+                'city' => $request->city,
+                'barangay' => $request->barangay,
+                'street' => $request->street,
+                'is_default' => true,
+                'label' => 'Company Address'
+            ]);
+            
+            $distributorProfile->addresses()->save($address);
+        }
 
         // Update profile_completed status to true
         $user = $request->user();

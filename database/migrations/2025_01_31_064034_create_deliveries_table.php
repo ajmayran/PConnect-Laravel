@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('deliveries', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('order_id');
+            $table->unsignedBigInteger('address_id');
             $table->string('tracking_number')->unique()->nullable();
             $table->datetime('estimated_delivery')->nullable();
             $table->enum('status', [
@@ -24,7 +25,9 @@ return new class extends Migration
                 'failed'
             ])->default('pending');
             $table->timestamps();
+            $table->foreign('address_id')->references('id')->on('addresses')->onDelete('cascade');
             $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
+
         });
     }
 
