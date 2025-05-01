@@ -65,6 +65,11 @@ class Delivery extends Model
         return $this->hasMany(OrderItemDelivery::class);
     }
 
+    public function orderItemDeliveries()
+    {
+        return $this->hasMany(OrderItemDelivery::class);
+    }
+
     public function address()
     {
         return $this->belongsTo(Address::class, 'address_id');

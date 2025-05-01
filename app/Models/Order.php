@@ -55,9 +55,14 @@ class Order extends Model
     {
         return $this->hasOne(Payment::class, 'order_id', 'id');
     }
-    
+
     public function returnRequests()
     {
         return $this->hasMany(\App\Models\ReturnRequest::class);
+    }
+
+    public function deliveries()
+    {
+        return $this->hasMany(Delivery::class);
     }
 }

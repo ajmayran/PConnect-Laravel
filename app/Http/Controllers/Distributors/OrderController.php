@@ -192,7 +192,7 @@ class OrderController extends Controller
                     $orderDetail = $order->orderDetails->first();
                     $addressId = null;
 
-                        // Try to find an address for the retailer
+                    // Try to find an address for the retailer
                     if ($order->user && $order->user->retailerProfile && $order->user->retailerProfile->defaultAddress) {
                         $addressId = $order->user->retailerProfile->defaultAddress->id;
                     } else {
@@ -566,105 +566,93 @@ class OrderController extends Controller
         return view('distributors.orders.history', compact('orders'));
     }
 
+
     public function getOrderDeliveries(Order $order)
     {
-        try {
-            if ($order->status === self::STATUS_PENDING) {
-                if ($order->is_multi_address) {
-                    // Existing multi-address order logic
-                    $orderItemDeliveries = \App\Models\OrderItemDelivery::with(['address', 'orderDetail.product'])
-                        ->whereHas('orderDetail', function ($query) use ($order) {
-                            $query->where('order_id', $order->id);
-                        })
-                        ->get();
+        $isMultiAddress = $order->is_multi_address;
 
-                    $deliveries = $orderItemDeliveries->map(function ($item) {
-                        $address = $item->address;
+        if ($isMultiAddress) {
+            // For multi-address orders, get all delivery locations
+            if ($order->status === 'pending') {
+                // For pending orders, get from order_item_deliveries
+                $deliveries = [];
 
-                        // Fetch barangay name if available
-                        if ($address && $address->barangay) {
-                            $barangay = DB::table('barangays')->where('code', $address->barangay)->first();
-                            $address->barangay_name = $barangay ? $barangay->name : $address->barangay;
+                // Get distinct addresses
+                $orderItemDeliveries = \App\Models\OrderItemDelivery::whereHas('orderDetail', function ($query) use ($order) {
+                    $query->where('order_id', $order->id);
+                })
+                    ->with(['address', 'orderDetail.product'])
+                    ->get()
+                    ->groupBy('address_id');
+
+                foreach ($orderItemDeliveries as $addressId => $items) {
+                    $address = $items->first()->address;
+
+                    // No need to manually lookup barangay name, use the accessor
+                    // The accessor will be triggered when address is converted to array/JSON
+
+                    $productItems = [];
+                    foreach ($items as $item) {
+                        if ($item->orderDetail && $item->orderDetail->product) {
+                            $productItems[] = [
+                                'product_id' => $item->orderDetail->product_id,
+                                'product_name' => $item->orderDetail->product->product_name,
+                                'quantity' => $item->quantity
+                            ];
                         }
-
-                        return [
-                            'address' => $address,
-                            'items' => [
-                                [
-                                    'product_name' => $item->orderDetail->product->product_name ?? 'Product not found',
-                                    'quantity' => $item->quantity,
-                                ]
-                            ],
-                            'status' => 'pending',
-                            'tracking_number' => null,
-                        ];
-                    });
-                } else {
-                    // For regular pending orders with delivery_address in OrderDetails
-                    $orderDetail = $order->orderDetails->first();
-
-                    if ($orderDetail && $orderDetail->delivery_address) {
-                        // Create a virtual address object with the text address
-                        $deliveryAddressObject = [
-                            'barangay_name' => $orderDetail->delivery_address,
-                            'street' => ''
-                        ];
-
-                        $deliveries = [[
-                            'address' => $deliveryAddressObject,
-                            'items' => $order->orderDetails->map(function ($detail) {
-                                return [
-                                    'product_name' => $detail->product->product_name ?? 'Product not found',
-                                    'quantity' => $detail->quantity,
-                                ];
-                            })->toArray(),
-                            'status' => 'pending',
-                            'tracking_number' => null,
-                        ]];
-                    } else {
-                        $deliveries = []; // No delivery address found
                     }
+
+                    $deliveries[] = [
+                        'address' => [
+                            'id' => $address->id,
+                            'barangay' => $address->barangay,
+                            'barangay_name' => $address->barangay_name, // Explicitly call the accessor
+                            'street' => $address->street,
+                        ],
+                        'status' => 'pending',
+                        'items' => $productItems
+                    ];
                 }
             } else {
-                $deliveries = \App\Models\Delivery::with(['address', 'itemDeliveries.orderDetail.product'])
-                    ->where('order_id', $order->id)
-                    ->get()
+                // For orders in processing/other status, get from deliveries table
+                $deliveries = $order->deliveries()->with(['address', 'orderItemDeliveries.orderDetail.product'])->get()
                     ->map(function ($delivery) {
-                        $address = $delivery->address;
+                        // No need to manually lookup the barangay name
 
-                        // Fetch barangay name if available
-                        if ($address && $address->barangay) {
-                            $barangay = DB::table('barangays')->where('code', $address->barangay)->first();
-                            $address->barangay_name = $barangay ? $barangay->name : $address->barangay;
-                        }
-
-                        $items = $delivery->itemDeliveries->map(function ($itemDelivery) {
+                        $items = $delivery->orderItemDeliveries->map(function ($itemDelivery) {
                             return [
-                                'product_name' => $itemDelivery->orderDetail->product->product_name ?? 'Product not found',
-                                'quantity' => $itemDelivery->quantity,
+                                'product_id' => $itemDelivery->orderDetail->product_id,
+                                'product_name' => $itemDelivery->orderDetail->product->product_name,
+                                'quantity' => $itemDelivery->quantity
                             ];
-                        });
+                        })->toArray();
 
                         return [
-                            'address' => $address,
-                            'items' => $items,
+                            'id' => $delivery->id,
+                            'address' => $delivery->address, // Address model already has barangay_name accessor
                             'status' => $delivery->status,
-                            'tracking_number' => $delivery->tracking_number,
+                            'items' => $items
                         ];
-                    });
+                    })->toArray();
             }
+        } else {
+            // For regular orders
+            $deliveries = $order->deliveries()->with(['address'])->get()->map(function ($delivery) {
+                // No need to manually lookup the barangay name
 
-            return response()->json([
-                'success' => true,
-                'is_multi_address' => $order->is_multi_address,
-                'deliveries' => $deliveries,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error fetching deliveries: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to load delivery information.',
-            ], 500);
+                return [
+                    'id' => $delivery->id,
+                    'address' => $delivery->address, // Address model already has barangay_name accessor
+                    'status' => $delivery->status,
+                    'items' => []
+                ];
+            })->toArray();
         }
+
+        return response()->json([
+            'success' => true,
+            'is_multi_address' => $isMultiAddress,
+            'deliveries' => $deliveries
+        ]);
     }
 }

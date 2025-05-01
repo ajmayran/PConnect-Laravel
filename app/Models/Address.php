@@ -24,6 +24,8 @@ class Address extends Model
         'is_default' => 'boolean',
     ];
 
+    protected $appends = ['barangay_name', 'formatted_address'];
+
     /**
      * Get the parent addressable model.
      */
