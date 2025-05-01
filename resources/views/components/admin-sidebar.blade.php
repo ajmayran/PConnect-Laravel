@@ -64,13 +64,6 @@
                 </ul>
             </li>
             <li class="mb-1 group">
-                <a href="{{ route('admin.reports.index') }}"
-                    class="flex items-center py-2 px-4 hover:bg-green-500 hover:text-gray-100 rounded-md">
-                    <iconify-icon icon="mdi:chart-box-outline" class="mr-3 text-xl"></iconify-icon>
-                    <span class="text-sm">Reports</span>
-                </a>
-            </li>
-            <li class="mb-1 group">
                 <a href="#"
                     class="flex items-center py-2 px-4 hover:bg-green-500 hover:text-gray-100 rounded-md group-[.active]:bg-green-600 group-[.active]:text-white group-[.selected]:bg-green-400 group-[.selected]:text-gray-100 sidebar-dropdown-toggle">
                     <iconify-icon icon="mdi:users" class="mr-3 text-xl"></iconify-icon>
@@ -143,6 +136,13 @@
                         </a>
                     </li>
                 </ul>
+            </li>
+            <li class="mb-1 group">
+                <a href="{{ route('admin.reports.index') }}"
+                    class="flex items-center py-2 px-4 hover:bg-green-500 hover:text-gray-100 rounded-md">
+                    <iconify-icon icon="mdi:chart-box-outline" class="mr-3 text-xl"></iconify-icon>
+                    <span class="text-sm">Reports</span>
+                </a>
             </li>
         </ul>
     </div>
