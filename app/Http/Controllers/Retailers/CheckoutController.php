@@ -186,15 +186,16 @@ class CheckoutController extends Controller
             // Create a new object with original and discounted values
             $discountedItems[] = [
                 'id' => $item->id,
+                'cart_id' => $item->cart_id, // <-- Add this line
                 'product' => $product,
                 'quantity' => $quantity,
                 'original_price' => $product->price,
                 'original_subtotal' => $originalSubtotal,
                 'discount_amount' => $discountAmount,
                 'free_items' => $freeItems,
-                'final_subtotal' => $finalSubtotal, // Now correctly calculated
+                'final_subtotal' => $finalSubtotal,
                 'applied_discount' => $appliedDiscountName,
-                'subtotal' => $originalSubtotal // Adding subtotal for blade template compatibility
+                'subtotal' => $originalSubtotal
             ];
         }
 

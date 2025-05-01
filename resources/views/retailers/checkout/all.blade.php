@@ -33,44 +33,42 @@
                                             <div class="flex items-center px-4 py-4 border-b border-gray-100">
                                                 <div class="flex items-center flex-1">
                                                     <img class="object-cover w-16 h-16 mr-4 rounded"
-                                                        src="{{ $product->product->image ? asset('storage/products/' . basename($product->product->image)) : asset('img/default-product.jpg') }}"
-                                                        onerror="this.src='{{ asset('img/default-product.jpg') }}'"
-                                                        alt="{{ $product->product->product_name }}">
-                                                    <div>
+                                                    src="{{ $product['product']->image ? asset('storage/products/' . basename($product['product']->image)) : asset('img/default-product.jpg') }}"
+                                                    onerror="this.src='{{ asset('img/default-product.jpg') }}'"
+                                                    alt="{{ $product['product']->product_name }}">
+                                                <div>
                                                         <p class="font-semibold">
-                                                            {{ $product->product->product_name }}</p>
-                                                        <p class="text-sm text-gray-600">Qty:
-                                                            {{ $product->quantity }}</p>
+                                                            {{ $product['product']->product_name }}</p>
+                                                        <p class="text-sm text-gray-600">Qty: {{ $product['quantity'] }}</p>
 
                                                         <!-- Display discount information -->
-                                                        @if ($product->applied_discount)
+                                                        @if ($product['applied_discount'])
+                                                        <p class="text-sm text-green-600">
+                                                            Discount: {{ $product['applied_discount'] }}
+                                                        </p>
+                                                        @if ($product['discount_amount'] > 0)
                                                             <p class="text-sm text-green-600">
-                                                                Discount: {{ $product->applied_discount }}
+                                                                -₱{{ number_format($product['discount_amount'], 2) }}
                                                             </p>
-                                                            @if ($product->discount_amount > 0)
-                                                                <p class="text-sm text-green-600">
-                                                                    -₱{{ number_format($product->discount_amount, 2) }}
-                                                                </p>
-                                                            @endif
-                                                            @if ($product->free_items > 0)
-                                                                <p class="text-sm text-green-600">
-                                                                    +{{ $product->free_items }} free item(s)
-                                                                </p>
-                                                            @endif
                                                         @endif
+                                                        @if ($product['free_items'] > 0)
+                                                            <p class="text-sm text-green-600">
+                                                                +{{ $product['free_items'] }} free item(s)
+                                                            </p>
+                                                        @endif
+                                                    @endif
                                                     </div>
                                                 </div>
                                                 <div class="w-24 text-right">
-                                                    @if ($product->discount_amount > 0)
+                                                    @if ($product['discount_amount'] > 0)
                                                         <p class="text-sm text-gray-500 line-through">
-                                                            ₱{{ number_format($product->product->price * $product->quantity, 2) }}
+                                                            ₱{{ number_format($product['product']->price * $product['quantity'], 2) }}
                                                         </p>
                                                     @endif
-                                                    <p>₱{{ number_format($product->subtotal, 2) }}</p>
+                                                    <p>₱{{ number_format($product['subtotal'], 2) }}</p>
                                                 </div>
                                             </div>
-                                            <input type="hidden" name="cart_details[{{ $distributorId }}][]"
-                                                value="{{ $product->id }}">
+                                            <input type="hidden" name="cart_details[{{ $distributorId }}][]" value="{{ $product['id'] }}">
                                         @endforeach
                                         <div class="flex px-4 py-4 font-semibold border-t border-gray-200">
                                             <span class="flex-1 text-right">Total Amount:</span>
@@ -78,7 +76,7 @@
                                                 class="w-24 text-right">₱{{ number_format($distributorTotals[$distributorId] ?? 0, 2) }}</span>
                                         </div>
                                     </div>
-                                    <input type="hidden" name="carts[]" value="{{ $products->first()->cart_id }}">
+                                    <input type="hidden" name="carts[]" value="{{ $products->first()['cart_id'] }}">
                                 @endif
                             </div>
                         @endforeach

@@ -277,7 +277,7 @@
             </div>
         </div>
     </div>
-
+    <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
     @push('scripts')
         <script>
             function confirmDeleteConversation(distributorId) {

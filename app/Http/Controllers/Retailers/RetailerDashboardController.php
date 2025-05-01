@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Retailers;
 
 use App\Models\Product;
 use App\Models\Distributors;
+use App\Models\DistributorFollower;
 use Illuminate\Http\Request;
 use App\Models\BlockedRetailer;
 use App\Http\Controllers\Controller;
@@ -22,11 +23,16 @@ class RetailerDashboardController extends Controller
             ->toArray();
 
         // Get all distributors, including those who blocked the retailer
-        $allDistributors = Distributors::take(3)->get();
+        $allDistributors = Distributors::with(['followers' => function ($query) use ($retailerId) {
+            $query->where('retailer_id', $retailerId);
+        }])
+        ->take(3)
+        ->get();
 
-        // Add a "is_blocked" flag to each distributor
-        $distributors = $allDistributors->map(function ($distributor) use ($blockingDistributorIds) {
+        // Add "is_blocked" and "is_following" flags to each distributor
+        $distributors = $allDistributors->map(function ($distributor) use ($blockingDistributorIds, $retailerId) {
             $distributor->is_blocked = in_array($distributor->user_id, $blockingDistributorIds);
+            $distributor->is_following = $distributor->followers->isNotEmpty();
             return $distributor;
         });
 

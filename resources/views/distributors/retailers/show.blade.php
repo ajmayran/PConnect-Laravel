@@ -12,7 +12,7 @@
     </script>
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <title>Retailer Profile - {{ $retailer->first_name }} {{ $retailer->last_name }}</title>
+    <title>{{ $retailer->first_name }} {{ $retailer->last_name }}</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- Fonts -->
@@ -30,16 +30,20 @@
 <body class="bg-gray-100 font-lexend">
     <x-dist_navbar />
 
-    <div class="container max-w-6xl px-4 py-6 mx-auto mt-16">
+    <div class="container max-w-6xl px-4 py-6 mx-auto mt-2">
         <!-- Back button -->
-        <div class="mb-6">
-            <a href="{{ url()->previous() }}" class="flex items-center text-blue-600 hover:text-blue-800">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Retailers
+        <div class="flex items-center mb-6">
+            <a href="{{ url()->previous() }}" class="inline-flex items-center justify-center w-10 h-10 mr-3 text-gray-600 transition-colors rounded-full hover:bg-gray-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span class="sr-only">Back</span>
+            </a>
+            <a href="{{ route('distributors.dashboard') }}" class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            Dashboard
             </a>
         </div>
 
@@ -86,17 +90,7 @@
                                                 d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                         </svg>
                                         {{ $retailer->email }}
-                                    </p>
-                                    @if ($retailer->retailerProfile && $retailer->retailerProfile->phone)
-                                        <p class="flex items-center">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none"
-                                                viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                            </svg>
-                                            {{ $retailer->retailerProfile->phone }}
-                                        </p>
-                                    @endif
+                                    </p> 
                                     @if ($retailer->retailerProfile && ($retailer->retailerProfile->barangay || $retailer->retailerProfile->street))
                                         <p class="flex items-center">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none"
@@ -196,7 +190,7 @@
                 <div class="p-5">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-700">Account Status</h3>
-                        <span class="{{ $retailer->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }} text-xs font-medium px-2.5 py-0.5 rounded-full">
+                        <span class="{{ $retailer->status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }} text-xs font-medium px-2.5 py-0.5 rounded-full">
                             {{ ucfirst($retailer->status) }}
                         </span>
                     </div>

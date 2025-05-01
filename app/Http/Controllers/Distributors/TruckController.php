@@ -42,13 +42,13 @@ class TruckController extends Controller
             ->latest('truck_delivery.started_at')
             ->paginate(10);
 
-            $deliveries->getCollection()->transform(function ($delivery) {
-                if ($delivery->order) {
-                    // Use the accessor from the Order model
-                    $delivery->order->setAttribute('formatted_order_id', $delivery->order->formatted_order_id);
-                }
-                return $delivery;
-            });
+        $deliveries->getCollection()->transform(function ($delivery) {
+            if ($delivery->order) {
+                // Use the accessor from the Order model
+                $delivery->order->setAttribute('formatted_order_id', $delivery->order->formatted_order_id);
+            }
+            return $delivery;
+        });
 
         return view('distributors.trucks.show', compact('truck', 'deliveries'));
     }
@@ -216,6 +216,7 @@ class TruckController extends Controller
         return redirect()->back()->with('success', 'Delivery assigned to truck successfully');
     }
 
+
     public function outForDelivery(Request $request, Trucks $truck)
     {
         // Validate the estimated delivery date
@@ -243,6 +244,13 @@ class TruckController extends Controller
                 'status' => 'out_for_delivery',
                 'estimated_delivery' => $request->estimated_delivery
             ]);
+
+            // Send notification to the retailer
+            app(\App\Services\NotificationService::class)->deliveryStatusChanged(
+                $delivery->id,
+                'out_for_delivery',
+                $delivery->order->user_id
+            );
         }
 
         // Update truck status to "on_delivery"
@@ -301,9 +309,7 @@ class TruckController extends Controller
         return view('distributors.trucks.delivery-history', compact('truck', 'deliveryHistory'));
     }
 
-    /**
-     * Move a delivery to another truck
-     */
+
     public function moveDeliveryToTruck(Request $request)
     {
         $validated = $request->validate([

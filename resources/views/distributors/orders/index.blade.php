@@ -434,23 +434,27 @@
             </div>
 
             <!-- Retailer Profile Section -->
-            <div class="p-4 bg-white rounded-lg shadow">
-                <div class="flex items-start space-x-4">
-                    <div class="flex-shrink-0">
+       <div class="p-4 bg-white rounded-lg shadow">
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0">
+                         <a href="/retailers/${retailer.id}">
                         <img src="${retailer.retailer_profile?.profile_picture ? storageBaseUrl + '/' + retailer.retailer_profile.profile_picture : 'img/default-avatar.jpg'}" 
                              alt="Profile" 
-                             class="object-cover w-16 h-16 rounded-full shadow" />
-                    </div>
-                    <div>
+                             class="object-cover w-16 h-16 rounded-full shadow hover:opacity-80" />
+                    </a>
+                </div>
+                <div>
+                    <a href="/retailers/${retailer.id}" class="hover:underline">
                         <h4 class="text-lg font-medium text-gray-800">${retailer.first_name} ${retailer.last_name}</h4>
-                        <p class="text-sm text-gray-600">${retailer.email}</p>
-                        <p class="text-sm text-gray-600">${retailer.retailer_profile?.phone || 'No phone number'}</p>
-                        <p class="text-sm text-gray-600">${deliveryAddress || 'No delivery address'}</p>
-                    </div>
+                    </a>
+                    <p class="text-sm text-gray-600">${retailer.email}</p>
+                    <p class="text-sm text-gray-600">${retailer.retailer_profile?.phone || 'No phone number'}</p>
+                    <p class="text-sm text-gray-600">${deliveryAddress || 'No delivery address'}</p>
                 </div>
             </div>
         </div>
-    `;
+                </div>
+            `;
 
             document.getElementById('modalContent').innerHTML = modalHtml;
             document.getElementById('orderModal').classList.remove('hidden');

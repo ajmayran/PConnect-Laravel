@@ -20,14 +20,14 @@
                 </a>
             </li>
             <li
+                class="p-2 m-2 cursor-pointer tab-item hover:bg-green-200 {{ request()->routeIs('retailers.profile.following') ? 'bg-gray-200 p-2 m-2 rounded-lg' : '' }}">
+                <a href="{{ route('retailers.profile.following') }}" class="flex items-center justify-center">
+                    Following
+                </a>
+            </li>
+            <li
                 class="p-2 m-2 cursor-pointer tab-item hover:bg-green-200 {{ request()->routeIs('retailers.profile.settings') ? 'bg-gray-200 p-2 m-2 rounded-lg' : '' }}">
                 <a href="{{ route('retailers.profile.settings') }}">Settings</a>
-            </li>
-            <li class="p-2 m-2 font-bold text-red-500 cursor-pointer tab-item hover:bg-green-200">
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit">Log Out</button>
-                </form>
             </li>
         </ul>
     </div>

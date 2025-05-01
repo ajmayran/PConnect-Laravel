@@ -71,6 +71,11 @@ class Product extends Model
         return $this->belongsToMany(Discount::class, 'discount_product');
     }
 
+    public function orderDetails()
+    {
+        return $this->hasMany(OrderDetails::class);
+    }
+
     // this method is for dynamically calculate stock based on batches
     public function getStockQuantityAttribute($value)
     {

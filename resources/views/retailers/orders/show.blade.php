@@ -13,10 +13,10 @@
                 <!-- Order Header Section -->
                 <div class="flex items-center justify-between pb-6 mb-6 border-b border-gray-200">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-800">Order #{{ $order->formatted_order_id }}</h1>
+                        <h1 class="text-2xl font-bold text-gray-800">{{ $order->formatted_order_id }}</h1>
                         <p class="mt-1 text-sm text-gray-500">Placed on {{ $order->created_at->format('M d, Y h:i A') }}</p>
                     </div>
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-4">               
                         <!-- Order Status Badge -->
                         <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full {{ 
                             $order->status === 'completed' ? 'bg-green-100 text-green-800' : 
@@ -25,7 +25,7 @@
                             ($order->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
                             'bg-gray-100 text-gray-800'))) 
                         }}">
-                            {{ ucfirst($order->status) }}
+                            Order: {{ ucfirst($order->status) }}
                         </span>
                         
                         <!-- Delivery Status Badge -->
@@ -35,7 +35,7 @@
                             ($order->delivery->status === 'out_for_delivery' ? 'bg-purple-100 text-purple-800' : 
                             'bg-blue-100 text-blue-800') 
                         }}">
-                            {{ ucfirst(str_replace('_', ' ', $order->delivery->status)) }}
+                            Delivery: {{ ucfirst(str_replace('_', ' ', $order->delivery->status)) }}
                         </span>
                         @endif
                         
@@ -45,7 +45,7 @@
                             $order->payment->payment_status === 'paid' ? 'bg-green-100 text-green-800' : 
                             'bg-yellow-100 text-yellow-800' 
                         }}">
-                            {{ ucfirst($order->payment->payment_status) }}
+                            Payment: {{ ucfirst($order->payment->payment_status) }}
                         </span>
                         @endif
                     </div>
@@ -131,10 +131,6 @@
                                     </div>
                                     
                                     @if($order->delivery)
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500">Tracking Number</dt>
-                                        <dd class="mt-1 text-sm text-gray-900">{{ $order->delivery->tracking_number ?? 'N/A' }}</dd>
-                                    </div>
                                     <div>
                                         <dt class="text-sm font-medium text-gray-500">Last Updated</dt>
                                         <dd class="mt-1 text-sm text-gray-900">{{ $order->delivery->updated_at->format('M d, Y h:i A') }}</dd>

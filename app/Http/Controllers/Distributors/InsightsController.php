@@ -245,4 +245,17 @@ class InsightsController extends Controller
 
         return $weeklyData;
     }
+
+    public function allEarnings()
+    {
+        $distributor_id = Auth::user()->distributor->id;
+
+        // Fetch all earnings for the distributor
+        $earnings = Earning::where('distributor_id', $distributor_id)
+            ->with(['payment.order.user', 'payment.order.orderDetails'])
+            ->latest()
+            ->paginate(20); // Paginate results
+
+        return view('distributors.insights.all-earnings', compact('earnings'));
+    }
 }

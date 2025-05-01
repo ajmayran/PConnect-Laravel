@@ -11,17 +11,6 @@
 
         <x-retailer-orderstatus-tabs />
 
-        <!-- Add Track Order Form -->
-        <div class="relative flex justify-end mb-4">
-            <form action="{{ route('retailers.orders.track') }}" method="GET" class="flex">
-                <input type="text" name="tracking_number" placeholder="Enter tracking number"
-                    class="px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                <button type="submit" class="px-4 py-2 text-white bg-green-600 rounded-r-md hover:bg-green-700">
-                    Track Order
-                </button>
-            </form>
-        </div>
-
         @if ($orders->isEmpty())
             <div class="flex items-center justify-center p-8 mt-4 bg-white rounded-lg">
                 <p class="text-lg text-gray-500">No orders to receive at the moment</p>
@@ -48,12 +37,8 @@
                                 Total
                             </th>
                             <th scope="col"
-                                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                                Tracking Number
-                            </th>
-                            <th scope="col"
                                 class="px-6 py-3 text-xs font-medium tracking-wider text-center text-gray-500 uppercase">
-                                Actions
+                        
                             </th>
                         </tr>
                     </thead>
@@ -73,11 +58,6 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">
                                         ₱{{ number_format($order->orderDetails->sum('subtotal'), 2) }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">
-                                        {{ $order->delivery ? $order->delivery->tracking_number : 'Not assigned' }}
-                                    </div>
                                 </td>
                                 <td class="px-6 py-4 text-sm font-medium text-center whitespace-nowrap">
                                     <button onclick="openOrderModal({{ $order->id }})"

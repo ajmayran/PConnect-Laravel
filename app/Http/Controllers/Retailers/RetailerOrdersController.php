@@ -48,7 +48,7 @@ class RetailerOrdersController extends Controller
             ->where('status', 'processing')
             ->with(['distributor', 'orderDetails.product', 'payment', 'delivery']) // Added delivery relationship
             ->whereHas('payment', function ($query) {
-                $query->where('payment_status', 'unpaid');
+                $query->where('payment_status', 'pending');
             })
             ->latest()
             ->paginate(10);
@@ -876,16 +876,7 @@ class RetailerOrdersController extends Controller
 
         return view('retailers.profile.my-purchase', compact('orders'));
     }
-
-    public function getOrderDetails(Order $order)
-    {
-        if ($order->user_id !== Auth::id()) {
-            abort(403);
-        }
-
-        $order->load(['orderDetails.product']);
-        return view('retailers.profile.order-details', compact('order'));
-    }
+   
 
     // Modify your existing showOrderDetails method to include return info
     public function showOrderDetails($orderId)
@@ -1087,5 +1078,20 @@ class RetailerOrdersController extends Controller
         $orders = $query->latest()->paginate(10);
 
         return view('retailers.orders.returned-history', compact('orders'));
+    }
+
+    public function getOrderDetailsPartial(Order $order)
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $order->load(['orderDetails.product', 'distributor']);
+        $html = view('retailers.orders.partials.order-details', compact('order'))->render();
+
+        return response()->json([
+            'html' => $html,
+            'order_id' => $order->formatted_order_id,
+        ]);
     }
 }

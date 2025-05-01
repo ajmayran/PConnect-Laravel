@@ -163,7 +163,7 @@ class OrderController extends Controller
                 Payment::create([
                     'order_id' => $order->id,
                     'distributor_id' => $order->distributor_id,
-                    'payment_status' => 'unpaid',
+                    'payment_status' => 'pending',
                 ]);
 
                 app(NotificationService::class)->orderStatusChanged(

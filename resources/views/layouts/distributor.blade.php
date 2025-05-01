@@ -70,6 +70,9 @@
     #arrow {
         transition: transform 0.3s ease;
     }
+    #reports-arrow{
+        transition: transform 0.3s ease;
+    }
 </style>
 
 <body class="bg-gray-200" data-user-id="{{ Auth::id() ?? '' }}" data-user-type="distributor">
@@ -114,6 +117,7 @@
         document.querySelector("#arrow").classList.toggle("rotate-180");
     }
     dropdown();
+    
 
     function toggleSidebar() {
         const sidebar = document.getElementById("sidebar");

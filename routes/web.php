@@ -178,7 +178,6 @@ Route::middleware(['auth', 'verified', 'checkRole:retailer', 'check.distributor.
     Route::delete('retailers/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
     Route::get('profile/my-purchase', [RetailerOrdersController::class, 'myPurchases'])->name('profile.my-purchase');
-    Route::get('/profile/{order}/order-details', [RetailerORdersController::class, 'getOrderDetails'])->name('profile.order-details');
     Route::get('/profile/check-complete', [App\Http\Controllers\ProfileController::class, 'checkProfileComplete'])->name('profile.check-complete');
 
     // Message Routes
@@ -230,7 +229,8 @@ Route::middleware(['auth', 'verified', 'checkRole:retailer', 'check.distributor.
     Route::get('/check-return-request-status/{orderId}', [ReturnRequestController::class, 'checkReturnRequestStatus'])->name('check-return-request-status');
     Route::get('/orders/refund-track', [RetailerOrdersController::class, 'trackRefund'])->name('orders.refund-track');
     Route::get('/orders/purchase-history', [RetailerOrdersController::class, 'purchaseHistory'])->name('orders.purchase-history');
-    Route::get('/orders/returned-history', [RetailerOrdersController::class, 'returnedHistory'])->name('.orders.returned-history');
+    Route::get('/orders/returned-history', [RetailerOrdersController::class, 'returnedHistory'])->name('orders.returned-history');
+    Route::get('/orders/{order}/partial-details', [RetailerOrdersController::class, 'getOrderDetailsPartial'])->name('orders.partials.order-details');
 
     Route::get('/orders/{order}', [RetailerOrdersController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/cancel', [RetailerOrdersController::class, 'cancelOrder'])->name('orders.cancel');
@@ -259,6 +259,8 @@ Route::middleware(['auth', 'verified', 'checkRole:retailer', 'check.distributor.
     Route::get('/notifications/latest', [RetailerNotifController::class, 'getLatestNotifications'])->name('notifications.latest');
     Route::post('/notifications/mark-read', [RetailerNotifController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::post('/notifications/mark-all-read', [RetailerNotifController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+
+    Route::get('/retailers/profile/following', [DistributorFollowController::class, 'following'])->name('profile.following');
 });
 
 
@@ -365,6 +367,7 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     // Insights Routes
     Route::get('/insights', [InsightsController::class, 'index'])->name('distributors.insights.index');
     Route::get('/insights/data', [InsightsController::class, 'getInsightsData'])->name('distributors.insights.data');
+    Route::get('/insights/all-earnings', [InsightsController::class, 'allEarnings'])->name('distributors.insights.all-earnings');
 
     // Discount Routes
     Route::patch('discounts/{discount}/toggle', [DiscountsController::class, 'toggle'])->name('distributors.discounts.toggle');
@@ -418,6 +421,19 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     // Ticket Routes
     Route::get('/tickets/create', [DistributorTicketController::class, 'create'])->name('distributors.tickets.create');
     Route::post('/tickets', [DistributorTicketController::class, 'store'])->name('distributors.tickets.store');
+
+    Route::get('/followers', [DistributorFollowController::class, 'index'])->name('distributors.followers.index');
+    Route::delete('/followers/{id}', [DistributorFollowController::class, 'remove'])->name('distributors.followers.remove');
+
+    // Reports Routes
+    Route::get('/reports/products', [App\Http\Controllers\Distributors\ReportsController::class, 'products'])->name('distributors.reports.products');
+    Route::get('/reports/orders', [App\Http\Controllers\Distributors\ReportsController::class, 'orders'])->name('distributors.reports.orders');
+    Route::get('/reports/delivery', [App\Http\Controllers\Distributors\ReportsController::class, 'delivery'])->name('distributors.reports.delivery');
+    Route::get('/reports/revenue', [App\Http\Controllers\Distributors\ReportsController::class, 'revenue'])->name('distributors.reports.revenue');
+    Route::get('/reports/inventory', [App\Http\Controllers\Distributors\ReportsController::class, 'inventory'])->name('distributors.reports.inventory');
+
+
+
 
     // Subscription Routes
     Route::get('/subscription', [App\Http\Controllers\Distributors\SubscriptionController::class, 'index'])->name('distributors.subscription');

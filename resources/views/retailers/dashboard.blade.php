@@ -145,6 +145,14 @@
                                     </span>
                                 </div>
                             @endif
+                     
+                            @if ($distributor->is_following)
+                                <div class="absolute top-2 right-2">
+                                    <span class="px-2 py-1 text-xs font-bold text-white bg-green-500 rounded-full">
+                                        Following
+                                    </span>
+                                </div>
+                            @endif
 
                             <img class="w-16 h-16 mb-2 transition-transform duration-300 rounded-full shadow-md sm:w-24 sm:h-24 sm:mb-4 group-hover:scale-110 group-active:scale-105 {{ $distributor->is_blocked ? 'opacity-60' : '' }}"
                                 src="{{ $distributor->company_profile_image ? asset('storage/' . $distributor->company_profile_image) : asset('img/default-distributor.jpg') }}"
@@ -201,7 +209,8 @@
                                 </p>
                                 <div class="flex items-center justify-start gap-2 pt-2 mt-auto sm:pt-4">
                                     @if ($product->activeDiscount)
-                                        <span class="text-sm font-bold text-gray-500 sm:text-base" style="text-decoration:line-through">
+                                        <span class="text-sm font-bold text-gray-500 sm:text-base"
+                                            style="text-decoration:line-through">
                                             ₱{{ number_format($product->price, 2) }}
                                         </span>
                                         <span class="text-sm font-bold text-green-600 sm:text-lg">
