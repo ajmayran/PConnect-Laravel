@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-dashboard-nav />
 
-    <div class="py-4 sm:py-8 bg-gray-50">
+    <div class="py-2 sm:py-8 bg-gray-50">
         <div class="container px-4 mx-auto">
             <div class="mx-auto max-w-7xl">
                 <!-- Back Button -->
@@ -30,7 +30,12 @@
 
                         <!-- Product Info -->
                         <div class="w-full p-4 sm:p-6 md:p-8 md:w-1/2">
-                            <!-- Product Title and Distributor -->
+                            <!-- Hidden Inputs for JavaScript -->
+                            <input type="hidden" id="product-id" value="{{ $product->id }}">
+                            <input type="hidden" id="product-price" value="{{ $product->price }}">
+                            <input type="hidden" id="min-purchase-qty" value="{{ $product->minimum_purchase_qty }}">
+                            <input type="hidden" id="max-stock" value="{{ $product->stock_quantity }}">
+
                             <div class="mb-3 sm:mb-4">
                                 <h1 class="mb-1 text-xl font-bold text-gray-900 sm:text-2xl md:text-3xl sm:mb-2">
                                     {{ $product->product_name }}</h1>
@@ -41,9 +46,40 @@
                             <!-- Price and Description -->
                             <div class="mb-4 sm:mb-6">
                                 <h2 class="mb-2 text-2xl font-bold text-green-600 sm:text-3xl md:text-4xl">
-                                    ₱{{ number_format($product->price, 2) }}</h2>
-                                <p class="mb-4 text-sm text-gray-700 sm:text-base">{{ $product->description }}</p>
+                                    @if ($product->activeDiscount && $product->activeDiscount->type === 'percentage')
+                                        <span class="text-gray-500"
+                                            style="text-decoration:line-through">₱{{ number_format($product->price, 2) }}</span>
+                                        ₱{{ number_format($product->price - $product->activeDiscount->calculatePercentageDiscount($product->price), 2) }}
+                                    @else
+                                        ₱{{ number_format($product->price, 2) }}
+                                    @endif
+                                </h2>
+                                <p class="p-2 mb-4 text-sm text-gray-700 rounded-md bg-green-50 sm:text-base">
+                                    {{ $product->description }}
+                                </p>
                             </div>
+
+                            @if ($product->activeDiscount)
+                                <div class="mb-4">
+                                    <p class="text-sm text-green-600">
+                                        Discount: {{ $product->activeDiscount->name }}
+                                    </p>
+                                    @if ($product->activeDiscount->type === 'percentage')
+                                        <p class="text-sm text-green-600">
+                                            {{ $product->activeDiscount->percentage }}% OFF
+                                        </p>
+                                    @elseif ($product->activeDiscount->type === 'freebie')
+                                        <p class="text-sm text-green-600">
+                                            Buy {{ $product->activeDiscount->buy_quantity }} Get
+                                            {{ $product->activeDiscount->free_quantity }} Free
+                                        </p>
+                                    @endif
+
+                                    <p class="mt-1 text-sm font-medium text-red-600" id="discount-countdown">
+                                        Discount ends in: <span id="countdown-timer">calculating...</span>
+                                    </p>
+                                </div>
+                            @endif
 
                             <!-- Stock Information -->
                             <div class="mb-4 sm:mb-6">
@@ -51,7 +87,7 @@
                                     Stock Available: <span class="font-semibold">{{ $product->stock_quantity }}</span>
                                 </p>
                                 <p class="text-sm text-gray-600 sm:text-base">
-                                    Min. Purchase: <span
+                                    Minimum Purchase Quantity: <span
                                         class="font-semibold">{{ $product->minimum_purchase_qty }}</span>
                                 </p>
                             </div>
@@ -63,7 +99,8 @@
                                     -
                                 </button>
                                 <input type="number" id="quantity" value="{{ $product->minimum_purchase_qty }}"
-                                    min="1"
+                                    min="{{ $product->minimum_purchase_qty }}"
+                                    data-min-qty="{{ $product->minimum_purchase_qty }}"
                                     class="w-20 px-3 py-1 text-center border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                                     oninput="validateQuantity()">
                                 <button onclick="increaseQuantity()"
@@ -74,14 +111,36 @@
 
                             <!-- Action Buttons -->
                             <div class="flex flex-col gap-2 sm:flex-row sm:gap-4">
-                                <button id="addToCartBtn"
-                                    class="w-full px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-lg sm:text-base hover:bg-green-600 active:bg-green-700 touch-manipulation">
-                                    Add to Cart
-                                </button>
-                                <button id="buyNowBtn"
-                                    class="w-full px-4 py-2 text-sm font-medium text-green-600 bg-white border-2 border-green-600 rounded-lg sm:text-base hover:bg-green-600 hover:text-white active:bg-green-700 touch-manipulation">
-                                    Buy Now
-                                </button>
+                                @if (!$product->distributor->accepting_orders)
+                                    <div
+                                        class="w-full p-4 text-center bg-yellow-100 border border-yellow-200 rounded-lg">
+                                        <p class="flex items-center justify-center text-yellow-700">
+                                            <i class="mr-2 bi bi-exclamation-triangle"></i>
+                                            This distributor is currently not accepting new orders. Please check back
+                                            later.
+                                        </p>
+                                    </div>
+                                @elseif ($product->stock_quantity <= 0)
+                                    <div class="w-full p-4 text-center bg-red-100 border border-red-200 rounded-lg">
+                                        <p class="flex items-center justify-center text-red-700">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                            Out of Stock
+                                        </p>
+                                    </div>
+                                @else
+                                    <button id="addToCartBtn" type="submit"
+                                        class="px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600">
+                                        Add to Cart
+                                    </button>
+                                    <button id="buyNowBtn"
+                                        class="w-full px-4 py-2 text-sm font-medium text-green-600 bg-white border-2 border-green-600 rounded-lg sm:text-base hover:bg-green-600 hover:text-white active:bg-green-700 touch-manipulation">
+                                        Buy Now
+                                    </button>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -90,6 +149,110 @@
         </div>
     </div>
 
+    <!-- Distributor Info Section -->
+    <div class="pb-4 bg-gray-50">
+        <div class="container px-4 mx-auto">
+            <div class="mx-auto max-w-7xl">
+                <div class="overflow-hidden bg-white rounded-lg shadow-lg">
+                    <div class="flex flex-col md:flex-row">
+                        <!-- Left Side - Profile Image -->
+                        <div class="flex items-center justify-center p-4 md:w-1/6 md:p-6">
+                            <img src="{{ $product->distributor->company_profile_image ? asset('storage/' . $product->distributor->company_profile_image) : asset('img/default-distributor.jpg') }}"
+                                alt="{{ $product->distributor->company_name }}"
+                                class="object-cover w-24 h-24 border-2 border-green-500 rounded-full">
+                        </div>
+
+                        <!-- Right Side - Split into two columns on larger screens -->
+                        <div class="flex flex-col p-4 md:w-5/6 md:p-6">
+                            <div class="flex flex-col gap-4 md:flex-row md:justify-between">
+                                <!-- Left Column: Company Info & Action Buttons -->
+                                <div class="flex flex-col md:w-1/2">
+                                    <!-- Company Name -->
+                                    <div class="mb-3">
+                                        <h3 class="text-xl font-bold text-gray-800">
+                                            {{ $product->distributor->company_name }}</h3>
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="flex flex-col mt-2 space-y-3 sm:flex-row sm:space-y-0 sm:space-x-4">
+                                        <a href="{{ route('retailers.distributor-page', $product->distributor->id) }}"
+                                            class="flex items-center justify-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                            </svg>
+                                            View Shop
+                                        </a>
+
+                                        <!-- Add Follow Button -->
+                                        <button id="followDistributorBtn"
+                                            data-distributor-id="{{ $product->distributor->id }}"
+                                            class="flex items-center justify-center px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                @if ($isFollowing ?? false)
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M5 13l4 4L19 7" />
+                                                @else
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M12 4v16m8-8H4" />
+                                                @endif
+                                            </svg>
+                                            <span>{{ $isFollowing ?? false ? 'Unfollow' : 'Follow' }}</span>
+                                        </button>
+
+                                        <!-- Contact Button -->
+                                        <a href="{{ route('retailers.messages.show', $product->distributor->user_id) }}"
+                                            class="flex items-center justify-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                            </svg>
+                                            Contact
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Right Column: Stats -->
+                                <div class="flex justify-end gap-4 mt-4 md:mt-0 md:gap-6">
+                                    <div class="px-3 py-2 text-center rounded-lg ">
+                                        <p class="text-sm font-medium text-gray-600">Ratings</p>
+                                        <p class="text-lg font-bold text-gray-800">
+                                            {{ number_format($rating ?? 0, 1) }}</p>
+                                    </div>
+                                    <div class="px-3 py-2 text-center rounded-lg ">
+                                        <p class="text-sm font-medium text-gray-600">Products</p>
+                                        <p class="text-lg font-bold text-gray-800">{{ $productsCount ?? 0 }}</p>
+                                    </div>
+
+                                    <div class="px-3 py-2 text-center rounded-lg ">
+                                        <p class="text-sm font-medium text-gray-600">Cut-off Time</p>
+                                        <p class="text-lg font-bold text-gray-800">
+                                            {{ $product->distributor->cut_off_time ? $product->distributor->formatted_cut_off_time : 'No limit' }}
+                                        </p>
+                                    </div>
+
+                                    <div class="px-3 py-2 text-center rounded-lg ">
+                                        <p class="text-sm font-medium text-gray-600">Joined</p>
+                                        <p class="text-lg font-bold text-gray-800">
+                                            {{ \Carbon\Carbon::parse($product->distributor->created_at)->diffForHumans(null, true) }}
+                                            ago</p>
+                                    </div>
+                                    <div class="px-3 py-2 text-center rounded-lg ">
+                                        <p class="text-sm font-medium text-gray-600">Followers</p>
+                                        <p class="text-lg font-bold text-gray-800">
+                                            {{ number_format($product->distributor->followers_count ?? 0) }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Related Products Section -->
     <div class="py-8 bg-white sm:py-12">
         <div class="container px-4 mx-auto">
@@ -127,217 +290,362 @@
     </div>
 
     <script>
-        // Add to Cart button handler - unchanged
-        document.getElementById('addToCartBtn').addEventListener('click', function(event) {
-            event.preventDefault();
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cache DOM elements
+            const quantityInput = document.getElementById('quantity');
+            const addToCartBtn = document.getElementById('addToCartBtn');
+            const buyNowBtn = document.getElementById('buyNowBtn');
 
-            if (!validateQuantity()) {
-                return false;
-            }
+            // Get values from hidden inputs
+            const productId = parseInt(document.getElementById('product-id').value);
+            const productPrice = parseFloat(document.getElementById('product-price').value);
+            const minPurchaseQty = parseInt(document.getElementById('min-purchase-qty').value) || 1;
+            const maxStock = parseInt(document.getElementById('max-stock').value);
 
-            // Get form data
-            const formData = {
-                product_id: {{ $product->id }},
-                price: {{ $product->price }},
-                quantity: parseInt(document.getElementById('quantity').value)
-            };
-
-            // Show loading state
-            Swal.fire({
-                title: 'Processing...',
-                text: 'Adding product to cart',
-                allowOutsideClick: false,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+            console.log("Initial Values: ", {
+                minPurchaseQty,
+                maxStock,
+                productId,
+                productPrice
             });
 
-            // Send the add to cart request
-            fetch('{{ route('retailers.cart.add') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                })
-                .then(response => {
-                    // First parse the JSON response regardless of status code
-                    return response.json().then(data => {
-                        // Then handle based on the HTTP status
-                        if (!response.ok) {
-                            // Server returned an error with a status code (4xx or 5xx)
-                            throw new Error(data.message || 'Server returned an error');
-                        }
-                        return data;
-                    });
-                })
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            title: 'Success!',
-                            text: data.message,
-                            icon: 'success',
-                            confirmButtonColor: '#10B981',
-                            timer: 2000
-                        });
-                    } else {
-                        throw new Error(data.message || 'Something went wrong');
-                    }
-                })
-                .catch(error => {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: error.message || 'Failed to add product to cart',
-                        icon: 'error',
-                        confirmButtonColor: '#EF4444'
-                    });
-                });
-        });
+            // Ensure input has correct min value
+            quantityInput.min = minPurchaseQty;
+            quantityInput.value = minPurchaseQty;
 
-        // Buy Now button handler 
-        document.getElementById('buyNowBtn').addEventListener('click', function(event) {
-            event.preventDefault();
+            // ---------------------- QUANTITY CONTROL FUNCTIONS ----------------------
 
-            if (!validateQuantity()) {
-                return false;
+            function increaseQuantity() {
+                let currentVal = parseInt(quantityInput.value);
+                if (currentVal < maxStock) {
+                    quantityInput.value = currentVal + 1;
+                } else {
+                    showWarning("Maximum Stock Reached", `You cannot add more than ${maxStock} items.`);
+                }
             }
 
-            // Show confirmation dialog
-            Swal.fire({
-                title: 'Proceed to Checkout?',
-                text: "You'll be redirected to complete your purchase.",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#10B981',
-                cancelButtonColor: '#6B7280',
-                confirmButtonText: 'Yes, proceed',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Show loading animation
-                    Swal.fire({
-                        title: 'Processing...',
-                        text: 'Preparing your checkout. Please wait.',
-                        allowOutsideClick: false,
-                        showConfirmButton: false,
-                        timer: 4000,
-                        timerProgressBar: true,
-                        willOpen: () => {
-                            Swal.showLoading();
+            function decreaseQuantity() {
+                let currentVal = parseInt(quantityInput.value);
+                if (currentVal > minPurchaseQty) {
+                    quantityInput.value = currentVal - 1;
+                } else {
+                    showWarning("Minimum Purchase Limit", `You cannot have less than ${minPurchaseQty} items.`);
+                }
+            }
+
+            function validateQuantity() {
+                let currentQty = parseInt(quantityInput.value);
+
+                if (isNaN(currentQty) || currentQty < minPurchaseQty) {
+                    showWarning("Invalid Quantity", `Quantity cannot be less than ${minPurchaseQty}.`);
+                    quantityInput.value = minPurchaseQty;
+                    return false;
+                }
+
+                if (currentQty > maxStock) {
+                    showWarning("Invalid Quantity", `Quantity cannot exceed ${maxStock}.`);
+                    quantityInput.value = maxStock;
+                    return false;
+                }
+
+                return true;
+            }
+
+            // ---------------------- CART ACTIONS ----------------------
+
+            function addToCart(event) {
+                event.preventDefault();
+                if (!validateQuantity()) return;
+
+                const quantity = parseInt(quantityInput.value);
+
+                // Log the request data
+                console.log("🛒 Sending Add to Cart Request:", {
+                    productId,
+                    productPrice,
+                    quantity,
+                    minPurchaseQty
+                });
+
+                const formData = {
+                    product_id: productId,
+                    price: productPrice,
+                    quantity: quantity,
+                    minimum_purchase_qty: minPurchaseQty
+                };
+
+                fetch('{{ route('retailers.cart.add') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    })
+                    .then(response => response.json().then(data => ({
+                        status: response.status,
+                        data
+                    })))
+                    .then(({
+                        status,
+                        data
+                    }) => {
+                        console.log("Server Response:", data);
+
+                        if (status === 422 || !data.success) {
+                            throw new Error(data.message || "Failed to add product to cart.");
                         }
-                    });
 
-                    // Get form data
-                    const formData = {
-                        product_id: {{ $product->id }},
-                        quantity: parseInt(document.getElementById('quantity').value)
-                    };
+                        showSuccess("Success!", data.message);
+                    })
+                    .catch(error => showError("Error!", error.message));
+            }
 
-                    // Direct checkout flow
-                    fetch('{{ route('retailers.direct-purchase.buy-now') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Accept': 'application/json'
-                            },
-                            body: JSON.stringify(formData)
-                        })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data.success) {
-                                // Close loading animation and redirect
-                                Swal.close();
-                                // Redirect to direct checkout page
-                                window.location.href = data.redirect_url;
-                            } else {
-                                throw new Error(data.message || 'Something went wrong');
-                            }
-                        })
-                        .catch(error => {
+            function buyNow(event) {
+                event.preventDefault();
+                if (!validateQuantity()) return;
+
+                // Check if profile is complete first
+                fetch('{{ route('retailers.profile.check-complete') }}', {
+                        method: 'GET',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.isComplete) {
+                            // Profile is incomplete, show warning
                             Swal.fire({
-                                title: 'Error!',
-                                text: error.message || 'Failed to process request',
-                                icon: 'error',
-                                confirmButtonColor: '#EF4444'
+                                title: 'Profile Incomplete',
+                                text: 'Please complete your profile information before making a purchase.',
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#10B981',
+                                cancelButtonColor: '#6B7280',
+                                confirmButtonText: 'Complete Profile',
+                                cancelButtonText: 'Cancel'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = '{{ route('retailers.profile.edit') }}';
+                                }
                             });
-                        });
-                }
-            });
-        });
-        // Existing quantity functions - unchanged
-        function increaseQuantity() {
-            var quantityInput = document.getElementById('quantity');
-            var currentVal = parseInt(quantityInput.value);
-            var maxStock = {{ $product->stock_quantity }};
+                            return;
+                        }
 
-            if (currentVal < maxStock) {
-                quantityInput.value = currentVal + 1;
-            } else {
+                        // If profile is complete, proceed with checkout
+                        proceedToCheckout();
+                    })
+                    .catch(error => {
+                        console.error('Error checking profile:', error);
+                        showError("Error!", "Unable to verify profile completeness.");
+                    });
+            }
+
+            function proceedToCheckout() {
                 Swal.fire({
-                    title: 'Maximum Stock Reached',
-                    text: 'You cannot add more than the available stock quantity',
-                    icon: 'warning',
+                    title: 'Proceed to Checkout?',
+                    text: "You'll be redirected to complete your purchase.",
+                    icon: 'question',
+                    showCancelButton: true,
                     confirmButtonColor: '#10B981',
+                    cancelButtonColor: '#6B7280',
+                    confirmButtonText: 'Yes, proceed',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Processing...',
+                            text: 'Preparing your checkout. Please wait.',
+                            allowOutsideClick: false,
+                            showConfirmButton: false,
+                            timer: 4000,
+                            timerProgressBar: true,
+                            willOpen: () => Swal.showLoading()
+                        });
+
+                        const formData = {
+                            product_id: productId,
+                            quantity: parseInt(quantityInput.value)
+                        };
+
+                        fetch('{{ route('retailers.direct-purchase.buy-now') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify(formData)
+                            })
+                            .then(response => response.json().then(data => ({
+                                status: response.status,
+                                data
+                            })))
+                            .then(({
+                                status,
+                                data
+                            }) => {
+                                if (status !== 200 || !data.success) {
+                                    throw new Error(data.message || "Failed to process request.");
+                                }
+
+                                Swal.close();
+                                window.location.href = data.redirect_url;
+                            })
+                            .catch(error => showError("Error!", error.message));
+                    }
                 });
             }
-        }
 
-        function decreaseQuantity() {
-            var quantityInput = document.getElementById('quantity');
-            var minQty = {{ $product->minimum_purchase_qty }};
+            // ---------------------- UTILITY FUNCTIONS ----------------------
 
-            if (parseInt(quantityInput.value) > minQty) {
-                quantityInput.value = parseInt(quantityInput.value) - 1;
-            }
-        }
-
-        function validateQuantity() {
-            var quantityInput = document.getElementById('quantity');
-            var currentQty = parseInt(quantityInput.value);
-            var minQty = {{ $product->minimum_purchase_qty }};
-            var maxStock = {{ $product->stock_quantity }};
-
-            if (currentQty < minQty) {
+            function showSuccess(title, message) {
                 Swal.fire({
-                    title: 'Invalid Quantity',
-                    text: 'Quantity cannot be less than the minimum purchase quantity of ' + minQty + '.',
+                    title: title,
+                    text: message,
+                    icon: 'success',
+                    confirmButtonColor: '#10B981',
+                    timer: 2000
+                });
+            }
+
+            function showError(title, message) {
+                Swal.fire({
+                    title: title,
+                    text: message,
+                    icon: 'error',
+                    confirmButtonColor: '#EF4444'
+                });
+            }
+
+            function showWarning(title, message) {
+                Swal.fire({
+                    title: title,
+                    text: message,
                     icon: 'warning',
                     confirmButtonColor: '#10B981'
                 });
-                return false;
             }
 
-            if (currentQty > maxStock) {
-                Swal.fire({
-                    title: 'Invalid Quantity',
-                    text: 'Quantity cannot exceed the available stock of ' + maxStock + '.',
-                    icon: 'warning',
-                    confirmButtonColor: '#10B981'
-                });
-                return false;
+            // ---------------------- EVENT LISTENERS ----------------------
+
+            if (addToCartBtn && maxStock > 0) {
+                addToCartBtn.addEventListener('click', addToCart);
             }
 
-            if (isNaN(currentQty) || currentQty <= 0) {
-                Swal.fire({
-                    title: 'Invalid Quantity',
-                    text: 'Please enter a valid quantity.',
-                    icon: 'warning',
-                    confirmButtonColor: '#10B981'
-                });
-                return false;
+            if (buyNowBtn && maxStock > 0) {
+                buyNowBtn.addEventListener('click', buyNow);
             }
 
-            return true;
+            // Assigning quantity increase/decrease to respective buttons
+            if (maxStock > 0) {
+                document.querySelectorAll('[onclick="increaseQuantity()"]').forEach(btn => btn.addEventListener(
+                    'click',
+                    increaseQuantity));
+                document.querySelectorAll('[onclick="decreaseQuantity()"]').forEach(btn => btn.addEventListener(
+                    'click',
+                    decreaseQuantity));
+            }
+        });
+
+
+        // Follow/Unfollow Distributor
+        const followBtn = document.getElementById('followDistributorBtn');
+        if (followBtn) {
+            followBtn.addEventListener('click', function() {
+                const distributorId = this.dataset.distributorId;
+
+                fetch('{{ route('retailers.distributors.follow') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            distributor_id: distributorId
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update button text
+                            const buttonText = followBtn.querySelector('span');
+                            buttonText.textContent = data.is_following ? 'Unfollow' : 'Follow';
+
+                            // Update icon (optional)
+                            const iconElement = followBtn.querySelector('svg');
+                            if (iconElement) {
+                                if (data.is_following) {
+                                    // Change to "check" or "minus" icon for following
+                                    iconElement.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" 
+                            stroke-width="2" d="M5 13l4 4L19 7" />`;
+                                } else {
+                                    // Change back to "plus" icon for not following
+                                    iconElement.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" 
+                            stroke-width="2" d="M12 4v16m8-8H4" />`;
+                                }
+                            }
+
+                            // Update follower count
+                            const followerCountElement = document.querySelector(
+                                '.text-lg.font-bold:last-of-type');
+                            if (followerCountElement) {
+                                followerCountElement.textContent = new Intl.NumberFormat().format(data
+                                    .follower_count);
+                            }
+
+                            // Show a notification
+                            showSuccess('Success', data.message);
+                        } else {
+                            showError('Error', 'Unable to update follow status');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Follow error:', error);
+                        showError('Error', 'An error occurred while processing your request');
+                    });
+            });
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if there's an active discount with an end date
+            @if ($product->activeDiscount && $product->activeDiscount->end_date)
+                const endDate = new Date("{{ $product->activeDiscount->end_date->toIso8601String() }}");
+                const countdownElement = document.getElementById('countdown-timer');
+
+                function updateCountdown() {
+                    const now = new Date();
+                    const timeDiff = endDate - now;
+
+                    if (timeDiff <= 0) {
+                        countdownElement.innerHTML = "Expired";
+                        return;
+                    }
+
+                    // Calculate the days, hours, minutes, and seconds
+                    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+
+                    // Format the countdown display
+                    let countdownText = '';
+                    if (days > 0) countdownText += `${days}d `;
+                    countdownText +=
+                        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                    countdownElement.innerHTML = countdownText;
+                }
+
+                // Update the countdown immediately and then every second
+                updateCountdown();
+                setInterval(updateCountdown, 1000);
+            @endif
+        });
     </script>
 
     <x-footer />

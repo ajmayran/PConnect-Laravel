@@ -16,7 +16,7 @@ class TruckController extends Controller
         $trucks = Trucks::where('distributor_id', Auth::user()->distributor->id)
             ->with('deliveryLocations')  // Only load the deliveryLocations relationship
             ->withCount(['deliveries as deliveries_count' => function ($query) {
-                $query->whereIn('status', ['processing', 'in_transit', 'out_for_delivery']);
+                $query->whereIn('status', ['in_transit', 'out_for_delivery']);
             }])
             ->get();
 
@@ -42,13 +42,13 @@ class TruckController extends Controller
             ->latest('truck_delivery.started_at')
             ->paginate(10);
 
-            $deliveries->getCollection()->transform(function ($delivery) {
-                if ($delivery->order) {
-                    // Use the accessor from the Order model
-                    $delivery->order->setAttribute('formatted_order_id', $delivery->order->formatted_order_id);
-                }
-                return $delivery;
-            });
+        $deliveries->getCollection()->transform(function ($delivery) {
+            if ($delivery->order) {
+                // Use the accessor from the Order model
+                $delivery->order->setAttribute('formatted_order_id', $delivery->order->formatted_order_id);
+            }
+            return $delivery;
+        });
 
         return view('distributors.trucks.show', compact('truck', 'deliveries'));
     }
@@ -99,7 +99,7 @@ class TruckController extends Controller
             'status' => 'required|in:available,on_delivery,maintenance',
             'locations' => 'required|array|min:1',
             'locations.*.barangay' => 'required',
-            'locations.*.street' => 'required',
+            'locations.*.street' => 'nullable',
             'locations.*.region' => 'required',
             'locations.*.province' => 'required',
             'locations.*.city' => 'required',
@@ -160,7 +160,7 @@ class TruckController extends Controller
             'plate_number' => 'required|unique:trucks',
             'locations' => 'required|array|min:1',
             'locations.*.barangay' => 'required',
-            'locations.*.street' => 'required',
+            'locations.*.street' => 'nullable',
             'locations.*.region' => 'required',
             'locations.*.province' => 'required',
             'locations.*.city' => 'required',
@@ -216,6 +216,7 @@ class TruckController extends Controller
         return redirect()->back()->with('success', 'Delivery assigned to truck successfully');
     }
 
+
     public function outForDelivery(Request $request, Trucks $truck)
     {
         // Validate the estimated delivery date
@@ -243,6 +244,13 @@ class TruckController extends Controller
                 'status' => 'out_for_delivery',
                 'estimated_delivery' => $request->estimated_delivery
             ]);
+
+            // Send notification to the retailer
+            app(\App\Services\NotificationService::class)->deliveryStatusChanged(
+                $delivery->id,
+                'out_for_delivery',
+                $delivery->order->user_id
+            );
         }
 
         // Update truck status to "on_delivery"
@@ -266,6 +274,7 @@ class TruckController extends Controller
             ->with([
                 'order.user',
                 'order.orderDetails.product',
+                'order.payment',
             ])
             ->latest('updated_at');
 
@@ -290,12 +299,17 @@ class TruckController extends Controller
 
         $deliveryHistory = $query->paginate(10)->withQueryString();
 
+        $deliveryHistory->getCollection()->transform(function ($delivery) {
+            if ($delivery->order) {
+                $delivery->order->setAttribute('formatted_order_id', $delivery->order->formatted_order_id);
+            }
+            return $delivery;
+        });
+
         return view('distributors.trucks.delivery-history', compact('truck', 'deliveryHistory'));
     }
 
-    /**
-     * Move a delivery to another truck
-     */
+
     public function moveDeliveryToTruck(Request $request)
     {
         $validated = $request->validate([

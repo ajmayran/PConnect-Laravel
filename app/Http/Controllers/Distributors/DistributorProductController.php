@@ -3,14 +3,16 @@
 namespace App\Http\Controllers\Distributors;
 
 use App\Models\Product;
-use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use App\Models\Category;
+use Illuminate\Http\Request;
+use App\Models\ProductHistory;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Storage;
 
 class DistributorProductController extends Controller
 {
@@ -52,7 +54,13 @@ class DistributorProductController extends Controller
     public function store(Request $request)
     {
         try {
-            Log::info('Product store attempt', $request->all());
+            Log::info('Product store attempt', [
+                'request_data' => $request->all(),
+                'has_image' => $request->hasFile('image'),
+                'category' => Category::find($request->category_id)?->name,
+                'is_batch_managed' => $this->isBatchManagedCategory(Category::find($request->category_id)?->name),
+                'stock_quantity' => $request->stock_quantity
+            ]);
 
             $user = Auth::user();
             $distributor = $user->distributor;
@@ -62,37 +70,59 @@ class DistributorProductController extends Controller
                 return back()->with('error', 'No distributor profile found for this user.');
             }
 
-            // Validate basic info and specifications
+            $category = Category::find($request->category_id);
+            $isBatchManaged = $this->isBatchManagedCategory($category->name);
+
+            Log::info('Category check', [
+                'category_name' => $category->name,
+                'is_batch_managed' => $isBatchManaged
+            ]);
+
+            // Step 1: Validate basic info that's always required
             $validatedData = $request->validate([
                 'product_name' => 'required|string|max:255',
                 'description' => 'required|string',
                 'category_id' => 'required|exists:categories,id',
                 'image' => 'required|image|max:2048',
                 'brand' => 'required|string|max:255',
-                'sku' => 'required|string|max:255',
+                'sku' => 'required|string|max:255|unique:products,sku',
                 'weight' => 'nullable|numeric|min:0',
                 'tags' => 'nullable|string',
             ]);
 
-            // Handle partial save
-            if ($request->has('save_product')) {
-                // Set default values for required fields
-                $validatedData['price'] = 0;
-                $validatedData['stock_quantity'] = 0;
-                $validatedData['minimum_purchase_qty'] = 1;
-                $alertMessage = 'Product saved successfully (partial save).';
-            } else {
-                // Validate sales information
-                $validatedSales = $request->validate([
-                    'price' => 'required|numeric|min:0',
-                    'stock_quantity' => 'required|integer|min:0',
-                    'minimum_purchase_qty' => 'required|integer|min:1',
-                ]);
+            // Step 2: If this is a full save, validate sales-related fields
+            if (!$request->has('save_product')) {
+                if ($isBatchManaged) {
+                    $validatedSales = $request->validate([
+                        'price' => 'required|numeric|min:0',
+                        'minimum_purchase_qty' => 'required|integer|min:1',
+                    ]);
+
+                    // Force stock_quantity to 0 for batch-managed products
+                    $validatedSales['stock_quantity'] = 0;
+                } else {
+                    // For non-batch products, make stock_quantity required and ensure it's present
+                    $validatedSales = $request->validate([
+                        'price' => 'required|numeric|min:0',
+                        'minimum_purchase_qty' => 'required|integer|min:1',
+                        'stock_quantity' => 'required|integer|min:0',
+                    ]);
+
+                    // Ensure stock_quantity is always present even if it wasn't in the request
+                    if (!isset($validatedSales['stock_quantity'])) {
+                        $validatedSales['stock_quantity'] = 0;
+                    }
+                }
+
                 $validatedData = array_merge($validatedData, $validatedSales);
-                $alertMessage = 'Product saved successfully.';
+            } else {
+                // Partial save: default required sales values
+                $validatedData['price'] = 0;
+                $validatedData['stock_quantity'] = $isBatchManaged ? 0 : ($request->input('stock_quantity', 0));
+                $validatedData['minimum_purchase_qty'] = 1;
             }
 
-            // Handle image upload
+            // Step 3: Handle image upload
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
                 $filename = time() . '_' . $file->getClientOriginalName();
@@ -100,19 +130,50 @@ class DistributorProductController extends Controller
                 $validatedData['image'] = $path;
             }
 
-            // Create product
+            // Step 4: Additional data
             $validatedData['distributor_id'] = $distributor->id;
-            $validatedData['status'] = 'pending';
+            $validatedData['status'] = 'Accepted';
 
-            $product = Product::create($validatedData);
+            // Step 5: Save product
+            DB::beginTransaction();
+            try {
+                $product = Product::create($validatedData);
+                Log::info('Product created', ['product_id' => $product->id]);
 
-            Log::info('Product created', ['product_id' => $product->id]);
+                // Step 6: Create stock for regular (non-batch) products
+                if (
+                    !$request->has('save_product') &&
+                    !$isBatchManaged &&
+                    isset($validatedData['stock_quantity']) &&
+                    $validatedData['stock_quantity'] > 0
+                ) {
+                    \App\Models\Stock::create([
+                        'product_id' => $product->id,
+                        'batch_id' => null,
+                        'type' => 'in',
+                        'quantity' => $validatedData['stock_quantity'],
+                        'user_id' => $user->id,
+                        'notes' => 'Initial stock',
+                        'stock_updated_at' => now()
+                    ]);
+                }
 
-            return redirect()->route('distributors.products.index')
-                ->with('success', $alertMessage);
+                DB::commit();
+
+                $message = $request->has('save_product')
+                    ? 'Product saved successfully (partial save).'
+                    : 'Product saved successfully.';
+
+                return redirect()->route('distributors.products.index')
+                    ->with('success', $message);
+            } catch (\Exception $inner) {
+                DB::rollBack();
+                Log::error('Transaction failed: ' . $inner->getMessage());
+                return back()->with('error', 'Could not save product. Try again.');
+            }
         } catch (\Exception $e) {
-            Log::error('Product creation failed: ' . $e->getMessage());
-            return back()->with('error', 'Failed to create product. Please try again.');
+            Log::error('Outer error: ' . $e->getMessage());
+            return back()->with('error', 'Failed to create product: ' . $e->getMessage());
         }
     }
 
@@ -149,7 +210,7 @@ class DistributorProductController extends Controller
                     Storage::disk('public')->delete($product->image);
                 }
                 $file = $request->file('image');
-                $filename = time() . '_' . $file->getClientOriginalName();
+                $filename = time() . $file->getClientOriginalName();
                 $path = Storage::disk('public')->putFileAs('products', $file, $filename);
                 $validatedData['image'] = $path;
             }
@@ -171,12 +232,38 @@ class DistributorProductController extends Controller
 
     public function destroy($id)
     {
-        $product = Product::findOrFail($id);
-        $product->delete();
+        try {
+            // Start a transaction to ensure data consistency
+            DB::beginTransaction();
 
-        return redirect()->route('distributors.products.index')->with('success', 'Product deleted successfully.');
+            $product = Product::findOrFail($id);
+
+            // Create history record
+            ProductHistory::create([
+                'product_id' => $product->id, // We can keep the ID since the product will still exist (soft deleted)
+                'user_id' => Auth::id(),
+                'action_type' => 'deleted',
+                'old_values' => $product->toArray(),
+                'notes' => 'Product deleted'
+            ]);
+
+            // Soft delete the product
+            $product->delete(); // This does a soft delete if SoftDeletes is used
+
+            // Commit the transaction
+            DB::commit();
+
+            return redirect()->route('distributors.products.index')
+                ->with('success', 'Product deleted successfully.');
+        } catch (\Exception $e) {
+            // Rollback in case of error
+            DB::rollBack();
+
+            Log::error('Product deletion failed: ' . $e->getMessage());
+            return redirect()->route('distributors.products.index')
+                ->with('error', 'Failed to delete product: ' . $e->getMessage());
+        }
     }
-
 
     public function getProductsList()
     {
@@ -244,5 +331,87 @@ class DistributorProductController extends Controller
                 'message' => 'Failed to update price: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Check if a category requires batch management
+     */
+    private function isBatchManagedCategory($categoryName)
+    {
+        $batchCategories = [
+            'Ready To Cook',
+            'Beverages',
+            'Instant Products',
+            'Snacks',
+            'Sauces & Condiments',
+            'Juices & Concentrates',
+            'Powdered Products',
+            'Frozen Products',
+            'Dairy Products'
+        ];
+
+        return in_array($categoryName, $batchCategories);
+    }
+
+    public function history(Request $request)
+    {
+        $user = Auth::user();
+        $distributor = $user->distributor;
+
+        // Get all products for filtering (include soft deleted ones)
+        $products = Product::withTrashed()
+            ->where('distributor_id', $distributor->id)
+            ->select('id', 'product_name')
+            ->orderBy('product_name')
+            ->get();
+
+        // Build the query for histories
+        $query = ProductHistory::whereHas('product', function ($query) use ($distributor) {
+            $query->withTrashed() // Include soft-deleted products
+                ->where('distributor_id', $distributor->id);
+        })
+            ->with(['product' => function ($query) {
+                $query->withTrashed(); // Include soft-deleted products in eager loading
+            }, 'user']);
+
+        // Filter by product
+        if ($request->has('product') && $request->product) {
+            $query->where('product_id', $request->product);
+        }
+
+        // Filter by action type
+        if ($request->has('action') && $request->action) {
+            $query->where('action_type', $request->action);
+        }
+
+        // Filter by date
+        if ($request->has('date') && $request->date) {
+            $query->whereDate('created_at', $request->date);
+        }
+
+        // Get paginated results
+        $productHistories = $query->latest()->paginate(10);
+
+        // Pass query parameters to pagination links
+        if ($request->has(['product', 'action', 'date'])) {
+            $productHistories->appends($request->only(['product', 'action', 'date']));
+        }
+
+        return view('distributors.products.history', compact('productHistories', 'products'));
+    }
+
+    public function checkSku(Request $request)
+    {
+        $sku = $request->input('sku');
+        $productId = $request->input('product_id'); // In case of editing a product
+        
+        $query = Product::where('sku', $sku);
+        if ($productId) {
+            $query->where('id', '!=', $productId); // Exclude current product when editing
+        }
+        
+        $exists = $query->exists();
+        
+        return response()->json(['unique' => !$exists]);
     }
 }

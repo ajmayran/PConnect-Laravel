@@ -1,3 +1,4 @@
+{{-- filepath: /c:/Users/nunez/Documents/PConnect-Laravel/resources/views/components/app-layout.blade.php --}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
@@ -5,6 +6,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>
+        window.userId = {{ auth()->id() }};
+        window.pusherAppKey = "{{ env('PUSHER_APP_KEY') }}";
+        window.pusherAppCluster = "{{ env('PUSHER_APP_CLUSTER') }}";
+    </script>
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <title>PConnect</title>
@@ -13,7 +19,6 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -66,5 +71,6 @@
         </script>
     @endif
 </body>
+
 
 </html>

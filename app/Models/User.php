@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
+use App\Notifications\VerifyRetailerEmail;
+use App\Notifications\VerifyDistributorEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -23,14 +26,13 @@ class User extends Authenticatable
         'first_name',
         'last_name',
         'middle_name',
-        'credentials',
         'email',
         'password',
         'user_type',
-        'facebook_id',
-        'google_id',
         'status',
         'profile_completed',
+        'rejection_reason',
+        'has_seen_subscription_page',
     ];
 
     protected $casts = [
@@ -66,6 +68,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
     public function credential()
     {
         return $this->hasMany(Credential::class);
@@ -73,16 +80,89 @@ class User extends Authenticatable
 
     public function products()
     {
-        return $this->hasMany(Product::class, 'distributor_id');
+        return $this->hasMany(Product::class, 'user_id');
     }
 
     public function retailerProfile()
     {
-        return $this->hasOne(RetailerProfile::class);
+        return $this->hasOne(RetailerProfile::class, 'user_id');
+    }
+    public function retailers()
+    {
+        return $this->hasOne(retailers::class, 'user_id');
     }
 
     public function cart()
     {
         return $this->hasOne(Cart::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function sentMessages()
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function receivedMessages()
+    {
+        return $this->hasMany(Message::class, 'receiver_id');
+    }
+
+    public function credentials()
+    {
+        return $this->hasMany(Credential::class, 'user_id', 'id');
+    }
+
+    /**
+     * Send the email verification notification.
+     *
+     * @return void
+     */
+    public function sendEmailVerificationNotification()
+    {
+        if ($this->user_type === 'distributor') {
+            $this->notify(new VerifyDistributorEmail($this));
+        } else if ($this->user_type === 'retailer') {
+            $this->notify(new VerifyRetailerEmail($this));
+        } else {
+            parent::sendEmailVerificationNotification();
+        }
+    }
+
+    public function followedDistributors()
+    {
+        return $this->hasMany(DistributorFollower::class, 'retailer_id')
+            ->with('distributor');
+    }
+
+    public function isFollowing($distributorId)
+    {
+        return $this->followedDistributors()
+            ->where('distributor_id', $distributorId)
+            ->exists();
+    }
+
+    public function blockedRetailers()
+    {
+        return $this->hasMany(BlockedRetailer::class, 'distributor_id');
+    }
+
+    public function blockedByDistributors()
+    {
+        return $this->hasMany(BlockedRetailer::class, 'retailer_id');
+    }
+
+    public function blockedMessages()
+    {
+        return $this->hasMany(BlockedMessage::class, 'retailer_id');
+    }
+
+    public function blockedMessagesBy()
+    {
+        return $this->hasMany(BlockedMessage::class, 'distributor_id');
     }
 }

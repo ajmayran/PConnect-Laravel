@@ -56,10 +56,10 @@ class ProfileController extends Controller
     {
         $request->validate([
             'business_name' => ['nullable', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:15'],
-            'city' => ['required', 'string', 'max:10'],
-            'province' => ['required', 'string', 'max:10'],
-            'region' => ['required', 'string', 'max:10'],
+            'phone' => ['required', 'string', 'regex:/^[0-9]{11}$/'],
+            'city' => ['nullable', 'string', 'max:10'],
+            'province' => ['nullable', 'string', 'max:10'],
+            'region' => ['nullable', 'string', 'max:10'],
             'barangay' => ['nullable', 'string', 'max:20'],
             'street' => ['nullable', 'string', 'max:255'],
             'profile_picture' => ['nullable', 'image', 'max:2048'],
@@ -86,9 +86,9 @@ class ProfileController extends Controller
                 Storage::disk('public')->delete($retailerProfile->profile_picture);
             }
             // Create a custom file name
-            $fileName = time() . '_' . $request->user()->id . '.' . $request->file('profile_picture')->getClientOriginalExtension();
-            // Store the file in the "profile_pictures" folder in the "public" disk
-            $path = $request->file('profile_picture')->storeAs('profile_pictures', $fileName, 'public');
+            $fileName = time() . $request->user()->id . '.' . $request->file('profile_picture')->getClientOriginalExtension();
+            // Store the file in the "profile_pictures" folder in the "public" disk with custom filename
+            $path = Storage::disk('public')->putFileAs('retailers_profile', $request->file('profile_picture'), $fileName);
             $retailerProfile->profile_picture = $path;
         }
 
@@ -146,5 +146,35 @@ class ProfileController extends Controller
 
         // If no file or file doesn't exist
         return redirect()->back()->with('error', 'File not found or inaccessible.');
+    }
+
+    public function checkProfileComplete()
+    {
+        $user = Auth::user();
+        $isComplete = false;
+
+        if ($user->user_type === 'retailer' && $user->retailerProfile) {
+            // Define what constitutes a complete profile
+            $requiredFields = [
+                'business_name',
+                'phone',
+                'barangay',
+                'street'
+            ];
+
+            $profileComplete = true;
+            foreach ($requiredFields as $field) {
+                if (empty($user->retailerProfile->$field)) {
+                    $profileComplete = false;
+                    break;
+                }
+            }
+
+            $isComplete = $profileComplete;
+        }
+
+        return response()->json([
+            'isComplete' => $isComplete
+        ]);
     }
 }

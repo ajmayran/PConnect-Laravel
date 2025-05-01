@@ -1,10 +1,41 @@
 <x-distributor-layout>
+    <style>
+        #navbar {
+            z-index: 50;
+            /* Ensure navbar is above most elements */
+        }
+
+        #notificationsPopup {
+            z-index: 1050;
+            /* Ensure dropdown is above product cards */
+        }
+
+        .grid>div {
+            z-index: 10;
+            /* Ensure product cards are below the dropdown */
+        }
+    </style>
+
     <div class="container p-4 mx-auto">
         <span class="absolute text-3xl text-white cursor-pointer top-5 left-4 lg:hidden" onclick="toggleSidebar()">
             <i class="px-2 bg-gray-900 rounded-md bi bi-filter-left"></i>
         </span>
         <div class="container p-2 mx-auto">
-            <h1 class="mb-6 text-3xl font-bold text-gray-800">My Products</h1>
+            <div class="flex items-center justify-between mb-2">
+                <h1 class="text-3xl font-bold text-gray-800">My Products</h1>
+
+                <div class="block">
+                    <a href="{{ route('distributors.products.history') }}"
+                        class="flex items-center px-2 py-1 text-xs font-medium text-white transition duration-200 bg-purple-500 rounded-lg hover:bg-purple-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:mr-1" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="hidden sm:inline">History</span>
+                    </a>
+                </div>
+            </div>
 
             <!-- Search Bar -->
             <div class="flex items-center justify-between mb-6">
@@ -15,8 +46,8 @@
                                 placeholder="Search products..."
                                 class="w-full py-2 pl-4 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             <button type="submit"
-                                class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-blue-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+                                class="absolute inset-y-0 right-0 flex items-center px-2 text-gray-500 hover:text-blue-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -25,18 +56,36 @@
                         </div>
                     </form>
                 </div>
-                <div class="flex items-center justify-end space-x-4">
-                    <div class="flex items-center space-x-4">
+                <div class="flex items-center justify-end space-x-2">
+                    <div class="items-center hidden sm:block md:flex">
                         <button onclick="openModal('priceModal')"
-                            class="px-4 py-2 font-bold text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600">
+                            class="px-2 py-1 text-xs font-medium text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600">
                             Product Prices
                         </button>
                     </div>
-                    <div class="space-x-2">
+                    <div>
                         <a href="{{ route('distributors.products.create') }}"
-                            class="px-4 py-2 font-bold text-white transition duration-200 bg-green-500 rounded-lg hover:bg-green-600">
-                            Add New Product
+                            class="px-2 py-1 text-xs font-medium text-green-500 transition duration-200 rounded-lg">
+                            <span class="hidden sm:inline">Add New Product</span>
+                            <span class="sm:hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4v16m8-8H4" />
+                                </svg>
+                            </span>
                         </a>
+                    </div>
+                    <!-- Mobile-only price button with icon -->
+                    <div class="block sm:hidden">
+                        <button onclick="openModal('priceModal')"
+                            class="px-2 py-1 text-xs font-medium text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -71,16 +120,16 @@
             @endif
 
             <!-- Products Grid -->
-            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 relative z-[10]">
                 @foreach ($products as $product)
                     <div class="overflow-hidden bg-white rounded-lg shadow-md">
-                        <div class="relative">
+                        <div class="relative h-48 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
                             @if ($product->image && Storage::disk('public')->exists($product->image))
                                 <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->product_name }}"
-                                    class="object-cover w-full h-48">
+                                    class="object-contain w-full h-48 transition-transform duration-300 hover:scale-105">
                             @else
                                 <img src="{{ asset('img/default-product.jpg') }}" alt="Default Product Image"
-                                    class="object-cover w-full h-48">
+                                    class="object-contain w-full h-48 transition-transform duration-300 hover:scale-105">
                             @endif
                         </div>
                         <div class="p-4">

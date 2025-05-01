@@ -5,6 +5,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>
+        window.userId = {{ auth()->id() }};
+        window.pusherAppKey = "{{ env('PUSHER_APP_KEY') }}";
+        window.pusherAppCluster = "{{ env('PUSHER_APP_CLUSTER') }}";
+    </script>
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <title>PConnect</title>
@@ -65,15 +70,18 @@
     #arrow {
         transition: transform 0.3s ease;
     }
+    #reports-arrow{
+        transition: transform 0.3s ease;
+    }
 </style>
 
-<body class="bg-gray-100" data-user-id="{{ Auth::id() ?? '' }}" data-user-type="distributor">
+<body class="bg-gray-200" data-user-id="{{ Auth::id() ?? '' }}" data-user-type="distributor">
 
 
 
     <x-dist_navbar />
     <!-- Page Content -->
-    <span class="absolute text-4xl text-white cursor-pointer top-5 left-4" onclick="toggleSidebar()">
+    <span class="absolute text-4xl text-white cursor-pointer top-5 left-4 z-[50]" onclick="toggleSidebar()">
         <i class="px-2 bg-gray-900 rounded-md bi bi-filter-left"></i>
     </span>
 
@@ -85,7 +93,7 @@
         {{ $slot }}
     </div>
 
-    <x-footer />
+
 
     @stack('scripts')
 
@@ -101,12 +109,15 @@
         </script>
     @endif
 </body>
+
+<script src="{{ asset('js/distributornotif-utils.js') }}"></script>
 <script>
     function dropdown() {
         document.querySelector("#submenu").classList.toggle("hidden");
         document.querySelector("#arrow").classList.toggle("rotate-180");
     }
     dropdown();
+    
 
     function toggleSidebar() {
         const sidebar = document.getElementById("sidebar");

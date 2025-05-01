@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('distributor_id');
-            $table->enum('status', ['pending', 'processing', 'completed', 'cancelled', 'rejected','returned'])
+            $table->enum('status', ['pending', 'processing', 'completed', 'cancelled', 'rejected','returned', 'refunded', 'failed', 'delivered'])
                 ->default('pending');
             $table->text('reject_reason')->nullable();
             $table->text('cancel_reason')->nullable();
@@ -33,6 +33,9 @@ return new class extends Migration
             $table->integer('quantity');
             $table->decimal('subtotal', 10, 2);
             $table->string('delivery_address');
+            $table->decimal('discount_amount', 10, 2)->default(0);
+            $table->integer('free_items')->default(0);
+            $table->string('applied_discount')->nullable();
 
             $table->timestamps();
 

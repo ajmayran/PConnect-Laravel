@@ -13,6 +13,9 @@ class OrderDetails extends Model
         'price',
         'subtotal',
         'delivery_address',
+        'discount_amount',
+        'free_items',
+        'applied_discount'
     ];
 
     public function order()

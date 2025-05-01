@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
+use App\Providers\RouteServiceProvider;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class EmailVerificationPromptController extends Controller
 {
@@ -14,8 +15,16 @@ class EmailVerificationPromptController extends Controller
      */
     public function __invoke(Request $request): RedirectResponse|View
     {
-        return $request->user()->hasVerifiedEmail()
-                    ? redirect()->intended(route('dashboard', absolute: false))
-                    : view('auth.verify-email');
+        if ($request->user()->hasVerifiedEmail()) {
+            if ($request->user()->user_type === 'distributor') {
+                return redirect()->route('auth.approval-waiting')
+                    ->with('message', 'Email verified! Please wait for admin approval.');
+            }
+            
+            return redirect()->intended(RouteServiceProvider::HOME);
+        }
+
+        // Use the standard auth.verify-email view instead of an email template
+        return view('auth.verify-email');
     }
 }

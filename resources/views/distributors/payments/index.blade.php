@@ -72,7 +72,8 @@
                                 <th class="px-4 py-3 font-medium text-left text-gray-700">Order ID</th>
                                 <th class="px-4 py-3 font-medium text-left text-gray-700">Retailer</th>
                                 <th class="px-4 py-3 font-medium text-left text-gray-700">Amount</th>
-                                <th class="px-4 py-3 font-medium text-left text-gray-700">Status</th>
+                                <th class="px-4 py-3 font-medium text-left text-gray-700">Payment Status</th>
+                                <th class="px-4 py-3 font-medium text-left text-gray-700">Delivery Status</th>
                                 <th class="px-4 py-3 font-medium text-left text-gray-700">Paid At</th>
                                 <th class="px-4 py-3 font-medium text-left text-gray-700">Note</th>
                                 <th class="px-4 py-3 font-medium text-left text-gray-700">Action</th>
@@ -101,6 +102,23 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3">
+                                        @if ($payment->order->delivery)
+                                            <span
+                                                class="px-2 py-1 text-sm rounded-full 
+                                                @if ($payment->order->delivery->status === 'delivered') bg-green-100 text-green-800
+                                                @elseif ($payment->order->delivery->status === 'out_for_delivery') bg-blue-100 text-blue-800
+                                                @elseif ($payment->order->delivery->status === 'in_transit') bg-indigo-100 text-indigo-800
+                                                @elseif ($payment->order->delivery->status === 'failed') bg-red-100 text-red-800
+                                                @else bg-gray-100 text-gray-800 @endif">
+                                                {{ ucwords(str_replace('_', ' ', $payment->order->delivery->status)) }}
+                                            </span>
+                                        @else
+                                            <span class="px-2 py-1 text-sm text-gray-800 bg-gray-100 rounded-full">
+                                                Not Assigned
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3">
                                         @if ($payment->paid_at)
                                             {{ \Carbon\Carbon::parse($payment->paid_at)->format('Y-m-d H:i') }}
                                         @else
@@ -111,8 +129,15 @@
                                     <td class="px-4 py-3">
                                         @if ($payment->payment_status === 'unpaid')
                                             <div class="flex space-x-1">
-                                                <button type="button" onclick="openUpdateModal('{{ $payment->id }}', 'paid')"
-                                                    class="px-3 py-1 text-xs text-white bg-green-500 rounded hover:bg-green-600">
+                                                @php
+                                                    $canMarkAsPaid = $payment->order->delivery && $payment->order->delivery->status === 'delivered';
+                                                @endphp
+                                                <button type="button" 
+                                                    onclick="openUpdateModal('{{ $payment->id }}', 'paid')"
+                                                    class="px-3 py-1 text-xs text-white {{ $canMarkAsPaid ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-400 cursor-not-allowed' }}"
+                                                    {{ $canMarkAsPaid ? '' : 'disabled' }}
+                                                    title="{{ $canMarkAsPaid ? 'Mark as Paid' : 'Order must be delivered first' }}"
+                                                    >
                                                     Mark as Paid
                                                 </button>
                                                 <button type="button" onclick="openUpdateModal('{{ $payment->id }}', 'failed')"
@@ -165,6 +190,34 @@
 
     @push('scripts')
         <script>
+            // Add tooltips to disabled buttons
+            document.addEventListener('DOMContentLoaded', function() {
+                const disabledButtons = document.querySelectorAll('button[disabled]');
+                disabledButtons.forEach(button => {
+                    if (button.title) {
+                        button.addEventListener('mouseover', function(e) {
+                            const tooltip = document.createElement('div');
+                            tooltip.className = 'absolute z-50 px-2 py-1 text-xs text-white bg-gray-800 rounded';
+                            tooltip.style.top = (e.pageY - 30) + 'px';
+                            tooltip.style.left = e.pageX + 'px';
+                            tooltip.innerText = this.title;
+                            tooltip.id = 'tooltip-' + Math.random().toString(36).substr(2, 9);
+                            document.body.appendChild(tooltip);
+                            
+                            this.dataset.tooltipId = tooltip.id;
+                        });
+                        
+                        button.addEventListener('mouseout', function() {
+                            if (this.dataset.tooltipId) {
+                                const tooltip = document.getElementById(this.dataset.tooltipId);
+                                if (tooltip) tooltip.remove();
+                                delete this.dataset.tooltipId;
+                            }
+                        });
+                    }
+                });
+            });
+
             function openUpdateModal(paymentId, status) {
                 const modal = document.getElementById('updatePaymentModal');
                 const form = document.getElementById('updatePaymentForm');

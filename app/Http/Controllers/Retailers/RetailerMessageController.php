@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Message;
 use App\Events\MessageSent;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -100,7 +101,7 @@ class RetailerMessageController extends Controller
             ]);
 
             // Broadcast the message
-            event(new MessageSent($message->message, Auth::id(), $request->receiver_id));
+            broadcast(new MessageSent($message->message, Auth::id(), $request->receiver_id))->toOthers();
 
             return response()->json([
                 'status' => 'success',
@@ -115,14 +116,36 @@ class RetailerMessageController extends Controller
         }
     }
 
+
     public function getUnreadCount()
-    {
-        $unreadCount = Message::where('receiver_id', Auth::id())
+{
+    try {
+        // Get authenticated user ID
+        $userId = Auth::id();
+
+        // Count unique senders who have sent unread messages
+        $unreadSendersCount = Message::where('receiver_id', $userId)
             ->where('is_read', false)
+            ->select('sender_id')
+            ->distinct()
             ->count();
 
-        return response()->json(['unread_count' => $unreadCount]);
+        return response()->json([
+            'success' => true,
+            'unread_count' => $unreadSendersCount,
+            'count' => $unreadSendersCount
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Error fetching unread message count: ' . $e->getMessage());
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Error fetching unread messages',
+            'count' => 0,
+            'unread_count' => 0
+        ]);
     }
+}
 
     public function markAsRead(Request $request)
     {
@@ -140,5 +163,82 @@ class RetailerMessageController extends Controller
             ]);
 
         return response()->json(['status' => 'success']);
+    }
+
+
+    public function getMessagePreviews()
+    {
+        try {
+            // Get the latest message from each unique sender
+            $latestMessages = Message::where('receiver_id', Auth::id())
+                ->select('sender_id', DB::raw('MAX(id) as max_id'))
+                ->groupBy('sender_id')
+                ->orderBy('max_id', 'desc')
+                ->take(5)
+                ->get();
+
+            $messageIds = $latestMessages->pluck('max_id');
+
+            // Fetch the actual message details
+            $messages = Message::whereIn('id', $messageIds)
+                ->with('sender:id,first_name,last_name')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            $formattedMessages = $messages->map(function ($message) {
+                $senderImg = null;
+                if ($message->sender->distributorProfile && $message->sender->distributorProfile->profile_picture) {
+                    $senderImg = asset('storage/' . $message->sender->distributorProfile->profile_picture);
+                }
+
+                return [
+                    'id' => $message->id,
+                    'sender_id' => $message->sender_id,
+                    'sender_name' => $message->sender->first_name . ' ' . $message->sender->last_name,
+                    'sender_image' => $senderImg,
+                    'message' => \Illuminate\Support\Str::limit($message->message, 50),
+                    'created_at' => $message->created_at,
+                    'is_read' => $message->is_read,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'messages' => $formattedMessages
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching message previews: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching message previews',
+            ], 500);
+        }
+    }
+
+    public function show($userId)
+    {
+        return redirect()->route('retailers.messages.index', ['distributor' => $userId]);
+    }
+
+    public function deleteConversation(Request $request)
+    {
+        $request->validate([
+            'distributor_id' => 'required|exists:users,id', // Changed from distributors,id to users,id
+        ]);
+
+        $retailerId = Auth::id();
+        $distributorId = $request->distributor_id;
+
+        // Delete all messages between these users
+        Message::where(function ($query) use ($retailerId, $distributorId) {
+            $query->where('sender_id', $retailerId)
+                ->where('receiver_id', $distributorId);
+        })->orWhere(function ($query) use ($retailerId, $distributorId) {
+            $query->where('sender_id', $distributorId)
+                ->where('receiver_id', $retailerId);
+        })->delete();
+
+        return redirect()->route('retailers.messages.index')
+            ->with('success', 'Conversation deleted successfully');
     }
 }

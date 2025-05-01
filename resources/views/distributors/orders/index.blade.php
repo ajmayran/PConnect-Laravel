@@ -1,10 +1,43 @@
 <x-distributor-layout>
+    <style>
+        /* This ensures toggle stays within its container during scroll */
+        #navbar {
+            position: sticky;
+            z-index: 40;
+        }
+
+        .container {
+            position: relative;
+            z-index: 30;
+        }
+    </style>
+
     <span class="absolute text-3xl text-white cursor-pointer top-5 left-4 lg:hidden" onclick="toggleSidebar()">
         <i class="px-2 bg-gray-900 rounded-md bi bi-filter-left"></i>
     </span>
 
     <div class="container p-4 mx-auto">
-        <h1 class="mb-6 text-2xl font-bold text-left text-gray-800 sm:text-3xl">Orders Management</h1>
+        <div class="relative flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold text-left text-gray-800 sm:text-3xl">Orders Management</h1>
+
+            <!-- Order Acceptance Toggle -->
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-medium text-gray-700">Accept New Orders:</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="orderToggle" class="sr-only peer"
+                        {{ Auth::user()->distributor->accepting_orders ? 'checked' : '' }}>
+                    <div
+                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 
+                               peer-focus:ring-blue-300 rounded-full peer 
+                               peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full 
+                               peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] 
+                               after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full 
+                               after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600">
+                    </div>
+                </label>
+                <div id="statusIndicator" class="text-sm font-medium"></div>
+            </div>
+        </div>
 
         <!-- Search Bar -->
         <div class="flex items-center justify-between mb-4">
@@ -25,6 +58,16 @@
                         </button>
                     </div>
                 </form>
+            </div>
+            <!-- Order History Link -->
+            <div class="flex justify-end flex-1">
+                <a href="{{ route('distributors.orders.history') }}" 
+                   class="px-4 py-2 text-sm font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">
+                    <span class="flex items-center gap-2">
+                        <i class="bi bi-clock-history"></i>
+                        Order History
+                    </span>
+                </a>
             </div>
         </div>
 
@@ -66,13 +109,6 @@
                       border-b-2">
                 Processing
             </a>
-            <a href="?status=rejected{{ request('search') ? '&search=' . request('search') : '' }}"
-                class="px-4 py-2 -mb-px font-semibold 
-                      @if (request('status') === 'rejected') text-green-500 border-green-500
-                      @else text-gray-600 border-transparent @endif  
-                      border-b-2">
-                Rejected
-            </a>
         </div>
 
         @if ($orders->isEmpty())
@@ -111,9 +147,9 @@
                                             class="font-medium text-gray-700">{{ $order->created_at->format('F d, Y') }}</span>
                                         <span
                                             class="px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
-                                            {{ $order->created_at->format('h:i A') }}
+                                            {{ $order->created_at->setTimezone('Asia/Manila')->format('h:i A') }}
                                         </span>
-                                        
+
                                         @if (request('status') === 'processing' && $order->status_updated_at)
                                             <span
                                                 class="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full">
@@ -132,7 +168,6 @@
             </div>
         @endif
     </div>
-
 
     <!-- Main Order Modal -->
     <div id="orderModal"
@@ -171,6 +206,10 @@
                     class="px-4 py-2 font-medium text-white transition-colors bg-blue-500 rounded-lg hover:bg-blue-600">
                     QR Code
                 </a>
+                <button onclick="openEditOrderModal()"
+                    class="px-4 py-2 font-medium text-white transition-colors bg-yellow-500 rounded-lg hover:bg-yellow-600">
+                    Edit Order
+                </button>
                 <button onclick="closeModal()"
                     class="px-4 py-2 font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">
                     Close
@@ -181,7 +220,7 @@
 
     <!-- Reject Reason Modal -->
     <div id="rejectModal"
-        class="fixed inset-0 flex items-center justify-center hidden bg-black bg-opacity-50 z-60 backdrop-blur-sm">
+        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
         <div class="w-11/12 max-w-md bg-white rounded-lg shadow-xl">
             <div class="p-4 border-b">
                 <h2 class="text-xl font-bold text-gray-800">Reject Order</h2>
@@ -280,6 +319,33 @@
         </div>
     </div>
 
+    <!-- Edit Order Modal -->
+    <div id="editOrderModal"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="w-11/12 max-w-2xl bg-white rounded-lg shadow-xl">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-bold text-gray-800">Edit Order</h2>
+            </div>
+            <div class="p-4">
+                <form id="editOrderForm">
+                    <div id="editOrderItems" class="space-y-4">
+                        <!-- Order items will be dynamically populated here -->
+                    </div>
+                    <div class="flex justify-end gap-2 mt-4">
+                        <button type="button" onclick="submitEditOrder()"
+                            class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
+                            Save Changes
+                        </button>
+                        <button type="button" onclick="closeEditOrderModal()"
+                            class="px-4 py-2 text-white bg-gray-600 rounded hover:bg-gray-700">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Hidden Forms for Accept and Reject -->
     <form id="acceptForm" method="POST" class="hidden">
         @csrf
@@ -296,6 +362,7 @@
 
         function openModal(row) {
             var orderId = row.getAttribute('data-order-id');
+            var formattedOrderId = row.querySelector('td:first-child').textContent.trim();
             var orderStatus = row.getAttribute('data-status');
             currentOrderId = orderId;
             var retailer = JSON.parse(row.getAttribute('data-retailer'));
@@ -303,113 +370,107 @@
             var dateTime = row.getAttribute('data-created-at');
             var deliveryAddress = row.getAttribute('data-delivery-address');
 
-            document.getElementById('modalTitle').innerText = 'Order #' + orderId;
+            document.getElementById('modalTitle').innerText = 'Order ' + formattedOrderId;
 
-            var modalHtml = '<div class="space-y-6">';
-
-            // Products Section
-            modalHtml += '<div class="overflow-hidden bg-white rounded-lg shadow">';
-            modalHtml +=
-                '<div class="p-4 border-b bg-gray-50"><h3 class="text-lg font-semibold text-gray-800">Products Ordered</h3></div>';
-            modalHtml += '<div class="overflow-x-auto">';
-            modalHtml += '<table class="min-w-full divide-y divide-gray-200">';
-            modalHtml += '<thead class="bg-gray-50"><tr>';
-            modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Product</th>';
-            modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Price</th>';
-            modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Quantity</th>';
-            modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Subtotal</th>';
-            modalHtml += '</tr></thead><tbody class="divide-y divide-gray-200">';
+            let modalHtml = `
+        <div class="space-y-6">
+            <!-- Products Section -->
+            <div class="overflow-hidden bg-white rounded-lg shadow">
+                <div class="p-4 border-b bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-800">Products Ordered</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Product</th>
+                                <th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Price</th>
+                                <th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Quantity</th>
+                                <th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+    `;
 
             let totalAmount = 0;
             details.forEach(function(detail) {
-                modalHtml += '<tr class="hover:bg-gray-50">';
-                modalHtml += '<td class="px-4 py-3">';
-                modalHtml += '<div class="flex items-center gap-3">';
-                if (detail.product.image) {
-                    modalHtml += '<img src="' + storageBaseUrl + '/' + detail.product.image + '" alt="' + detail
-                        .product.product_name + '" class="object-cover w-16 h-16 rounded-lg" />';
-                } else {
-                    modalHtml += '<img src="img/default-product.jpg" class="object-cover w-16 h-16 rounded-lg" />';
-                }
-                modalHtml += '<span class="font-medium text-gray-800">' + detail.product.product_name + '</span>';
-                modalHtml += '</div></td>';
-                modalHtml += '<td class="px-4 py-3">₱' + parseFloat(detail.product.price).toFixed(2) + '</td>';
-                modalHtml += '<td class="px-4 py-3">' + detail.quantity + '</td>';
-                modalHtml += '<td class="px-4 py-3 font-medium text-blue-600">₱' + parseFloat(detail.subtotal)
-                    .toFixed(2) + '</td>';
-                modalHtml += '</tr>';
+                const originalPrice = parseFloat(detail.product.price).toFixed(2);
+                const discountedPrice = detail.discount_amount > 0 ?
+                    (detail.product.price - (detail.discount_amount / detail.quantity)).toFixed(2) :
+                    originalPrice;
+                modalHtml += `
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3">
+                    <div class="flex items-center gap-3">
+                        <img src="${detail.product.image ? storageBaseUrl + '/' + detail.product.image : 'img/default-product.jpg'}" 
+                             alt="${detail.product.product_name}" 
+                             class="object-cover w-16 h-16 rounded-lg" />
+                        <span class="font-medium text-gray-800">${detail.product.product_name}</span>
+                    </div>
+                </td>
+                <td class="px-4 py-3">
+                    ${detail.discount_amount > 0
+                        ? `<span class="text-xs text-gray-500 line-through">₱${originalPrice}</span><br>
+                               <span class="text-green-600">₱${discountedPrice}</span>`
+                        : `₱${originalPrice}`}
+                </td>
+                <td class="px-4 py-3">${detail.quantity}</td>
+                <td class="px-4 py-3 font-medium text-blue-600">₱${parseFloat(detail.subtotal).toFixed(2)}</td>
+            </tr>
+        `;
                 totalAmount += parseFloat(detail.subtotal);
             });
 
-            modalHtml += '</tbody>';
-            modalHtml += '<tfoot class="bg-gray-50"><tr>';
-            modalHtml += '<td colspan="3" class="px-4 py-3 font-medium text-right text-gray-700">Total Amount:</td>';
-            modalHtml += '<td class="px-4 py-3 font-bold text-blue-600">₱' + totalAmount.toFixed(2) + '</td>';
-            modalHtml += '</tr></tfoot>';
-            modalHtml += '</table></div></div>';
+            modalHtml += `
+                        </tbody>
+                        <tfoot class="bg-gray-50">
+                            <tr>
+                                <td colspan="3" class="px-4 py-3 font-medium text-right text-gray-700">Total Amount:</td>
+                                <td colspan="3" class="px-4 py-3 font-bold text-blue-600">₱${totalAmount.toFixed(2)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
 
-            // Retailer Profile Card - Compact Design
-            modalHtml += '<div class="p-4 bg-white rounded-lg shadow">';
-            modalHtml += '<div class="flex items-start space-x-4">';
-            // Profile picture and name section
-            modalHtml += '<div class="flex items-center">';
-            if (retailer.retailer_profile && retailer.retailer_profile.profile_picture) {
-                modalHtml += '<img src="' + storageBaseUrl + '/' + retailer.retailer_profile.profile_picture +
-                    '" alt="Profile" class="object-cover w-12 h-12 rounded-full shadow" />';
-            } else {
-                modalHtml += '<div class="flex items-center justify-center w-12 h-12 bg-gray-200 rounded-full">' +
-                    '<span class="text-xl font-medium text-gray-600">' + retailer.first_name.charAt(0) + '</span></div>';
-            }
-            modalHtml += '</div>';
-            // Retailer information container
-            modalHtml += '<div class="flex-1">';
-            modalHtml += '<div class="flex items-center mb-2">';
-            modalHtml += '<h4 class="text-lg font-medium text-gray-800">' + retailer.first_name + ' ' + retailer.last_name +
-                '</h4>';
-            modalHtml += '</div>';
-            modalHtml += '<div class="grid grid-cols-1 gap-2 text-sm">';
-            if (retailer.email) {
-                modalHtml +=
-                    '<p class="flex items-center text-gray-600"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>' +
-                    retailer.email + '</p>';
-            }
-            if (retailer.retailer_profile) {
-                if (retailer.retailer_profile.phone) {
-                    modalHtml +=
-                        '<p class="flex items-center text-gray-600"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>' +
-                        retailer.retailer_profile.phone + '</p>';
-                }
-                if (deliveryAddress) {
-                    modalHtml +=
-                        '<p class="flex items-center text-gray-600"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>' +
-                        deliveryAddress + '</p>';
-                }
-            }
-            modalHtml += '</div>';
-            modalHtml += '</div>';
-            modalHtml += '</div>'; // End of retailer card
-
-            modalHtml += '</div>';
+            <!-- Retailer Profile Section -->
+       <div class="p-4 bg-white rounded-lg shadow">
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0">
+                         <a href="/retailers/${retailer.id}">
+                        <img src="${retailer.retailer_profile?.profile_picture ? storageBaseUrl + '/' + retailer.retailer_profile.profile_picture : 'img/default-avatar.jpg'}" 
+                             alt="Profile" 
+                             class="object-cover w-16 h-16 rounded-full shadow hover:opacity-80" />
+                    </a>
+                </div>
+                <div>
+                    <a href="/retailers/${retailer.id}" class="hover:underline">
+                        <h4 class="text-lg font-medium text-gray-800">${retailer.first_name} ${retailer.last_name}</h4>
+                    </a>
+                    <p class="text-sm text-gray-600">${retailer.email}</p>
+                    <p class="text-sm text-gray-600">${retailer.retailer_profile?.phone || 'No phone number'}</p>
+                    <p class="text-sm text-gray-600">${deliveryAddress || 'No delivery address'}</p>
+                </div>
+            </div>
+        </div>
+                </div>
+            `;
 
             document.getElementById('modalContent').innerHTML = modalHtml;
             document.getElementById('orderModal').classList.remove('hidden');
 
-            if (orderStatus !== 'pending') {
-                document.getElementById('actionButtons').classList.add('hidden');
+            // Show or hide action buttons based on order status
+            const actionButtons = document.getElementById('actionButtons');
+            if (orderStatus === 'pending') {
+                actionButtons.classList.remove('hidden');
             } else {
-                document.getElementById('actionButtons').classList.remove('hidden');
-            }
-
-            if (orderStatus !== 'pending') {
-                document.getElementById('actionButtons').classList.add('hidden');
-            } else {
-                document.getElementById('actionButtons').classList.remove('hidden');
+                actionButtons.classList.add('hidden');
             }
 
             // Show QR code button only for processing orders
             const qrCodeButton = document.getElementById('qrCodeButton');
             if (orderStatus === 'processing') {
-                qrCodeButton.href = "/orders/" + orderId + "/qrcode";
+                qrCodeButton.href = `/orders/${orderId}/qrcode`;
                 qrCodeButton.classList.remove('hidden');
             } else {
                 qrCodeButton.classList.add('hidden');
@@ -431,23 +492,57 @@
                 confirmButtonText: 'Yes, accept it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    document.getElementById('acceptForm').action = "/orders/" + currentOrderId +
-                        "/accept";
-                    document.getElementById('acceptForm').submit();
+                    fetch(`/orders/${currentOrderId}/accept`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    title: 'Success!',
+                                    text: 'Order accepted successfully.',
+                                    icon: 'success',
+                                    confirmButtonColor: '#3085d6'
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                // Show validation error in alert
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: data.message ||
+                                        'An error occurred while accepting the order.',
+                                    icon: 'error',
+                                    confirmButtonColor: '#d33'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: error.message || 'An unexpected error occurred.',
+                                icon: 'error',
+                                confirmButtonColor: '#d33'
+                            });
+                        });
                 }
             });
         }
 
-        // Updated: Hide order modal before opening reject modal
         function openRejectModal() {
             document.getElementById('orderModal').classList.add('hidden');
             document.getElementById('rejectModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
         }
 
-        // Updated: When closing reject modal, restore order modal
         function closeRejectModal() {
             document.getElementById('rejectModal').classList.add('hidden');
             document.getElementById('orderModal').classList.remove('hidden');
+            document.body.style.overflow = ''; // Restore background scrolling
         }
 
         function checkRejectOther(radio) {
@@ -458,6 +553,127 @@
                 otherReasonInput.classList.add('hidden');
                 otherReasonInput.value = '';
             }
+        }
+
+        function openEditOrderModal() {
+            const modal = document.getElementById('editOrderModal');
+            const orderItemsContainer = document.getElementById('editOrderItems');
+            orderItemsContainer.innerHTML = '';
+
+            // Fetch order details and stock availability
+            fetch(`/orders/${currentOrderId}/detail`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        data.orderDetails.forEach(detail => {
+                            const stockLeft = detail.product.stockLeft;
+
+                            orderItemsContainer.innerHTML += `
+                        <div class="flex items-center gap-4">
+                            <div class="flex-1">
+                                <p class="font-medium text-gray-800">${detail.product.product_name}</p>
+                                <p class="text-sm text-gray-600">Stock Left: ${stockLeft}</p>
+                            </div>
+                            <div>
+                                <input type="number" name="order_details[${detail.id}][quantity]"
+                                    value="${detail.quantity}" min="1" max="${stockLeft}"
+                                    class="w-20 px-2 py-1 border rounded">
+                            </div>
+                        </div>
+                    `;
+                        });
+
+                        modal.classList.remove('hidden');
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: data.message || 'Failed to load order details.',
+                            icon: 'error',
+                            confirmButtonColor: '#d33'
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: error.message || 'An unexpected error occurred.',
+                        icon: 'error',
+                        confirmButtonColor: '#d33'
+                    });
+                });
+        }
+
+        function submitEditOrder() {
+            const form = document.getElementById('editOrderForm');
+            const formData = new FormData(form);
+
+            // Convert FormData to JSON object
+            const orderDetails = [];
+            formData.forEach((value, key) => {
+                const match = key.match(
+                    /^order_details\[(\d+)\]\[quantity\]$/); // Match keys like "order_details[1][quantity]"
+                if (match) {
+                    const detailId = match[1];
+                    orderDetails.push({
+                        id: detailId,
+                        quantity: parseInt(value),
+                    });
+                }
+            });
+
+            // Ensure orderDetails is not empty
+            if (orderDetails.length === 0) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'No order details found to update.',
+                    icon: 'error',
+                    confirmButtonColor: '#d33'
+                });
+                return;
+            }
+
+            fetch(`/orders/${currentOrderId}/edit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({
+                        order_details: orderDetails
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonColor: '#3085d6'
+                        }).then(() => {
+                            location.reload(); // Refresh the page on success
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: data.message || 'Failed to update order.',
+                            icon: 'error',
+                            confirmButtonColor: '#d33'
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: error.message || 'An unexpected error occurred.',
+                        icon: 'error',
+                        confirmButtonColor: '#d33'
+                    });
+                });
+        }
+
+        function closeEditOrderModal() {
+            document.getElementById('editOrderModal').classList.add('hidden');
         }
 
         function submitRejectOrder() {
@@ -630,5 +846,60 @@
                 return 'Invalid date';
             }
         }
+
+        // Add this to the existing script section at the bottom
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggle = document.getElementById('orderToggle');
+            const statusIndicator = document.getElementById('statusIndicator');
+
+            // Set initial status text
+            updateStatusIndicator();
+
+            toggle.addEventListener('change', function() {
+                // Show loading indicator
+                statusIndicator.textContent = "Updating...";
+                statusIndicator.className = "text-sm font-medium text-blue-500";
+
+                // Send AJAX request to update status
+                fetch('{{ route('distributors.toggle-order-acceptance') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        },
+                        body: JSON.stringify({
+                            accepting_orders: toggle.checked
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            updateStatusIndicator();
+                        } else {
+                            // Revert toggle if there was an error
+                            toggle.checked = !toggle.checked;
+                            statusIndicator.textContent = "Update failed";
+                            statusIndicator.className = "text-sm font-medium text-red-500";
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // Revert toggle if there was an error
+                        toggle.checked = !toggle.checked;
+                        statusIndicator.textContent = "Update failed";
+                        statusIndicator.className = "text-sm font-medium text-red-500";
+                    });
+            });
+
+            function updateStatusIndicator() {
+                if (toggle.checked) {
+                    statusIndicator.textContent = "Accepting Orders";
+                    statusIndicator.className = "text-sm font-medium text-green-500";
+                } else {
+                    statusIndicator.textContent = "Not Accepting Orders";
+                    statusIndicator.className = "text-sm font-medium text-red-500";
+                }
+            }
+        });
     </script>
 </x-distributor-layout>

@@ -5,12 +5,16 @@ namespace App\Http\Controllers\Auth;
 use App\Models\Credential;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Mail\DistributorRegistrationMail;
+use App\Mail\RetailerRegistrationMail;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
@@ -39,15 +43,22 @@ class RegisteredUserController extends Controller
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'email' => [
+                'required',
+                'string',
+                'lowercase',
+                'email',
+                'max:255',
+                Rule::unique('users')->where(function ($query) {
+                    $query->where('status', 'approved'); // Only check for approved users
+                }),
+            ],
             'user_type' => ['required', 'in:retailer,distributor'],
             'credentials' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
-            'credentials2' => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
+            'credentials2' => ['required_if:user_type,distributor', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:20480'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
-
-        $credentialsPath = $request->file('credentials')->store('credentials', 'public');
-
+    
         $user = User::create([
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
@@ -55,7 +66,7 @@ class RegisteredUserController extends Controller
             'user_type' => $validated['user_type'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'status' => $validated['user_type'] === 'retailer' ? 'approved' : 'pending'
+            'status' => $validated['user_type'] === 'retailer' ? 'approved' : 'pending',
         ]);
 
         if ($request->hasFile('credentials')) {
@@ -76,16 +87,23 @@ class RegisteredUserController extends Controller
             ]);
         }
 
-
         event(new Registered($user));
 
-        if ($user->user_type === 'distributor') {
-            return redirect()->route('auth.approval-waiting')
-                ->with('message', 'Registration successful! Please wait for admin approval.');
-        }
-
         Auth::login($user);
-        return redirect(route('retailers.dashboard', absolute: false));
+
+        // Send appropriate emails based on user type
+        // if ($user->user_type === 'distributor') {
+        //     Mail::to($user->email)->send(new DistributorRegistrationMail($user));
+        //     return redirect()->route('verification.notice');
+        // } else {
+        //     Mail::to($user->email)->send(new RetailerRegistrationMail($user));
+
+        // Either redirect to verification notice (to enforce email verification)
+        return redirect()->route('verification.notice');
+
+        // Or keep the current behavior to skip verification for retailers
+        // return redirect(route('retailers.dashboard', absolute: false));
+
     }
 
     /**

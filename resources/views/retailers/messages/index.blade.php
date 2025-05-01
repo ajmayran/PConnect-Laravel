@@ -1,10 +1,12 @@
 <x-app-layout>
     <x-dashboard-nav />
-    <div class="py-8">
+    <div class="py-8 retailers-messages-page">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <x-retailer-sidebar />
             <!-- Main Content Area -->
+
             <div class="p-3 bg-white border-b border-gray-200 rounded-lg shadow-sm md:p-5">
+
                 <h2 class="mb-4 text-xl font-semibold text-gray-800">Messages</h2>
 
                 <div class="flex flex-col md:flex-row h-[calc(100vh-240px)]">
@@ -124,13 +126,30 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <button class="text-gray-500 focus:outline-none hover:text-gray-700">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20"
-                                            fill="currentColor">
-                                            <path
-                                                d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                        </svg>
-                                    </button>
+                                    <div class="relative" x-data="{ open: false }">
+                                        <button @click="open = !open"
+                                            class="text-gray-500 focus:outline-none hover:text-gray-700">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20"
+                                                fill="currentColor">
+                                                <path
+                                                    d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                            </svg>
+                                        </button>
+
+                                        <!-- Dropdown Menu -->
+                                        <div x-show="open" @click.away="open = false"
+                                            class="absolute right-0 z-10 w-48 py-1 mt-2 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                            <a href="{{ route('retailers.distributor-page', $currentDistributor->distributor->id) }}"
+                                                class="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100">
+                                                View Shop
+                                            </a>
+                                            <button type="button"
+                                                onclick="confirmDeleteConversation({{ $currentDistributor->id }})"
+                                                class="block w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-gray-100">
+                                                Delete Conversation
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -143,7 +162,7 @@
                                             class="{{ $message->sender_id == Auth::id()
                                                 ? 'message-bubble-sent bg-gradient-to-br from-green-50 to-green-100 text-green-900'
                                                 : 'message-bubble-received bg-white text-gray-800' }} 
-                                            rounded-lg p-3 shadow-sm max-w-xs lg:max-w-md transform transition-transform duration-200 hover:scale-[1.02]">
+                                        rounded-lg p-3 shadow-sm max-w-xs lg:max-w-md transform transition-transform duration-200 hover:scale-[1.02]">
                                             <p class="text-sm">{{ $message->message }}</p>
                                             <p
                                                 class="mt-1 text-xs {{ $message->sender_id == Auth::id() ? 'text-green-700/70' : 'text-gray-500' }} flex items-center">
@@ -180,33 +199,59 @@
 
                             <!-- Message Input -->
                             <div class="p-3 bg-white border-t border-gray-200">
-                                <form id="message-form" class="flex space-x-2">
-                                    <input type="hidden" name="receiver_id" value="{{ $currentDistributor->id }}">
-                                    <div class="relative flex-1">
-                                        <input type="text" name="message" id="message-input"
-                                            class="block w-full pl-4 pr-10 border-gray-300 rounded-full shadow-sm focus:border-green-500 focus:ring-green-500"
-                                            placeholder="Type your message..." required>
-                                        <div
-                                            class="absolute flex space-x-1 transform -translate-y-1/2 right-2 top-1/2">
-                                            <button type="button" class="text-gray-400 hover:text-gray-600">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
-                                                    viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fill-rule="evenodd"
-                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-7.536 5.879a1 1 0 001.414 0 3 3 0 014.242 0 1 1 0 001.414-1.414 5 5 0 00-7.07 0 1 1 0 000 1.414z"
-                                                        clip-rule="evenodd" />
-                                                </svg>
-                                            </button>
+                                @php
+                                    // Check if retailer is blocked by this distributor
+                                    $isBlocked = \App\Models\BlockedMessage::where(
+                                        'distributor_id',
+                                        $currentDistributor->id,
+                                    )
+                                        ->where('retailer_id', Auth::id())
+                                        ->exists();
+                                @endphp
+
+                                @if ($isBlocked)
+                                    <div
+                                        class="p-3 text-center text-red-800 bg-red-100 border border-red-200 rounded-md">
+                                        <div class="flex items-center justify-center mb-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <span class="font-medium">You have been blocked by this distributor</span>
                                         </div>
+                                        <p class="text-sm">You cannot send messages to this distributor.</p>
                                     </div>
-                                    <button type="submit"
-                                        class="inline-flex items-center px-4 py-2 text-white transition-colors duration-200 bg-green-600 border border-transparent rounded-full hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20"
-                                            fill="currentColor">
-                                            <path
-                                                d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                                        </svg>
-                                    </button>
-                                </form>
+                                @else
+                                    <form id="message-form" class="flex space-x-2">
+                                        <input type="hidden" name="receiver_id"
+                                            value="{{ $currentDistributor->id }}">
+                                        <div class="relative flex-1">
+                                            <input type="text" name="message" id="message-input"
+                                                class="block w-full pl-4 pr-10 border-gray-300 rounded-full shadow-sm focus:border-green-500 focus:ring-green-500"
+                                                placeholder="Type your message..." required>
+                                            <div
+                                                class="absolute flex space-x-1 transform -translate-y-1/2 right-2 top-1/2">
+                                                <button type="button" class="text-gray-400 hover:text-gray-600">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
+                                                        viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd"
+                                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-7.536 5.879a1 1 0 001.414 0 3 3 0 014.242 0 1 1 0 001.414-1.414 5 5 0 00-7.07 0 1 1 0 000 1.414z"
+                                                            clip-rule="evenodd" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <button type="submit"
+                                            class="inline-flex items-center px-4 py-2 text-white transition-colors duration-200 bg-green-600 border border-transparent rounded-full hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
+                                                viewBox="0 0 20 20" fill="currentColor">
+                                                <path
+                                                    d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         @else
                             <!-- Empty State -->
@@ -232,11 +277,56 @@
             </div>
         </div>
     </div>
-
+    <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
     @push('scripts')
-        <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
         <script>
+            function confirmDeleteConversation(distributorId) {
+                console.log("Delete conversation clicked for distributor ID:", distributorId);
+
+                Swal.fire({
+                    title: 'Delete Conversation?',
+                    text: "This will delete the entire conversation history. This action cannot be undone.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Yes, delete it'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Create a form and submit it
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = "{{ route('retailers.messages.delete-conversation') }}";
+                        form.style.display = 'none'; // Hide the form
+
+                        // Add CSRF token
+                        const csrfToken = document.createElement('input');
+                        csrfToken.type = 'hidden';
+                        csrfToken.name = '_token';
+                        csrfToken.value = '{{ csrf_token() }}';
+                        form.appendChild(csrfToken);
+
+                        // Add distributor ID
+                        const idInput = document.createElement('input');
+                        idInput.type = 'hidden';
+                        idInput.name = 'distributor_id';
+                        idInput.value = distributorId;
+                        form.appendChild(idInput);
+
+                        // Add the form to the document and submit
+                        document.body.appendChild(form);
+
+                        // Add debug logs
+                        console.log('Submitting form with distributor_id:', distributorId);
+                        console.log('Form action:', form.action);
+
+                        form.submit();
+                    }
+                });
+            }
+            
             document.addEventListener('DOMContentLoaded', function() {
+                // Get DOM elements
                 const messagesContainer = document.getElementById('messages-container');
                 const conversationsList = document.getElementById('conversations-list');
                 const chatArea = document.getElementById('chat-area');
@@ -296,18 +386,18 @@
                         const tempMessageDiv = document.createElement('div');
                         tempMessageDiv.className = 'flex justify-end new-message-animation';
                         tempMessageDiv.innerHTML = `
-                            <div class="message-bubble-sent bg-gradient-to-br from-green-50 to-green-100 text-green-900 rounded-lg p-3 shadow-sm max-w-xs lg:max-w-md transform transition-transform duration-200 hover:scale-[1.02]">
-                                <p class="text-sm">${message}</p>
-                                <p class="flex items-center mt-1 text-xs text-green-700/70">
-                                    ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                    <span class="ml-1 transition-opacity opacity-0 group-hover:opacity-100">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                        </svg>
-                                    </span>
-                                </p>
-                            </div>
-                        `;
+                        <div class="message-bubble-sent bg-gradient-to-br from-green-50 to-green-100 text-green-900 rounded-lg p-3 shadow-sm max-w-xs lg:max-w-md transform transition-transform duration-200 hover:scale-[1.02]">
+                            <p class="text-sm">${message}</p>
+                            <p class="flex items-center mt-1 text-xs text-green-700/70">
+                                ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                <span class="ml-1 transition-opacity opacity-0 group-hover:opacity-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </span>
+                            </p>
+                        </div>
+                    `;
 
                         messagesContainer.appendChild(tempMessageDiv);
                         messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -368,69 +458,63 @@
                     }
                 }
 
-                // Set up Pusher
-                const pusher = new Pusher("{{ env('PUSHER_APP_KEY') }}", {
-                    cluster: "{{ env('PUSHER_APP_CLUSTER') }}",
-                    encrypted: true,
-                    authEndpoint: '/broadcasting/auth',
-                    auth: {
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                'content')
-                        }
-                    }
-                });
+                // Setup Echo listener for real-time messages
+                if (window.Echo) {
+                    window.Echo.private(`chat.{{ Auth::id() }}`)
+                        .listen('MessageSent', function(data) {
+                            console.log('Received message event via Echo:', data);
 
-                // Subscribe to the private channel
-                const channel = pusher.subscribe('private-chat.{{ Auth::id() }}');
+                            const currentDistributorId = {{ $currentDistributor->id ?? 0 }};
 
-                // Listen for new messages
-                channel.bind('message.sent', function(data) {
-                    console.log('Received message event:', data);
+                            // Debug info
+                            console.log('Current distributor:', currentDistributorId);
+                            console.log('Message sender:', data.senderId);
+                            console.log('Message content:', data.message);
 
-                    const currentDistributorId = {{ $currentDistributor->id ?? 0 }};
+                            // Check if the message is from the current distributor
+                            if (data.senderId == currentDistributorId) {
+                                // Add the message to the current chat
+                                const messageDiv = document.createElement('div');
+                                messageDiv.className = 'flex justify-start new-message-animation';
+                                messageDiv.innerHTML = `
+                                <div class="message-bubble-received bg-white text-gray-800 rounded-lg p-3 shadow-sm max-w-xs lg:max-w-md transform transition-transform duration-200 hover:scale-[1.02]">
+                                    <p class="text-sm">${data.message}</p>
+                                    <p class="mt-1 text-xs text-gray-500">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                                </div>
+                            `;
 
-                    // Check if the message is from the current distributor
-                    if (data.senderId == currentDistributorId) {
-                        // Add the message to the current chat
-                        const messageDiv = document.createElement('div');
-                        messageDiv.className = 'flex justify-start new-message-animation';
-                        messageDiv.innerHTML = `
-                            <div class="message-bubble-received bg-white text-gray-800 rounded-lg p-3 shadow-sm max-w-xs lg:max-w-md transform transition-transform duration-200 hover:scale-[1.02]">
-                                <p class="text-sm">${data.message}</p>
-                                <p class="mt-1 text-xs text-gray-500">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                            </div>
-                        `;
+                                if (messagesContainer) {
+                                    messagesContainer.appendChild(messageDiv);
+                                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                                }
 
-                        if (messagesContainer) {
-                            messagesContainer.appendChild(messageDiv);
-                            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                        }
+                                // Mark as read
+                                fetch("{{ route('retailers.messages.mark-read') }}", {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify({
+                                        sender_id: data.senderId
+                                    })
+                                }).catch(error => {
+                                    console.error('Error marking message as read:', error);
+                                });
 
-                        // Mark as read
-                        fetch("{{ route('retailers.messages.mark-read') }}", {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: JSON.stringify({
-                                sender_id: data.senderId
-                            })
-                        }).catch(error => {
-                            console.error('Error marking message as read:', error);
+                                // Update message preview
+                                updateIncomingMessagePreview(data.senderId, data.message, false);
+                            } else {
+                                // Update message preview with unread indicator
+                                updateIncomingMessagePreview(data.senderId, data.message, true);
+                            }
+
+                            // Update unread count in the navbar
+                            updateUnreadCount();
                         });
-
-                        // Update message preview
-                        updateIncomingMessagePreview(data.senderId, data.message, false);
-                    } else {
-                        // Update message preview with unread indicator
-                        updateIncomingMessagePreview(data.senderId, data.message, true);
-                    }
-
-                    // Update unread count in the navbar
-                    updateUnreadCount();
-                });
+                } else {
+                    console.error('❌ Laravel Echo is NOT initialized - this may be a timing issue. Check your app.js');
+                }
 
                 // Function to update message preview when receiving a message
                 function updateIncomingMessagePreview(senderId, message, isUnread) {
@@ -439,7 +523,8 @@
                         // Update message preview text
                         const previewElement = distributorItem.querySelector('.text-xs.text-gray-600');
                         if (previewElement) {
-                            previewElement.textContent = message.length > 35 ? message.substring(0, 32) + '...' :
+                            previewElement.textContent = message.length > 35 ? message.substring(0, 32) +
+                                '...' :
                                 message;
 
                             if (isUnread) {
@@ -489,6 +574,7 @@
                     }
                 }
 
+
                 // Function to update unread message count
                 function updateUnreadCount() {
                     fetch("{{ route('retailers.messages.unread-count') }}")
@@ -521,6 +607,22 @@
                 // Initial unread count
                 updateUnreadCount();
             });
+
+            // Add Echo status check outside DOMContentLoaded to run immediately
+            setTimeout(function checkEcho() {
+                if (window.Echo) {
+                    console.log('✅ Laravel Echo is initialized');
+
+                    // Check connection state if possible
+                    if (window.Echo.connector && window.Echo.connector.pusher) {
+                        console.log('Echo connection state:', window.Echo.connector.pusher.connection.state);
+                    }
+                } else {
+                    console.error('❌ Laravel Echo is NOT initialized');
+                    // Try again in another second (in case of delayed initialization)
+                    setTimeout(checkEcho, 5000);
+                }
+            }, 500);
         </script>
     @endpush
 
@@ -553,5 +655,89 @@
             position: relative;
             border-radius: 18px 18px 18px 4px;
         }
+
+        /* Fix message input position on mobile */
+        @media (max-width: 768px) {
+
+            /* Container height adjustments */
+            .flex.flex-col.md\:flex-row.h-\[calc\(100vh-240px\)\] {
+                height: calc(100vh - 180px);
+                display: flex;
+                flex-direction: column;
+            }
+
+            #chat-area {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                position: relative;
+            }
+
+            #messages-container {
+                flex: 1;
+                overflow-y: auto;
+                max-height: calc(100vh - 300px);
+                padding-bottom: 10px;
+            }
+
+            /* Keep the input naturally positioned but styled properly */
+            .p-3.bg-white.border-t.border-gray-200 {
+                background-color: white;
+                z-index: 10;
+                box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+                width: calc(100% + 2rem);
+                /* Expand beyond parent container */
+                margin-left: -1rem;
+                margin-right: -1rem;
+                padding-left: 1rem;
+                padding-right: 1rem;
+                position: relative;
+                /* Add this */
+                left: 0;
+                /* Position properly */
+            }
+
+            /* Make sure the parent container doesn't clip the input area */
+            .p-3.bg-white.border-b.border-gray-200.rounded-lg.shadow-sm.md\:p-5 {
+                overflow: visible !important;
+                /* Prevent clipping */
+                position: relative;
+            }
+
+            /* Fix input form to take full available width */
+            #message-form {
+                width: 100%;
+                display: flex;
+            }
+
+            /* Fix rounded corners of input for better mobile display */
+            #message-input {
+                width: 100%;
+                border-radius: 20px;
+            }
+
+            /* Make sure the page has proper spacing at the bottom for footer */
+            x-footer {
+                margin-top: 20px;
+            }
+        }
+
+        /* Animation for new messages */
+        .new-message-animation {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </x-app-layout>
+<x-footer />
