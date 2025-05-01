@@ -107,9 +107,7 @@
                                                 <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                                                     Expiry Date
                                                 </th>
-                                                <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                                                    Actions
-                                                </th>
+                                        
                                             </tr>
                                         </thead>
                                         <tbody class="bg-white divide-y divide-gray-200">
@@ -147,11 +145,7 @@
                                                     <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                                                         {{ $subscription->expires_at ? $subscription->expires_at->format('Y-m-d') : 'N/A' }}
                                                     </td>
-                                                    <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
-                                                        <a href="{{ route('admin.subscriptions.show', $subscription->id) }}" class="mr-2 text-indigo-600 hover:text-indigo-900">
-                                                            View
-                                                        </a>
-                                                    </td>
+                                            
                                                 </tr>
                                             @endforeach
                                         </tbody>
