@@ -5,7 +5,7 @@
         @include('components.admin-sidebar')
 
         {{-- Main content area --}}
-        <div class="flex-1 ml-64 p-4">
+        <div class="flex-1 p-4 ml-64">
             @if (session('error'))
                 <div class="relative px-4 py-3 text-red-700 bg-red-100 border border-red-400 rounded" role="alert">
                     <span class="block sm:inline">{{ session('error') }}</span>
@@ -15,7 +15,7 @@
                 <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
                     <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                         <div class="p-6 bg-white border-b border-gray-200">
-                            <div class="flex justify-between items-center mb-6">
+                            <div class="flex items-center justify-between mb-6">
                                 <h1 class="text-2xl font-semibold">Distributor Subscriptions</h1>
                                 <!-- Download PDF Button -->
                                 <button id="downloadSubscriptionsPdf" class="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700">
@@ -204,4 +204,5 @@
             }
         });
     </script>
+      @vite(['resources/js/admin_dash.js'])
 </x-app-layout>
