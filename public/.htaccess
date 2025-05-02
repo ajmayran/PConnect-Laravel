@@ -23,7 +23,6 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
-    RewriteRule ^storage/.* - [F,L]
 
     RewriteRule ^storage/.*\.(jpg|jpeg|png|gif|bmp|webp|svg)$ - [L]
 </IfModule>
