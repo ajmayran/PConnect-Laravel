@@ -53,7 +53,6 @@ class RetailerNotifController extends Controller
             
         if ($notification) {
             $notification->update(['is_read' => true]);
-            return response()->json(['success' => true]);
         }
         
         return back()->with('success', ' notifications marked as read');

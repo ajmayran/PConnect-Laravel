@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('order_id');
             $table->unsignedBigInteger('distributor_id');
-            $table->enum('payment_status', ['pending','unpaid', 'paid', 'failed'])->default('unpaid');
+            $table->enum('payment_status', ['pending','unpaid', 'paid', 'failed', 'partial'])->default('unpaid');
             // $table->unsignedBigInteger('collected_by')->nullable();
             $table->timestamp('paid_at')->nullable();
             $table->text('payment_note')->nullable();

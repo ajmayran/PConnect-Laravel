@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Distributors;
 use App\Models\Order;
 use App\Models\Trucks;
 use App\Models\Payment;
+use App\Models\Earning;
 use App\Models\Delivery;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -34,7 +35,9 @@ class DeliveryController extends Controller
             'order',
             'order.user.retailerProfile',
             'order.orderDetails.product',
-            'returnRequest.items.orderDetail.product' // Add this relationship for exchange deliveries
+            'address',
+            'returnRequest.items.orderDetail.product', // Add this relationship for exchange deliveries
+            'orderItemDeliveries.address' // Add this to load the address relationships
         ])
             ->whereHas('order', function ($query) use ($distributorId) {
                 $query->where('distributor_id', $distributorId);
@@ -59,7 +62,7 @@ class DeliveryController extends Controller
                     ->orWhereHas('order', function ($sq) use ($search) {
                         $sq->where('formatted_order_id', 'like', "%{$search}%")
                             ->orWhereHas('user', function ($usq) use ($search) {
-                                $usq->where( DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%");
+                                $usq->where(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%");
                             });
                     });
             });
@@ -76,123 +79,285 @@ class DeliveryController extends Controller
         return view('distributors.delivery.index', compact('deliveries', 'availableTrucks', 'status'));
     }
 
-    public function updateStatus(Request $request, $id)
+    public function markDelivered(Request $request, Delivery $delivery)
     {
-        // Validate the incoming request
-        $validated = $request->validate([
-            'status' => ['required', Rule::in(['in_transit', 'out_for_delivery', 'delivered'])],
-        ]);
-
-        // Retrieve delivery or fail
-        $delivery = Delivery::findOrFail($id);
-        $delivery->status = $validated['status'];
-        $delivery->save();
-
-        return redirect()->back()->with('success', 'Delivery status updated successfully.');
-    }
-
-    public function markDelivered(Request $request, Delivery $delivery, Order $order)
-    {
-        // Existing validation and initial checks...
+        // Validate the request
         $validated = $request->validate([
             'payment_status' => ['required', 'string', Rule::in(['paid', 'unpaid'])],
             'payment_note' => ['nullable', 'string', 'max:500'],
         ]);
+    
         // Check if the delivery is in a valid state to be marked as delivered
         if ($delivery->status !== 'out_for_delivery') {
             return back()->with('error', 'This delivery cannot be marked as delivered in its current state.');
         }
     
-        // Update delivery status to delivered
-        $delivery->update([
-            'status' => 'delivered',
-            'updated_at' => now()
-        ]);
+        $distributor = Auth::user()->distributor;
+        $order = $delivery->order;
     
-        // Find existing payment record and update it, or create a new one if none exists
-        $payment = Payment::firstOrNew(
-            ['order_id' => $delivery->order_id],
-            ['distributor_id' => Auth::user()->distributor->id]
-        );
-    
-        // Update payment details
-        $payment->payment_status = $validated['payment_status'];
-        $payment->payment_note = $validated['payment_note'];
-        $payment->paid_at = $validated['payment_status'] === 'paid' ? now() : null;
-        $payment->save();
-        
-        // Log the payment update
-        Log::info('Payment record updated:', [
-            'order_id' => $delivery->order_id,
-            'payment_id' => $payment->id,
-            'payment_status' => $payment->payment_status
-        ]);
-    
-        // Update the order status to completed
-        if ($delivery->order) {
-            $orderStatus = $validated['payment_status'] === 'paid' ? 'completed' : 'delivered';
-            $delivery->order->update([
-                'status' => $orderStatus,
-                'status_updated_at' => now()
+        DB::beginTransaction();
+        try {
+            // Update delivery status to delivered
+            $delivery->update([
+                'status' => 'delivered',
+                'payment_status' => $validated['payment_status'],
+                'payment_note' => $validated['payment_note'],
+                'updated_at' => now()
             ]);
     
-            Log::info('Order updated:', [
-                'order_id' => $delivery->order->id,
-                'new_status' => $orderStatus,
-                'payment_status' => $validated['payment_status']
-            ]);
+            // Different handling for multi-address vs regular orders
+            if ($order->is_multi_address) {
+                // MULTI-ADDRESS ORDER HANDLING
     
-            // Add notification for order status change
-            app(NotificationService::class)->orderStatusChanged(
-                $delivery->order->id,
-                $orderStatus,
-                $delivery->order->user_id,
-                $delivery->order->distributor_id
-            );
+                // Calculate this delivery's portion of the total
+                $deliveryItems = $delivery->orderItemDeliveries;
+                $deliveryTotal = 0;
     
-            // Add delivery status notification
-            app(NotificationService::class)->deliveryStatusChanged(
-                $delivery->id,
-                'delivered',
-                $delivery->order->user_id
-            );
+                foreach ($deliveryItems as $item) {
+                    if ($item->orderDetail) {
+                        $itemPrice = $item->orderDetail->price;
+                        $itemQuantity = $item->quantity;
+                        $deliveryTotal += ($itemPrice * $itemQuantity);
+                    }
+                }
     
-            // If payment was made, also add payment notification
-            if ($validated['payment_status'] === 'paid') {
-                // Create earning record
-                $totalAmount = $delivery->order->orderDetails->sum('subtotal');
-                \App\Models\Earning::create([
-                    'payment_id' => $payment->id,
-                    'distributor_id' => Auth::user()->distributor->id,
-                    'amount' => $totalAmount
+                // Create a payment record specific to this delivery
+                $payment = new Payment();
+                $payment->order_id = $order->id;
+                $payment->delivery_id = $delivery->id; // Link payment to this specific delivery
+                $payment->distributor_id = $distributor->id;
+                $payment->payment_status = $validated['payment_status'];
+                $payment->payment_note = $validated['payment_note'];
+                
+                if ($validated['payment_status'] === 'paid') {
+                    $payment->paid_at = now();
+                }
+                
+                $payment->save();
+    
+                // Only create earnings for paid deliveries
+                if ($validated['payment_status'] === 'paid') {
+                    $earning = new Earning();
+                    $earning->payment_id = $payment->id;
+                    $earning->distributor_id = $distributor->id;
+                    $earning->amount = $deliveryTotal; // Only count this delivery's portion
+                    $earning->save();
+                }
+    
+                // Check if all deliveries for this order are now delivered
+                $allOrderDeliveries = Delivery::where('order_id', $order->id)->get();
+                $allDelivered = $allOrderDeliveries->every(function ($del) {
+                    return $del->status === 'delivered';
+                });
+    
+                if ($allDelivered) {
+                    // Count how many are paid vs total
+                    $paidDeliveries = $allOrderDeliveries->filter(function ($del) {
+                        return $del->payment_status === 'paid';
+                    })->count();
+                    
+                    $totalDeliveries = $allOrderDeliveries->count();
+                    
+                    // Determine overall payment status
+                    $orderPaymentStatus = 'unpaid';
+                    if ($paidDeliveries === $totalDeliveries) {
+                        $orderPaymentStatus = 'paid';
+                    } else if ($paidDeliveries > 0) {
+                        $orderPaymentStatus = 'partial';
+                    }
+                    
+                    // Update order status
+                    $order->update([
+                        'status' => 'completed',
+                        'payment_status' => $orderPaymentStatus,
+                        'status_updated_at' => now()
+                    ]);
+                    
+                    // Notify user about complete order
+                    $statusMessage = "Your order {$order->formatted_order_id} has been fully delivered";
+                    if ($orderPaymentStatus === 'paid') {
+                        $statusMessage .= " and paid.";
+                    } else if ($orderPaymentStatus === 'partial') {
+                        $statusMessage .= " with partial payment.";
+                    } else {
+                        $statusMessage .= " but is pending payment.";
+                    }
+                    
+                    app(NotificationService::class)->deliveryStatusChanged(
+                        $delivery->id,
+                        'delivered',
+                        $order->user_id,
+                        $statusMessage
+                    );
+                } else {
+                    // Just notify about this specific delivery
+                    app(NotificationService::class)->deliveryStatusChanged(
+                        $delivery->id,
+                        'delivered',
+                        $order->user_id,
+                        "Part of your order {$order->formatted_order_id} has been delivered."
+                    );
+                }
+            } else {
+                // REGULAR SINGLE-ADDRESS ORDER HANDLING
+                
+                // Find existing payment record and update it, or create a new one if none exists
+                $payment = Payment::firstOrNew(
+                    ['order_id' => $delivery->order_id],
+                    ['distributor_id' => $distributor->id]
+                );
+
+                Log::info('Processing payment for regular order', [
+                    'order_id' => $order->id,
+                    'payment_status' => $validated['payment_status']
                 ]);
                 
-                // Send payment notification
-                app(NotificationService::class)->paymentStatusChanged(
-                    $payment->id,
-                    'paid',
-                    $delivery->order->user_id,
-                    $delivery->order->distributor_id
+                // Update payment details
+                $payment->payment_status = $validated['payment_status'];
+                $payment->payment_note = $validated['payment_note'];
+                $payment->paid_at = $validated['payment_status'] === 'paid' ? now() : null;
+                $payment->save();
+                
+                // Log the payment update
+                Log::info('Payment record updated:', [
+                    'order_id' => $delivery->order_id,
+                    'payment_id' => $payment->id,
+                    'payment_status' => $payment->payment_status
+                ]);
+                
+                // If payment is marked as paid, create an earnings record
+                if ($validated['payment_status'] === 'paid') {
+                    // Check if an earning record already exists
+                    $existingEarning = Earning::where('payment_id', $payment->id)->first();
+                    
+                    if (!$existingEarning) {
+                        $earning = new Earning();
+                        $earning->payment_id = $payment->id;
+                        $earning->distributor_id = $distributor->id;
+                        $earning->amount = $order->total;
+                        $earning->save();
+
+                    }
+                }
+                
+                // Update the order status to completed
+                $orderStatus = $validated['payment_status'] === 'paid' ? 'completed' : 'delivered';
+                
+                $order->update([
+                    'status' => $orderStatus,
+                    'payment_status' => $validated['payment_status'],
+                    'status_updated_at' => now()
+                ]);
+                
+                Log::info('Order updated:', [
+                    'order_id' => $order->id,
+                    'new_status' => $orderStatus,
+                    'payment_status' => $validated['payment_status']
+                ]);
+                
+                // Add notification for order status change
+                app(NotificationService::class)->orderStatusChanged(
+                    $order->id,
+                    $orderStatus,
+                    $order->user_id,
+                    $order->distributor_id
+                );
+                
+                // Add delivery status notification
+                app(NotificationService::class)->deliveryStatusChanged(
+                    $delivery->id,
+                    'delivered',
+                    $order->user_id
                 );
             }
-        }
-
-        // Check if this is the last active delivery for this truck
-        $truck = $delivery->trucks()->first();
-        if ($truck) {
-            // Check if there are any remaining active deliveries for this truck
-            $activeDeliveriesCount = $truck->deliveries()
-                ->whereIn('status', ['pending', 'in_transit', 'out_for_delivery'])
-                ->count();
-
-            // If no more active deliveries are assigned to this truck, mark it as available
-            if ($activeDeliveriesCount === 0) {
-                $truck->update([
-                    'status' => 'available'
-                ]);
+    
+            // Check if this is the last delivery for the truck
+            $truck = $delivery->trucks()->first();
+            if ($truck) {
+                $activeDeliveriesCount = $truck->deliveries()
+                    ->whereIn('status', ['in_transit', 'out_for_delivery'])
+                    ->count();
+    
+                if ($activeDeliveriesCount === 0) {
+                    $truck->update(['status' => 'available']);
+                }
             }
+    
+            DB::commit();
+            return redirect()->back()->with('success', 'Delivery marked as delivered successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error marking delivery as delivered: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to mark delivery as delivered: ' . $e->getMessage());
+        }
+    }
+
+    public function getDeliveryDetails($id)
+    {
+        $delivery = Delivery::findOrFail($id);
+        $order = $delivery->order;
+
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found for this delivery'
+            ]);
         }
 
-        return back()->with('success', 'Order completed!.');
+        if (!$order->is_multi_address) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This is not a multi-address delivery'
+            ]);
+        }
+
+        // Get all item deliveries for this delivery
+        $orderItemDeliveries = \App\Models\OrderItemDelivery::where('delivery_id', $delivery->id)
+            ->with(['address', 'orderDetail.product'])
+            ->get()
+            ->groupBy('address_id');
+
+        $items = [];
+
+        foreach ($orderItemDeliveries as $addressId => $deliveryItems) {
+            // Get address details
+            $address = $deliveryItems->first()->address;
+
+            if (!$address) {
+                continue;
+            }
+
+            // Create products array for this address
+            $products = [];
+            foreach ($deliveryItems as $item) {
+                if ($item->orderDetail && $item->orderDetail->product) {
+                    $products[] = [
+                        'id' => $item->orderDetail->product_id,
+                        'name' => $item->orderDetail->product->product_name,
+                        'quantity' => $item->quantity,
+                        'price' => $item->orderDetail->price,
+                        'subtotal' => $item->orderDetail->price * $item->quantity
+                    ];
+                }
+            }
+
+            // Add this address entry to the items array
+            $items[] = [
+                'address' => [
+                    'id' => $address->id,
+                    'barangay' => $address->barangay,
+                    'barangay_name' => $address->barangay_name,
+                    'street' => $address->street,
+                ],
+                'products' => $products
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'delivery_id' => $delivery->id,
+            'order_id' => $order->id,
+            'items' => $items
+        ]);
     }
 }

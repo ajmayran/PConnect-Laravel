@@ -354,6 +354,8 @@ Route::middleware(['auth', 'verified', 'approved', 'checkRole:distributor', 'pro
     Route::post('/delivery/process-general-scan', [OrderQrController::class, 'processGeneralScan'])->name('distributors.delivery.process-general-scan');
     Route::post('/api/verify-qr-token', [OrderQrController::class, 'verifyQrToken'])->name('api.verify-qr-token');
     Route::get('/delivery/scan-qr', [OrderQrController::class, 'showGeneralQrScanner'])->name('distributors.delivery.scan-qr-general');
+    Route::get('/delivery/{delivery}/details', [DeliveryController::class, 'getDeliveryDetails'])->name('distributors.delivery.details');
+    Route::get('/delivery-address/{delivery}', [TruckController::class, 'getDeliveryAddress'])->name('distributors.delivery.address');
 
     // Inventory Routes
     Route::get('/inventory', [InventoryController::class, 'index'])->name('distributors.inventory.index');

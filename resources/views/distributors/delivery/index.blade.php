@@ -98,6 +98,7 @@
                                     onclick="openDeliveryModal(this)" data-delivery-id="{{ $delivery->id }}"
                                     data-delivery-status="{{ $delivery->status }}"
                                     data-order-id="{{ $delivery->order->formatted_order_id }}"
+                                    data-is-multi-address="{{ $delivery->order->is_multi_address ? 'true' : 'false' }}"
                                     data-is-exchange-delivery="{{ $delivery->is_exchange_delivery || $delivery->exchange_for_return_id ? 'true' : 'false' }}"
                                     data-exchange-for-return-id="{{ $delivery->exchange_for_return_id ?? '' }}"
                                     data-order-details='@json($delivery->order->orderDetails)'>
@@ -106,12 +107,32 @@
                                         @if ($delivery->is_exchange_delivery || $delivery->exchange_for_return_id)
                                             <span class="ml-1 text-xs font-medium text-purple-600">(Exchange)</span>
                                         @endif
+                                        @if ($delivery->order->is_multi_address)
+                                            <span class="ml-1 text-xs font-medium text-blue-600">(Multi-Address)</span>
+                                        @endif
                                     </td>
                                     <td class="px-4 py-3">
-                                        {{ $delivery->order->user->first_name }} {{ $delivery->order->user->last_name }}
+                                        {{ $delivery->order->user->first_name }}
+                                        {{ $delivery->order->user->last_name }}
                                     </td>
                                     <td class="px-4 py-3">
-                                        @if ($delivery->order->orderDetails->isNotEmpty())
+                                        @if ($delivery->address)
+                                            {{ $delivery->address->barangay_name }}, {{ $delivery->address->street ?? 'No street specified' }}
+                                        @elseif ($delivery->order->is_multi_address)
+                                            @php
+                                                // Get the address for this specific delivery from orderItemDeliveries
+                                                $itemDelivery = App\Models\OrderItemDelivery::where('delivery_id', $delivery->id)
+                                                    ->with('address')
+                                                    ->first();
+                                                $address = $itemDelivery ? $itemDelivery->address : null;
+                                            @endphp
+                                            @if ($address)
+                                                {{ $address->barangay_name }}, {{ $address->street ?? 'No street specified' }}
+                                                <span class="ml-1 text-xs font-medium text-blue-500">(Multiple order)</span>
+                                            @else
+                                                <span class="text-gray-400">Address not found</span>
+                                            @endif
+                                        @elseif ($delivery->order->orderDetails->isNotEmpty() && $delivery->order->orderDetails->first()->delivery_address)
                                             {{ $delivery->order->orderDetails->first()->delivery_address }}
                                         @else
                                             <span class="text-gray-400">No address provided</span>
@@ -179,7 +200,8 @@
                 <button onclick="closeAssignTruckModal()"
                     class="p-1 text-gray-400 transition-colors rounded-full hover:bg-gray-100 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12">
                         </path>
                     </svg>
                 </button>
@@ -192,11 +214,17 @@
                     <select id="truck_id" name="truck_id"
                         class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         @foreach ($availableTrucks as $truck)
-                            <option value="{{ $truck->id }}">
-                                {{ $truck->plate_number }} - {{ $truck->is_ready_to_deliver ? 'Ready' : 'Not Ready' }}
-                            </option>
-                        @endforeach
+                        <option value="{{ $truck->id }}">
+                            {{ $truck->plate_number }} 
+                            @if($truck->deliveryLocations->isNotEmpty())
+                                - {{ $truck->deliveryLocations->first()->barangay_name }}
+                            @else
+                                - No location assigned
+                            @endif
+                        </option>
+                    @endforeach
                     </select>
+                    <p class="mt-2 text-xs text-gray-500">Select a truck that operates in the delivery area</p>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
                     <button type="button" onclick="closeAssignTruckModal()"
@@ -220,6 +248,8 @@
             let deliveryStatus = row.getAttribute('data-delivery-status');
             let isExchange = row.hasAttribute('data-is-exchange-delivery') && row.getAttribute(
                 'data-is-exchange-delivery') === 'true';
+            let isMultiAddress = row.hasAttribute('data-is-multi-address') && row.getAttribute('data-is-multi-address') ===
+                'true';
             let exchangeForReturnId = row.getAttribute('data-exchange-for-return-id');
 
             try {
@@ -238,17 +268,31 @@
             // Build the main content
             let modalContent = '<div class="space-y-6">';
 
-            // Order Status Card (with different styling/wording for exchanges)
+            // Order Status Card
             modalContent += `<div class="p-3 rounded-lg ${getStatusCardClass(deliveryStatus)}">
-        <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold ${getStatusTextClass(deliveryStatus)}">
-                ${isExchange ? 'Exchange Status' : 'Delivery Status'}
-            </h3>
-            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(deliveryStatus)}">
-                ${formatStatus(deliveryStatus)}
-            </span>
-        </div>
-    </div>`;
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold ${getStatusTextClass(deliveryStatus)}">
+                        ${isExchange ? 'Exchange Status' : 'Delivery Status'}
+                    </h3>
+                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(deliveryStatus)}">
+                        ${formatStatus(deliveryStatus)}
+                    </span>
+                </div>
+            </div>`;
+
+            // Show multi-address badge if this is a multi-address order
+            if (isMultiAddress) {
+                modalContent += `<div class="p-3 border-2 border-blue-200 rounded-lg bg-blue-50">
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span class="text-sm font-bold text-blue-800">MULTIPLE DELIVERY ADDRESSES</span>
+                    </div>
+                    <p class="mt-1 text-sm text-blue-700">This order is split across multiple delivery addresses.</p>
+                </div>`;
+            }
 
             // Add special exchange banner if this is an exchange delivery
             if (isExchange) {
@@ -266,6 +310,89 @@
                     </a>
                 </div>
             </div>`;
+            }
+
+            // If this is a multi-address order, fetch and display address-specific details
+            if (isMultiAddress) {
+                // Display loading state
+                modalContent += `<div id="multi-address-content" class="p-4 bg-white rounded-lg shadow">
+                    <div class="flex justify-center">
+                        <svg class="w-8 h-8 text-blue-600 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="ml-2">Loading address details...</span>
+                    </div>
+                </div>`;
+
+                // Fetch the specific delivery details for multi-address orders
+                setTimeout(() => {
+                    fetch(`/delivery/${deliveryId}/details`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                let addressContent = `<div class="p-4 bg-white rounded-lg shadow">
+                            <h3 class="mb-3 text-lg font-semibold text-gray-800">Delivery Address Details</h3>
+                            <div class="space-y-4">`;
+
+                                // Display each address with its products
+                                data.items.forEach((item, index) => {
+                                    addressContent += `
+                            <div class="p-3 border ${index % 2 === 0 ? 'bg-gray-50' : ''} rounded-lg">
+                                <div class="flex items-center mb-2">
+                                    <svg class="flex-shrink-0 w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <h4 class="ml-2 font-medium text-gray-900">Address ${index + 1}: ${item.address.barangay_name}, ${item.address.street || 'No street provided'}</h4>
+                                </div>
+                                <div class="ml-7">
+                                    <p class="mb-1 text-sm font-medium text-gray-700">Products for this address:</p>
+                                    <ul class="pl-5 space-y-1 text-sm list-disc">`;
+
+                                    item.products.forEach(product => {
+                                        addressContent += `
+                                        <li>
+                                            ${product.name} <span class="text-gray-500">(Qty: ${product.quantity})</span>
+                                        </li>`;
+                                    });
+
+                                    addressContent += `
+                                    </ul>
+                                </div>
+                            </div>`;
+                                });
+
+                                addressContent += `</div></div>`;
+
+                                // Replace the loading placeholder with the actual content
+                                const multiAddressContent = document.getElementById('multi-address-content');
+                                if (multiAddressContent) {
+                                    multiAddressContent.outerHTML = addressContent;
+                                }
+                            } else {
+                                // Show error message if data fetch fails
+                                const multiAddressContent = document.getElementById('multi-address-content');
+                                if (multiAddressContent) {
+                                    multiAddressContent.innerHTML = `
+                                <div class="p-4 text-red-600 border border-red-200 rounded-lg bg-red-50">
+                                    <p>Unable to load address details. Please try again.</p>
+                                </div>`;
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching delivery details:', error);
+                            // Show error message
+                            const multiAddressContent = document.getElementById('multi-address-content');
+                            if (multiAddressContent) {
+                                multiAddressContent.innerHTML = `
+                            <div class="p-4 text-red-600 border border-red-200 rounded-lg bg-red-50">
+                                <p>Error loading address details: ${error.message}</p>
+                            </div>`;
+                            }
+                        });
+                }, 300);
             }
 
             // Products Section - Different display for exchanges vs regular orders

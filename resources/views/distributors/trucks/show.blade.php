@@ -105,7 +105,23 @@
                                                     {{ $delivery->order->user->last_name }}
                                                 </td>
                                                 <td class="px-6 py-4">
-                                                    @if ($delivery->order->orderDetails->isNotEmpty())
+                                                    @if ($delivery->address)
+                                                        {{ $delivery->address->barangay_name }}, {{ $delivery->address->street ?? 'No street specified' }}
+                                                    @elseif ($delivery->order->is_multi_address)
+                                                        @php
+                                                            // Get the address for this specific delivery from orderItemDeliveries
+                                                            $itemDelivery = App\Models\OrderItemDelivery::where('delivery_id', $delivery->id)
+                                                                ->with('address')
+                                                                ->first();
+                                                            $address = $itemDelivery ? $itemDelivery->address : null;
+                                                        @endphp
+                                                        @if ($address)
+                                                            {{ $address->barangay_name }}, {{ $address->street ?? 'No street specified' }}
+                                                            <span class="ml-1 text-xs font-medium text-blue-500">(Multiple order)</span>
+                                                        @else
+                                                            <span class="text-gray-400">Address not found</span>
+                                                        @endif
+                                                    @elseif ($delivery->order->orderDetails->isNotEmpty())
                                                         {{ $delivery->order->orderDetails->first()->delivery_address }}
                                                     @else
                                                         <span class="text-gray-400">No address provided</span>
@@ -351,6 +367,11 @@
                                 <span class="ml-2 font-medium text-green-700">Paid</span>
                             </label>
                             <label class="flex items-center px-3 py-2 border rounded-md hover:bg-gray-50">
+                                <input type="radio" name="payment_status" value="partial"
+                                    class="w-4 h-4 text-yellow-600">
+                                <span class="ml-2 font-medium text-yellow-700">Partial</span>
+                            </label>
+                            <label class="flex items-center px-3 py-2 border rounded-md hover:bg-gray-50">
                                 <input type="radio" name="payment_status" value="unpaid"
                                     class="w-4 h-4 text-red-600">
                                 <span class="ml-2 font-medium text-red-700">Unpaid</span>
@@ -412,15 +433,14 @@
                     return;
                 }
 
-
                 currentDeliveryId = delivery.id;
+                const isMultiAddress = order.is_multi_address;
 
                 // Create order ID even if formatted_order_id is missing
                 let orderId = 'N/A';
                 if (order.formatted_order_id) {
                     orderId = order.formatted_order_id;
                 } else if (order.id) {
-                    // Create a simple formatted ID if the attribute is missing
                     orderId = 'ORD-' + String(order.id).padStart(6, '0');
                 }
 
@@ -455,6 +475,20 @@
                 modalHtml += '</div>';
                 modalHtml += '</div>';
 
+                if (isMultiAddress) {
+                modalHtml += `<div class="p-3 border-2 border-blue-200 rounded-lg bg-blue-50">
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span class="text-sm font-bold text-blue-800">MULTIPLE DELIVERY ADDRESSES</span>
+                    </div>
+                    <p class="mt-1 text-sm text-blue-700">This order is split across multiple delivery addresses.</p>
+                </div>`;
+            }
+
+
                 // Products Section - Check if orderDetails is available and not empty
                 if (orderDetails && Array.isArray(orderDetails) && orderDetails.length > 0) {
                     modalHtml += '<div class="overflow-hidden bg-white rounded-lg shadow">';
@@ -468,7 +502,8 @@
                     modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Quantity</th>';
                     modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Subtotal</th>';
                     modalHtml += '</tr></thead><tbody class="divide-y divide-gray-200">';
-
+                    
+    
                     let totalAmount = 0;
 
                     orderDetails.forEach(function(detail) {
@@ -510,7 +545,6 @@
                         modalHtml += '<td class="px-4 py-3">' + (detail.quantity || 0) + '</td>';
                         modalHtml += '<td class="px-4 py-3 font-medium text-blue-600">₱' + parseFloat(detail
                             .subtotal || 0).toFixed(2) + '</td>';
-                        modalHtml += '</tr>';
 
                         totalAmount += parseFloat(detail.subtotal || 0);
                     });
@@ -535,7 +569,7 @@
                     modalHtml += '<h3 class="mb-3 text-lg font-semibold text-gray-800">Delivery Information</h3>';
                     modalHtml += '<div class="grid grid-cols-1 gap-4 md:grid-cols-2">';
 
-                    // Customer details
+                    // Customer details section remains unchanged
                     modalHtml += '<div class="p-3 border rounded-lg">';
                     modalHtml += '<h4 class="font-medium text-gray-700">Customer Details</h4>';
                     modalHtml += '<div class="mt-2 space-y-1 text-sm">';
@@ -553,14 +587,27 @@
                     modalHtml += '</div>';
                     modalHtml += '</div>';
 
-                    // Delivery address
+                    // Delivery address - updated to handle multi-address
                     modalHtml += '<div class="p-3 border rounded-lg">';
                     modalHtml += '<h4 class="font-medium text-gray-700">Delivery Address</h4>';
                     modalHtml += '<div class="mt-2 text-sm">';
 
-                    // Safely check if orderDetails has elements and if the first element has a delivery_address
-                    if (orderDetails && Array.isArray(orderDetails) && orderDetails.length > 0 && orderDetails[0]
-                        .delivery_address) {
+                    if (isMultiAddress) {
+                    modalHtml += `
+                    <div id="delivery-address-${delivery.id}" class="text-sm">
+                        <p class="font-medium text-blue-600">This delivery is for:</p>`;
+
+
+                        // Get the address for this specific delivery from orderItemDeliveries
+                        if (delivery.address) {
+                    modalHtml += `<p class="mt-1">${delivery.address.barangay_name}${delivery.address.street ? ', ' + delivery.address.street : ''}</p>`;
+                        } else {
+                            // If we don't have direct address access, suggest checking the table above
+                            modalHtml += `<p class="mt-1 text-gray-600">Please see the product table above for specific delivery addresses.</p>`;
+                        }
+                        
+                        modalHtml += `</div>`;
+                    } else if (orderDetails && Array.isArray(orderDetails) && orderDetails.length > 0 && orderDetails[0].delivery_address) {
                         modalHtml += '<p>' + orderDetails[0].delivery_address + '</p>';
                     } else {
                         modalHtml += '<p class="text-gray-500">No address provided</p>';
@@ -626,10 +673,13 @@
             const paymentStatus = form.querySelector('input[name="payment_status"]:checked').value;
 
             Swal.fire({
-                title: 'Confirm Delivery & Payment',
-                html: `
+            title: 'Confirm Delivery & Payment',
+            html: `
             <p>Are you sure this order has been delivered?</p>
-            <p class="mt-2">Payment will be marked as <strong>${paymentStatus === 'paid' ? 'PAID' : 'UNPAID'}</strong>.</p>
+            <p class="mt-2">Payment will be marked as <strong>${
+            paymentStatus === 'paid' ? 'PAID' : 
+            (paymentStatus === 'partial' ? 'PARTIALLY PAID' : 'UNPAID')
+            }</strong>.</p>
         `,
                 icon: 'question',
                 showCancelButton: true,
@@ -676,5 +726,6 @@
         function closeMoveDeliveryModal() {
             document.getElementById('moveDeliveryModal').classList.add('hidden');
         }
+        
     </script>
 </x-distributor-layout>

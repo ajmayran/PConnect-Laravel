@@ -36,19 +36,28 @@ class TruckController extends Controller
                 'order',
                 'order.user',
                 'order.orderDetails',
-                'order.orderDetails.product'
+                'order.orderDetails.product',
+                'orderItemDeliveries.address',
+                'order.orderDetails.orderItemDelivery.address',
+                'address'
             ])
             ->where('status', '!=', 'delivered')
             ->latest('truck_delivery.started_at')
             ->paginate(10);
 
-        $deliveries->getCollection()->transform(function ($delivery) {
-            if ($delivery->order) {
-                // Use the accessor from the Order model
-                $delivery->order->setAttribute('formatted_order_id', $delivery->order->formatted_order_id);
-            }
-            return $delivery;
-        });
+            $deliveries->getCollection()->transform(function ($delivery) {
+                if ($delivery->order) {
+                    $delivery->order->setAttribute('formatted_order_id', $delivery->order->formatted_order_id);
+                }
+        
+                // Fetch the specific address for this delivery from orderItemDeliveries
+                $itemDelivery = $delivery->orderItemDeliveries->first();
+                $delivery->setAttribute('delivery_address', $itemDelivery && $itemDelivery->address
+                    ? $itemDelivery->address->barangay_name . ', ' . ($itemDelivery->address->street ?? 'No street specified')
+                    : 'No address provided');
+        
+                return $delivery;
+            });
 
         return view('distributors.trucks.show', compact('truck', 'deliveries'));
     }
@@ -365,4 +374,39 @@ class TruckController extends Controller
         return redirect()->route('distributors.trucks.show', $newTruck)
             ->with('success', 'Delivery successfully moved to ' . $newTruck->plate_number);
     }
+
+    public function getDeliveryAddress(Delivery $delivery)
+{
+    // Verify the delivery belongs to the current distributor
+    if ($delivery->order->distributor_id !== Auth::user()->distributor->id) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthorized access'
+        ], 403);
+    }
+
+    // Get the address for this specific delivery from orderItemDeliveries
+    $itemDelivery = \App\Models\OrderItemDelivery::where('delivery_id', $delivery->id)
+        ->with('address')
+        ->first();
+    
+    $address = $itemDelivery ? $itemDelivery->address : null;
+    
+    if ($address) {
+        return response()->json([
+            'success' => true,
+            'address' => [
+                'id' => $address->id,
+                'barangay_name' => $address->barangay_name, 
+                'street' => $address->street,
+            ]
+        ]);
+    }
+    
+    return response()->json([
+        'success' => false,
+        'message' => 'Address not found'
+    ]);
+}
+
 }

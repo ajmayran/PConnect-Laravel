@@ -32,5 +32,16 @@ class OrderDetails extends Model
     {
         return $this->hasMany(OrderItemDelivery::class);
     }
-    
+
+    public function orderItemDelivery()
+    {
+        // This returns the first related OrderItemDelivery
+        return $this->hasOne(OrderItemDelivery::class, 'order_details_id');
+    }
+
+    public function orderItemDeliveries()
+    {
+        // This returns all related OrderItemDelivery records
+        return $this->hasMany(OrderItemDelivery::class, 'order_details_id');
+    }
 }

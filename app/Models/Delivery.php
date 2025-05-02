@@ -16,7 +16,9 @@ class Delivery extends Model
         'status',
         'exchange_for_return_id',
         'is_exchange_delivery',
-        'delivered_at'
+        'payment_status',
+        'payment_note'
+
     ];
 
     protected $attributes = [

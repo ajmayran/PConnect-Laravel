@@ -469,13 +469,47 @@ class NotificationService
                 'data' => $data,
                 'related_id' => $relatedId
             ]);
-            
+
             // Optionally broadcast the notification
             event(new NewNotification($notification));
 
             return $notification;
         } catch (\Exception $e) {
             Log::error('Failed to create notification: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+
+    /**
+     * Send notification when an order is completed
+     *
+     * @param int $orderId
+     * @param int $retailerId
+     * @return Notification|null
+     */
+    public function orderCompleted($orderId, $retailerId)
+    {
+        try {
+            // Get the order to use its formatted ID attribute
+            $order = Order::find($orderId);
+            $formattedOrderId = $order ? $order->formatted_order_id : 'ORD-' . str_pad($orderId, 6, '0', STR_PAD_LEFT);
+
+            // Create notification data
+            $data = [
+                'title' => 'Order Completed',
+                'message' => "Your order {$formattedOrderId} has been completed and delivered.",
+                'order_id' => $orderId,
+                'status' => 'completed'
+            ];
+
+            // Create notification for the retailer
+            return $this->create($retailerId, 'order_status', $data, $orderId);
+        } catch (\Exception $e) {
+            Log::error('Error sending order completed notification: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
             return null;
         }
     }
