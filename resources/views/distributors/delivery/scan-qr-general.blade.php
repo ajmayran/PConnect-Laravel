@@ -102,22 +102,49 @@
 
                 <div id="payment-options" class="hidden mb-6">
                     <label class="block mb-2 text-sm font-medium text-gray-700">Payment Status</label>
-                    <div class="flex space-x-4">
-                        <label class="inline-flex items-center">
+                    <div class="flex flex-wrap gap-3">
+                        <label class="inline-flex items-center px-3 py-2 border rounded-md hover:bg-gray-50">
                             <input type="radio" name="payment_status" value="paid"
-                                class="text-blue-600 border-gray-300 focus:ring-blue-500" checked>
-                            <span class="ml-2">Mark as Paid</span>
+                                class="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500" checked>
+                            <span class="ml-2 font-medium text-green-700">Paid</span>
                         </label>
-                        <label class="inline-flex items-center">
+                        <label class="inline-flex items-center px-3 py-2 border rounded-md hover:bg-gray-50">
+                            <input type="radio" name="payment_status" value="partial"
+                                class="w-4 h-4 text-yellow-600 border-gray-300 focus:ring-yellow-500">
+                            <span class="ml-2 font-medium text-yellow-700">Partial</span>
+                        </label>
+                        <label class="inline-flex items-center px-3 py-2 border rounded-md hover:bg-gray-50">
                             <input type="radio" name="payment_status" value="unpaid"
-                                class="text-blue-600 border-gray-300 focus:ring-blue-500">
-                            <span class="ml-2">Mark as Unpaid</span>
+                                class="w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500">
+                            <span class="ml-2 font-medium text-red-700">Unpaid</span>
                         </label>
                     </div>
+                    <p class="mt-1 text-xs text-gray-500">This will update both delivery status and payment record</p>
+
+                    <!-- Add payment amount field -->
+                    <div class="mt-4">
+                        <label for="payment_amount" class="block mb-2 text-sm font-medium text-gray-700">Payment
+                            Amount</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <span class="text-gray-500">₱</span>
+                            </div>
+                            <input type="number" id="payment_amount" name="payment_amount" step="0.01"
+                                class="w-full py-2 pl-8 pr-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                min="0">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Enter amount received from customer</p>
+                        <p id="payment-amount-error" class="hidden mt-1 text-xs text-red-600">Amount cannot exceed the
+                            order total</p>
+                    </div>
+
                     <!-- Note input field -->
                     <div class="mt-4">
-                        <label for="delivery_note" class="block mb-2 text-sm font-medium text-gray-700">Delivery Note</label>
-                        <textarea name="payment_note" id="payment_note" rows="2" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Add any notes about this delivery"></textarea>
+                        <label for="payment_note" class="block mb-2 text-sm font-medium text-gray-700">Payment
+                            Note</label>
+                        <textarea name="payment_note" id="payment_note" rows="2"
+                            class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Add any notes about this payment or delivery"></textarea>
                     </div>
                 </div>
 
@@ -222,6 +249,72 @@
 
                     // Restart scanner with new camera
                     startScanner();
+                }
+
+                // Add this to the showOrderDetails function to extract and set the max amount
+                function showOrderDetails(order) {
+                    deliveryDetails.classList.remove('hidden');
+
+                    // Store the total amount to use for payment validation
+                    const totalAmount = parseFloat(order.total_amount);
+
+                    let html = `
+    <p class="mb-2"><strong>Order ID:</strong> ${order.formatted_id}</p>
+    <p class="mb-2"><strong>Retailer:</strong> ${order.retailer_name}</p>
+    <p class="mb-2"><strong>Status:</strong> ${order.status}</p>
+    <p class="mb-2"><strong>Amount:</strong> ₱${order.total_amount}</p>
+    `;
+
+                    orderInfo.innerHTML = html;
+
+                    // Set max amount in the payment field
+                    const amountField = document.getElementById('payment_amount');
+                    amountField.dataset.maxAmount = totalAmount.toFixed(2);
+                    amountField.value = totalAmount.toFixed(2);
+                    amountField.max = totalAmount;
+
+                    // Add validation for the payment amount
+                    amountField.addEventListener('input', validatePaymentAmount);
+
+                    // Add event listeners to the payment status radio buttons
+                    const paymentStatusRadios = document.getElementsByName('payment_status');
+                    paymentStatusRadios.forEach(radio => {
+                        radio.addEventListener('change', function() {
+                            const maxAmount = parseFloat(amountField.dataset.maxAmount);
+
+                            if (this.value === 'unpaid') {
+                                amountField.value = '0.00';
+                            } else if (this.value === 'paid') {
+                                amountField.value = maxAmount.toFixed(2);
+                            } else if (this.value === 'partial') {
+                                // For partial payment, set to half the amount as a starting point
+                                amountField.value = (maxAmount / 2).toFixed(2);
+                            }
+                            validatePaymentAmount();
+                        });
+                    });
+                }
+
+                // Add the payment amount validation function
+                function validatePaymentAmount() {
+                    const amountField = document.getElementById('payment_amount');
+                    const errorContainer = document.getElementById('payment-amount-error');
+                    const submitBtn = document.getElementById('submit-btn');
+
+                    const enteredAmount = parseFloat(amountField.value);
+                    const maxAmount = parseFloat(amountField.dataset.maxAmount);
+
+                    if (enteredAmount > maxAmount) {
+                        errorContainer.classList.remove('hidden');
+                        submitBtn.disabled = true;
+                        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        return false;
+                    } else {
+                        errorContainer.classList.add('hidden');
+                        submitBtn.disabled = false;
+                        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        return true;
+                    }
                 }
 
                 // Function to start the scanner with appropriate configuration
@@ -338,7 +431,7 @@
                                 }
                             } else {
                                 showStatusMessage(data.message || 'Invalid QR code or delivery not found.',
-                                'error');
+                                    'error');
                                 // Show scan again button when verification fails
                                 scanAgainContainer.classList.remove('hidden');
                             }
@@ -426,9 +519,19 @@
                 };
 
                 window.confirmDeliveryCompletion = function() {
+                    // Validate payment amount before submission
+                    if (!validatePaymentAmount()) {
+                        return false; // Stop submission if validation fails
+                    }
+
                     // Get payment status
                     const paymentStatus = document.querySelector('input[name="payment_status"]:checked').value;
-                    const paymentLabel = paymentStatus === 'paid' ? 'Paid' : 'Unpaid';
+                    const paymentLabel = paymentStatus === 'paid' ? 'Paid' :
+                        (paymentStatus === 'partial' ? 'Partially Paid' : 'Unpaid');
+
+                    // Get payment amount
+                    const paymentAmount = parseFloat(document.getElementById('payment_amount').value);
+                    const maxAmount = parseFloat(document.getElementById('payment_amount').dataset.maxAmount);
 
                     // Get order info from the order-info div
                     const orderInfoEl = document.getElementById('order-info');
@@ -440,14 +543,15 @@
                     Swal.fire({
                         title: 'Complete Delivery?',
                         html: `
-                    <div class="text-left">
-                        <p class="mb-2">${orderID}</p>
-                        <p class="mb-2">${retailerName}</p>
-                        <p class="mb-2">${orderAmount}</p>
-                        <p class="mt-2"><strong>Payment Status:</strong> ${paymentLabel}</p>
-                        <p class="mt-2"><strong>Payment Note:</strong>  ${document.getElementById('payment_note').value || 'No notes provided'}</p>
-                    </div>
-                `,
+            <div class="text-left">
+                <p class="mb-2">${orderID}</p>
+                <p class="mb-2">${retailerName}</p>
+                <p class="mb-2">${orderAmount}</p>
+                <p class="mt-2"><strong>Payment Status:</strong> ${paymentLabel}</p>
+                <p class="mt-2"><strong>Payment Amount:</strong> ₱${paymentAmount.toFixed(2)} of ₱${maxAmount.toFixed(2)}</p>
+                <p class="mt-2"><strong>Payment Note:</strong> ${document.getElementById('payment_note').value || 'No notes provided'}</p>
+            </div>
+        `,
                         icon: 'question',
                         showCancelButton: true,
                         confirmButtonColor: '#10b981',
