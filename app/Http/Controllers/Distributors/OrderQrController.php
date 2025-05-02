@@ -56,14 +56,14 @@ class OrderQrController extends Controller
     public function processAction(Request $request, $token)
     {
         $order = Order::where('qr_token', $token)->firstOrFail();
-
+    
         try {
             DB::transaction(function () use ($request, $order) {
                 $action = $request->action;
-
+    
                 if ($action === 'confirm_payment') {
                     $payment = Payment::where('order_id', $order->id)->first();
-
+    
                     if ($payment && $payment->payment_status === 'unpaid') {
                         // Update payment status
                         $payment->update([
@@ -71,7 +71,7 @@ class OrderQrController extends Controller
                             'payment_note' => 'Payment confirmed via QR code',
                             'paid_at' => now()
                         ]);
-
+    
                         // Create earning record
                         $totalAmount = $order->orderDetails->sum('subtotal');
                         Earning::create([
@@ -79,7 +79,7 @@ class OrderQrController extends Controller
                             'distributor_id' => $payment->distributor_id,
                             'amount' => $totalAmount
                         ]);
-
+    
                         // Update order status if needed
                         if ($order->status === 'pending') {
                             $order->update([
@@ -89,24 +89,162 @@ class OrderQrController extends Controller
                         }
                     }
                 }
-
+    
                 if ($action === 'confirm_delivery') {
-                    $order->update([
-                        'status' => 'completed',
-                        'status_updated_at' => now(),
-                        'delivery_date' => now()
-                    ]);
+                    // For multi-address orders, handle the specific delivery
+                    if ($order->is_multi_address) {
+                        // We need to know which delivery this applies to
+                        $deliveryId = $request->delivery_id;
+                        if (!$deliveryId) {
+                            throw new \Exception("Delivery ID is required for multi-address orders");
+                        }
+    
+                        $delivery = Delivery::find($deliveryId);
+                        if (!$delivery || $delivery->order_id != $order->id) {
+                            throw new \Exception("Invalid delivery for this order");
+                        }
+    
+                        // Update delivery status
+                        $delivery->update([
+                            'status' => 'delivered',
+                            'payment_status' => $request->payment_status ?? 'paid',
+                            'payment_note' => $request->payment_note ?? 'Delivery confirmed via QR code'
+                        ]);
+    
+                        // Create or update payment record for this delivery
+                        $payment = Payment::firstOrNew([
+                            'order_id' => $order->id,
+                            'delivery_id' => $delivery->id
+                        ]);
+                        
+                        $payment->distributor_id = $order->distributor_id;
+                        $payment->payment_status = $request->payment_status ?? 'paid';
+                        $payment->payment_note = $request->payment_note ?? 'Payment confirmed via QR code';
+                        
+                        if ($request->payment_status === 'paid') {
+                            $payment->paid_at = now();
+                        }
+                        
+                        $payment->save();
+    
+                        // Create earning record if payment is marked as paid
+                        if ($request->payment_status === 'paid') {
+                            // Calculate total from OrderItemDelivery records for this delivery
+                            $deliveryTotal = 0;
+                            $deliveryItems = \App\Models\OrderItemDelivery::where('delivery_id', $delivery->id)
+                                ->with('orderDetail')
+                                ->get();
+                                
+                            foreach ($deliveryItems as $item) {
+                                if ($item->orderDetail) {
+                                    $itemPrice = $item->orderDetail->price;
+                                    $itemQuantity = $item->quantity;
+                                    $deliveryTotal += ($itemPrice * $itemQuantity);
+                                }
+                            }
+    
+                            Earning::create([
+                                'payment_id' => $payment->id,
+                                'distributor_id' => $order->distributor_id,
+                                'amount' => $deliveryTotal
+                            ]);
+                        }
+    
+                        // Check if all deliveries for this order have been delivered
+                        $allOrderDeliveries = Delivery::where('order_id', $order->id)->get();
+                        $allDelivered = $allOrderDeliveries->every(function ($del) {
+                            return $del->status === 'delivered';
+                        });
+                        
+                        if ($allDelivered) {
+                            // Count how many are paid vs total
+                            $paidDeliveries = $allOrderDeliveries->filter(function ($del) {
+                                return $del->payment_status === 'paid';
+                            })->count();
+                            
+                            $totalDeliveries = $allOrderDeliveries->count();
+                            
+                            // Determine overall payment status
+                            $orderPaymentStatus = 'unpaid';
+                            if ($paidDeliveries === $totalDeliveries) {
+                                $orderPaymentStatus = 'paid';
+                            } else if ($paidDeliveries > 0) {
+                                $orderPaymentStatus = 'partial';
+                            }
+                            
+                            // Update order status to completed
+                            $order->update([
+                                'status' => 'completed',
+                                'status_updated_at' => now(),
+                                'completed_at' => now()
+                            ]);
+                            
+                            // Add notification for completed order
+                            app(NotificationService::class)->orderStatusChanged(
+                                $order->id,
+                                'completed',
+                                $order->user_id,
+                                $order->distributor_id
+                            );
+                        }
+                    } else {
+                        // For regular orders, update order status directly
+                        $order->update([
+                            'status' => 'completed',
+                            'status_updated_at' => now(),
+                            'delivery_date' => now()
+                        ]);
+                        
+                        // Update delivery if it exists
+                        if ($order->delivery) {
+                            $order->delivery->update([
+                                'status' => 'delivered',
+                                'payment_status' => $request->payment_status ?? 'paid',
+                                'payment_note' => $request->payment_note ?? 'Delivery confirmed via QR code'
+                            ]);
+                        }
+                        
+                        // Create or update payment record
+                        $payment = Payment::firstOrNew(['order_id' => $order->id]);
+                        $payment->distributor_id = $order->distributor_id;
+                        $payment->payment_status = $request->payment_status ?? 'paid';
+                        $payment->payment_note = $request->payment_note ?? 'Payment confirmed via QR code';
+                        
+                        if ($request->payment_status === 'paid') {
+                            $payment->paid_at = now();
+                        }
+                        
+                        $payment->save();
+                        
+                        // Create earning record if payment is marked as paid
+                        if ($request->payment_status === 'paid') {
+                            $totalAmount = $order->orderDetails->sum('subtotal');
+                            Earning::create([
+                                'payment_id' => $payment->id,
+                                'distributor_id' => $order->distributor_id,
+                                'amount' => $totalAmount
+                            ]);
+                        }
+                        
+                        // Add notification
+                        app(NotificationService::class)->orderStatusChanged(
+                            $order->id,
+                            'completed',
+                            $order->user_id,
+                            $order->distributor_id
+                        );
+                    }
                 }
             });
-
+    
             return redirect()->route('order.verify', $token)
                 ->with('success', 'Action completed successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Order action failed: ' . $e->getMessage());
-
+    
             return redirect()->route('order.verify', $token)
-                ->with('error', 'Action failed. Please try again.');
+                ->with('error', 'Action failed: ' . $e->getMessage());
         }
     }
 
