@@ -25,6 +25,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('db:backup')->weekly()->sundays()->at('1:00');
 
         $schedule->command('batches:check-expiring')->dailyAt('8:00');
+
+        $schedule->command('orders:check-multi-address')->everySecond();
     }
 
     /**

@@ -281,6 +281,10 @@ class RetailerOrdersController extends Controller
         if (!in_array($order->status, ['pending', 'processing'])) {
             return redirect()->back()->with('error', 'This order cannot be cancelled.');
         }
+        // Check if order has a delivery record with out_for_delivery status
+        if ($order->delivery && $order->delivery->status === 'out_for_delivery') {
+            return redirect()->back()->with('error', 'This order cannot be cancelled because it is already out for delivery.');
+        }
 
         // Start a transaction to ensure data consistency
         DB::beginTransaction();
@@ -761,29 +765,42 @@ class RetailerOrdersController extends Controller
     {
         try {
             $request->validate([
-                'delivery_option' => 'required|in:default,other',
+                'delivery_option' => 'required_unless:is_multi_address,1|in:default,other',
                 'new_delivery_address' => 'nullable|required_if:delivery_option,other|string',
+                'is_multi_address' => 'sometimes|boolean',
+                'all_carts' => 'required|array',
+                'all_carts.*' => 'exists:carts,id',
+                'locations' => 'required_if:is_multi_address,1|array',
             ]);
 
             $user = Auth::user();
 
-            if ($request->input('delivery_option') === 'default') {
-                // Check if retailer profile and address details exist
-                if (!$user->retailerProfile || !$user->retailerProfile->barangay_name) {
-                    return redirect()->back()->with('error', 'No default delivery address found. Please provide a new address.');
+            // Determine if we're using multiple addresses
+            $isMultiAddress = $request->has('is_multi_address') && $request->input('is_multi_address') == 1;
+
+            // Get delivery address for regular orders
+            $deliveryAddress = null;
+
+            if (!$isMultiAddress) {
+                if ($request->input('delivery_option') === 'default') {
+                    // Check if retailer profile and address details exist
+                    if (!$user->retailerProfile || !$user->retailerProfile->barangay_name) {
+                        return redirect()->back()->with('error', 'No default delivery address found. Please provide a new address.');
+                    }
+                    // Combine barangay name and street
+                    $deliveryAddress = $user->retailerProfile->barangay_name .
+                        ($user->retailerProfile->street ? ', ' . $user->retailerProfile->street : '');
+                } else {
+                    $deliveryAddress = $request->input('new_delivery_address');
                 }
-                // Combine barangay name and street
-                $deliveryAddress = $user->retailerProfile->barangay_name .
-                    ($user->retailerProfile->street ? ', ' . $user->retailerProfile->street : '');
-            } else {
-                $deliveryAddress = $request->input('new_delivery_address');
             }
 
             // Start a transaction
             DB::beginTransaction();
 
             // Get all carts for this user
-            $carts = Cart::where('user_id', $user->id)->get();
+            $cartIds = $request->input('all_carts');
+            $carts = Cart::whereIn('id', $cartIds)->get();
 
             if ($carts->isEmpty()) {
                 DB::rollBack();
@@ -811,6 +828,7 @@ class RetailerOrdersController extends Controller
                     'status' => 'pending',
                     'status_updated_at' => now(),
                     'total_amount' => 0,  // Initialize with zero, will update after calculating details
+                    'is_multi_address' => $isMultiAddress, // Store multi-address flag
                 ]);
 
                 $createdOrders[] = $order;
@@ -844,31 +862,69 @@ class RetailerOrdersController extends Controller
                         // Total quantity including free items
                         $totalQuantity = $cartDetail->quantity + $freeItems;
 
-                        // Debug each cart detail with calculated values
-                        Log::info('Processing cart detail', [
-                            'product_id' => $cartDetail->product_id,
-                            'product_name' => $cartDetail->product->product_name,
-                            'quantity' => $cartDetail->quantity,
-                            'free_items' => $freeItems,
-                            'total_quantity' => $totalQuantity,
-                            'price' => $cartDetail->price,
-                            'original_subtotal' => $originalSubtotal,
-                            'discount_amount' => $discountAmount,
-                            'final_subtotal' => $finalSubtotal,
-                            'applied_discount' => $cartDetail->applied_discount
-                        ]);
-
-                        OrderDetails::create([
+                        // Create an order detail record
+                        $orderDetail = OrderDetails::create([
                             'order_id' => $order->id,
                             'product_id' => $cartDetail->product_id,
                             'quantity' => $totalQuantity, // Include free items here
                             'price' => $cartDetail->price,
                             'subtotal' => $finalSubtotal, // Use calculated final subtotal
-                            'delivery_address' => $deliveryAddress,
+                            'delivery_address' => !$isMultiAddress ? $deliveryAddress : null, // Only store address for regular orders
                             'discount_amount' => $discountAmount,
                             'free_items' => $freeItems,
                             'applied_discount' => $cartDetail->applied_discount
                         ]);
+
+                        // Only create OrderItemDelivery records for multi-address orders
+                        if ($isMultiAddress) {
+                            // Track total assigned quantity
+                            $totalAssigned = 0;
+
+                            // Process each location in the request
+                            foreach ($request->input('locations', []) as $locationId => $locationData) {
+                                // Get the address ID for this location
+                                $addressId = $locationData['address_id'];
+                                if ($addressId === 'default') {
+                                    // Use default address ID if "default" was selected
+                                    if (!$user->retailerProfile || !$user->retailerProfile->defaultAddress) {
+                                        throw new \Exception("Default address not found for multi-address delivery");
+                                    }
+                                    $addressId = $user->retailerProfile->defaultAddress->id;
+                                }
+
+                                // Check if this product is assigned to this location
+                                if (!empty($locationData['products'][$cartDetail->product_id])) {
+                                    $productData = $locationData['products'][$cartDetail->product_id];
+
+                                    // Verify this cart detail ID matches
+                                    if (
+                                        !empty($productData['cart_detail_id']) &&
+                                        $productData['cart_detail_id'] == $cartDetail->id
+                                    ) {
+
+                                        $quantity = (int)$productData['quantity'];
+
+                                        if ($quantity > 0) {
+                                            // Create an OrderItemDelivery record
+                                            \App\Models\OrderItemDelivery::create([
+                                                'order_details_id' => $orderDetail->id,
+                                                'address_id' => $addressId,
+                                                'quantity' => $quantity,
+                                                'delivery_id' => null, // Will be set when order is accepted
+                                            ]);
+
+                                            $totalAssigned += $quantity;
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Verify that all quantities are assigned
+                            if ($totalAssigned != $totalQuantity) {
+                                DB::rollBack();
+                                return redirect()->back()->with('error', 'Total assigned quantity does not match order quantity for ' . $cartDetail->product->product_name);
+                            }
+                        }
 
                         // Add this item's final subtotal to the order total
                         $totalAmount += $finalSubtotal;

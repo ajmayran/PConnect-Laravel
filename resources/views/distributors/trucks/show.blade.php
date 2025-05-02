@@ -106,18 +106,25 @@
                                                 </td>
                                                 <td class="px-6 py-4">
                                                     @if ($delivery->address)
-                                                        {{ $delivery->address->barangay_name }}, {{ $delivery->address->street ?? 'No street specified' }}
+                                                        {{ $delivery->address->barangay_name }},
+                                                        {{ $delivery->address->street ?? 'No street specified' }}
                                                     @elseif ($delivery->order->is_multi_address)
                                                         @php
                                                             // Get the address for this specific delivery from orderItemDeliveries
-                                                            $itemDelivery = App\Models\OrderItemDelivery::where('delivery_id', $delivery->id)
+                                                            $itemDelivery = App\Models\OrderItemDelivery::where(
+                                                                'delivery_id',
+                                                                $delivery->id,
+                                                            )
                                                                 ->with('address')
                                                                 ->first();
                                                             $address = $itemDelivery ? $itemDelivery->address : null;
                                                         @endphp
                                                         @if ($address)
-                                                            {{ $address->barangay_name }}, {{ $address->street ?? 'No street specified' }}
-                                                            <span class="ml-1 text-xs font-medium text-blue-500">(Multiple order)</span>
+                                                            {{ $address->barangay_name }},
+                                                            {{ $address->street ?? 'No street specified' }}
+                                                            <span
+                                                                class="ml-1 text-xs font-medium text-blue-500">(Multiple
+                                                                order)</span>
                                                         @else
                                                             <span class="text-gray-400">Address not found</span>
                                                         @endif
@@ -382,6 +389,25 @@
                     </div>
 
                     <div>
+                        <p class="mt-1 text-xs text-gray-500">This will update both delivery status and payment record
+                        </p>
+                    </div>
+
+                    <div>
+                        <label for="payment_amount" class="block mb-2 text-sm font-medium text-gray-700">Payment
+                            Amount</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <span class="text-gray-500">₱</span>
+                            </div>
+                            <input type="number" id="payment_amount" name="payment_amount"
+                                class="w-full py-2 pl-8 pr-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                min="0">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Enter amount received from customer</p>
+                    </div>
+
+                    <div>
                         <label for="payment_note" class="block mb-2 text-sm font-medium text-gray-700">Payment Notes
                             (Optional)</label>
                         <textarea id="payment_note" name="payment_note" rows="3"
@@ -410,73 +436,74 @@
         @method('PATCH')
     </form>
 
-    <script>
-        let currentDeliveryId = null;
-        const storageBaseUrl = "{{ asset('storage') }}";
-
-        function openDeliveryModal(delivery, order, orderDetails) {
-            try {
-                console.log('Delivery:', delivery);
-                console.log('Order:', order);
-                console.log('Order Details:', orderDetails);
-
-                // Validate data is available
-                if (!delivery) {
-                    console.error('Delivery data is missing');
-                    alert('Error: Delivery data is missing');
-                    return;
-                }
-
-                if (!order) {
-                    console.error('Order data is missing');
-                    alert('Error: Order data is missing');
-                    return;
-                }
-
-                currentDeliveryId = delivery.id;
-                const isMultiAddress = order.is_multi_address;
-
-                // Create order ID even if formatted_order_id is missing
-                let orderId = 'N/A';
-                if (order.formatted_order_id) {
-                    orderId = order.formatted_order_id;
-                } else if (order.id) {
-                    orderId = 'ORD-' + String(order.id).padStart(6, '0');
-                }
-
-                document.getElementById('deliveryModalTitle').innerText = 'Order ID: ' + orderId;
-
-                let modalHtml = '<div class="space-y-6">';
-
-                // Order Status Card
-                modalHtml += '<div class="p-3 rounded-lg ' +
-                    (delivery.status === 'delivered' ? 'bg-green-50 border border-green-200' :
-                        (delivery.status === 'out_for_delivery' ? 'bg-purple-50 border border-purple-200' :
-                            'bg-blue-50 border border-blue-200')) + '">';
-                modalHtml += '<div class="flex items-center justify-between">';
-                modalHtml += '<h3 class="text-lg font-semibold ' +
-                    (delivery.status === 'delivered' ? 'text-green-700' :
-                        (delivery.status === 'out_for_delivery' ? 'text-purple-700' :
-                            'text-blue-700')) + '">Delivery Status</h3>';
-                modalHtml += '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ' +
-                    (delivery.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        (delivery.status === 'in_transit' ? 'bg-blue-100 text-blue-800' :
-                            (delivery.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                                (delivery.status === 'out_for_delivery' ? 'bg-purple-100 text-purple-800' :
-                                    'bg-red-100 text-red-800')))) + '">' +
-                    (delivery.status || '').replace(/_/g, ' ').replace(/(^\w{1})|(\s+\w{1})/g, letter => letter
-                        .toUpperCase()) + '</span>';
-                modalHtml += '</div>';
-                modalHtml += '<div class="mt-1 text-sm ' +
-                    (delivery.status === 'delivered' ? 'text-green-600' :
-                        (delivery.status === 'out_for_delivery' ? 'text-purple-600' :
-                            'text-blue-600')) + '">';
-                modalHtml += 'Tracking #: ' + (delivery.tracking_number || 'N/A');
-                modalHtml += '</div>';
-                modalHtml += '</div>';
-
-                if (isMultiAddress) {
-                modalHtml += `<div class="p-3 border-2 border-blue-200 rounded-lg bg-blue-50">
+        <script>
+            // Define global variables and functions at the top of the page
+            let currentDeliveryId = null;
+            const storageBaseUrl = "{{ asset('storage') }}";
+    
+            function openDeliveryModal(delivery, order, orderDetails) {
+                try {
+                    console.log('Delivery:', delivery);
+                    console.log('Order:', order);
+                    console.log('Order Details:', orderDetails);
+    
+                    // Validate data is available
+                    if (!delivery) {
+                        console.error('Delivery data is missing');
+                        alert('Error: Delivery data is missing');
+                        return;
+                    }
+    
+                    if (!order) {
+                        console.error('Order data is missing');
+                        alert('Error: Order data is missing');
+                        return;
+                    }
+    
+                    currentDeliveryId = delivery.id;
+                    const isMultiAddress = order.is_multi_address;
+    
+                    // Create order ID even if formatted_order_id is missing
+                    let orderId = 'N/A';
+                    if (order.formatted_order_id) {
+                        orderId = order.formatted_order_id;
+                    } else if (order.id) {
+                        orderId = 'ORD-' + String(order.id).padStart(6, '0');
+                    }
+    
+                    document.getElementById('deliveryModalTitle').innerText = 'Order ID: ' + orderId;
+    
+                    let modalHtml = '<div class="space-y-6">';
+    
+                    // Order Status Card
+                    modalHtml += '<div class="p-3 rounded-lg ' +
+                        (delivery.status === 'delivered' ? 'bg-green-50 border border-green-200' :
+                            (delivery.status === 'out_for_delivery' ? 'bg-purple-50 border border-purple-200' :
+                                'bg-blue-50 border border-blue-200')) + '">';
+                    modalHtml += '<div class="flex items-center justify-between">';
+                    modalHtml += '<h3 class="text-lg font-semibold ' +
+                        (delivery.status === 'delivered' ? 'text-green-700' :
+                            (delivery.status === 'out_for_delivery' ? 'text-purple-700' :
+                                'text-blue-700')) + '">Delivery Status</h3>';
+                    modalHtml += '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ' +
+                        (delivery.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            (delivery.status === 'in_transit' ? 'bg-blue-100 text-blue-800' :
+                                (delivery.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                                    (delivery.status === 'out_for_delivery' ? 'bg-purple-100 text-purple-800' :
+                                        'bg-red-100 text-red-800')))) + '">' +
+                        (delivery.status || '').replace(/_/g, ' ').replace(/(^\w{1})|(\s+\w{1})/g, letter => letter
+                            .toUpperCase()) + '</span>';
+                    modalHtml += '</div>';
+                    modalHtml += '<div class="mt-1 text-sm ' +
+                        (delivery.status === 'delivered' ? 'text-green-600' :
+                            (delivery.status === 'out_for_delivery' ? 'text-purple-600' :
+                                'text-blue-600')) + '">';
+                    modalHtml += 'Tracking #: ' + (delivery.tracking_number || 'N/A');
+                    modalHtml += '</div>';
+                    modalHtml += '</div>';
+    
+                    if (isMultiAddress) {
+                        modalHtml += `<div class="p-3 border-2 border-blue-200 rounded-lg bg-blue-50">
                     <div class="flex items-center space-x-2">
                         <svg class="w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -485,247 +512,441 @@
                         <span class="text-sm font-bold text-blue-800">MULTIPLE DELIVERY ADDRESSES</span>
                     </div>
                     <p class="mt-1 text-sm text-blue-700">This order is split across multiple delivery addresses.</p>
-                </div>`;
-            }
-
-
-                // Products Section - Check if orderDetails is available and not empty
-                if (orderDetails && Array.isArray(orderDetails) && orderDetails.length > 0) {
-                    modalHtml += '<div class="overflow-hidden bg-white rounded-lg shadow">';
-                    modalHtml +=
-                        '<div class="p-4 border-b bg-gray-50"><h3 class="text-lg font-semibold text-gray-800">Products Ordered</h3></div>';
-                    modalHtml += '<div class="overflow-x-auto">';
-                    modalHtml += '<table class="min-w-full divide-y divide-gray-200">';
-                    modalHtml += '<thead class="bg-gray-50"><tr>';
-                    modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Product</th>';
-                    modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Price</th>';
-                    modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Quantity</th>';
-                    modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Subtotal</th>';
-                    modalHtml += '</tr></thead><tbody class="divide-y divide-gray-200">';
                     
+                    <!-- Add loading indicator for specific order items -->
+                    <div id="multi-address-items-${delivery.id}" class="p-3 mt-3 border border-blue-100 rounded-lg">
+                        <div class="flex items-center text-blue-600">
+                            <svg class="w-4 h-4 mr-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Loading specific delivery items...</span>
+                        </div>
+                    </div>
+                </div>`;
     
-                    let totalAmount = 0;
-
-                    orderDetails.forEach(function(detail) {
-                        if (!detail) return;
-
-                        modalHtml += '<tr class="hover:bg-gray-50">';
-                        modalHtml += '<td class="px-4 py-3">';
-                        modalHtml += '<div class="flex items-center gap-3">';
-
-                        // Check if product exists before accessing properties
-                        if (detail.product && detail.product.image) {
-                            modalHtml += '<img src="' + storageBaseUrl + '/' + detail.product.image + '" alt="' +
-                                detail.product.product_name + '" class="object-cover w-16 h-16 rounded-lg" />';
-                        } else {
-                            modalHtml +=
-                                '<div class="flex items-center justify-center w-16 h-16 text-gray-400 bg-gray-100 rounded-lg">No image</div>';
-                        }
-
-                        modalHtml += '<span class="font-medium text-gray-800">' + (detail.product ? detail.product
-                            .product_name : 'Unknown Product') + '</span>';
-                        modalHtml += '</div></td>';
-                        modalHtml += '<td class="px-4 py-3">';
-
-                        if (detail.discount_amount > 0) {
-                            // Show original price with strikethrough and discounted price below
-                            const originalPrice = parseFloat(detail.price).toFixed(2);
-                            const discountedPrice = (detail.price - (detail.discount_amount / detail.quantity))
-                                .toFixed(2);
-
-                            modalHtml += '<span class="text-xs text-gray-500 line-through">₱' + originalPrice +
-                                '</span><br>' +
-                                '<span class="text-green-600">₱' + discountedPrice + '</span>';
-                        } else {
-                            // Show regular price if no discount
-                            modalHtml += '₱' + parseFloat(detail.price || 0).toFixed(2);
-                        }
-
-                        modalHtml += '</td>';
-                        modalHtml += '<td class="px-4 py-3">' + (detail.quantity || 0) + '</td>';
-                        modalHtml += '<td class="px-4 py-3 font-medium text-blue-600">₱' + parseFloat(detail
-                            .subtotal || 0).toFixed(2) + '</td>';
-
-                        totalAmount += parseFloat(detail.subtotal || 0);
-                    });
-
-                    modalHtml += '</tbody>';
-                    modalHtml += '<tfoot class="bg-gray-50"><tr>';
-                    modalHtml +=
-                        '<td colspan="3" class="px-4 py-3 font-medium text-right text-gray-700">Total Amount:</td>';
-                    modalHtml += '<td class="px-4 py-3 font-bold text-blue-600">₱' + totalAmount.toFixed(2) + '</td>';
-                    modalHtml += '</tr></tfoot>';
-                    modalHtml += '</table></div></div>';
-                } else {
-                    // Display a message if no order details available
-                    modalHtml += '<div class="p-4 border rounded-lg bg-gray-50">';
-                    modalHtml += '<p class="text-center text-gray-500">No product details available for this order</p>';
-                    modalHtml += '</div>';
-                }
-
-                // Delivery Information - Only show if order has user information
-                if (order && order.user) {
-                    modalHtml += '<div class="p-4 mt-4 bg-white rounded-lg shadow">';
-                    modalHtml += '<h3 class="mb-3 text-lg font-semibold text-gray-800">Delivery Information</h3>';
-                    modalHtml += '<div class="grid grid-cols-1 gap-4 md:grid-cols-2">';
-
-                    // Customer details section remains unchanged
-                    modalHtml += '<div class="p-3 border rounded-lg">';
-                    modalHtml += '<h4 class="font-medium text-gray-700">Customer Details</h4>';
-                    modalHtml += '<div class="mt-2 space-y-1 text-sm">';
-                    modalHtml += '<p><span class="font-medium">Name:</span> ' +
-                        (order.user.first_name || '') + ' ' + (order.user.last_name || '') + '</p>';
-
-                    if (order.user.email) {
-                        modalHtml += '<p><span class="font-medium">Email:</span> ' + order.user.email + '</p>';
+                        // Call function to fetch specific items for this delivery
+                        setTimeout(() => fetchDeliveryItems(delivery.id), 300);
                     }
-
-                    if (order.user.retailer_profile && order.user.retailer_profile.phone) {
-                        modalHtml += '<p><span class="font-medium">Phone:</span> ' + order.user.retailer_profile.phone +
-                            '</p>';
-                    }
-                    modalHtml += '</div>';
-                    modalHtml += '</div>';
-
-                    // Delivery address - updated to handle multi-address
-                    modalHtml += '<div class="p-3 border rounded-lg">';
-                    modalHtml += '<h4 class="font-medium text-gray-700">Delivery Address</h4>';
-                    modalHtml += '<div class="mt-2 text-sm">';
-
-                    if (isMultiAddress) {
-                    modalHtml += `
-                    <div id="delivery-address-${delivery.id}" class="text-sm">
-                        <p class="font-medium text-blue-600">This delivery is for:</p>`;
-
-
-                        // Get the address for this specific delivery from orderItemDeliveries
-                        if (delivery.address) {
-                    modalHtml += `<p class="mt-1">${delivery.address.barangay_name}${delivery.address.street ? ', ' + delivery.address.street : ''}</p>`;
-                        } else {
-                            // If we don't have direct address access, suggest checking the table above
-                            modalHtml += `<p class="mt-1 text-gray-600">Please see the product table above for specific delivery addresses.</p>`;
-                        }
-                        
-                        modalHtml += `</div>`;
-                    } else if (orderDetails && Array.isArray(orderDetails) && orderDetails.length > 0 && orderDetails[0].delivery_address) {
-                        modalHtml += '<p>' + orderDetails[0].delivery_address + '</p>';
+    
+    
+                    // Products Section - Check if orderDetails is available and not empty
+                    if (orderDetails && Array.isArray(orderDetails) && orderDetails.length > 0) {
+                        modalHtml += '<div class="overflow-hidden bg-white rounded-lg shadow">';
+                        modalHtml +=
+                            '<div class="p-4 border-b bg-gray-50"><h3 class="text-lg font-semibold text-gray-800">Products Ordered</h3></div>';
+                        modalHtml += '<div class="overflow-x-auto">';
+                        modalHtml += '<table class="min-w-full divide-y divide-gray-200">';
+                        modalHtml += '<thead class="bg-gray-50"><tr>';
+                        modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Product</th>';
+                        modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Price</th>';
+                        modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Quantity</th>';
+                        modalHtml += '<th class="px-4 py-3 text-sm font-medium text-left text-gray-700">Subtotal</th>';
+                        modalHtml += '</tr></thead><tbody class="divide-y divide-gray-200">';
+    
+    
+                        let totalAmount = 0;
+    
+                        orderDetails.forEach(function(detail) {
+                            if (!detail) return;
+    
+                            modalHtml += '<tr class="hover:bg-gray-50">';
+                            modalHtml += '<td class="px-4 py-3">';
+                            modalHtml += '<div class="flex items-center gap-3">';
+    
+                            // Check if product exists before accessing properties
+                            if (detail.product && detail.product.image) {
+                                modalHtml += '<img src="' + storageBaseUrl + '/' + detail.product.image + '" alt="' +
+                                    detail.product.product_name + '" class="object-cover w-16 h-16 rounded-lg" />';
+                            } else {
+                                modalHtml +=
+                                    '<div class="flex items-center justify-center w-16 h-16 text-gray-400 bg-gray-100 rounded-lg">No image</div>';
+                            }
+    
+                            modalHtml += '<span class="font-medium text-gray-800">' + (detail.product ? detail.product
+                                .product_name : 'Unknown Product') + '</span>';
+                            modalHtml += '</div></td>';
+                            modalHtml += '<td class="px-4 py-3">';
+    
+                            if (detail.discount_amount > 0) {
+                                // Show original price with strikethrough and discounted price below
+                                const originalPrice = parseFloat(detail.price).toFixed(2);
+                                const discountedPrice = (detail.price - (detail.discount_amount / detail.quantity))
+                                    .toFixed(2);
+    
+                                modalHtml += '<span class="text-xs text-gray-500 line-through">₱' + originalPrice +
+                                    '</span><br>' +
+                                    '<span class="text-green-600">₱' + discountedPrice + '</span>';
+                            } else {
+                                // Show regular price if no discount
+                                modalHtml += '₱' + parseFloat(detail.price || 0).toFixed(2);
+                            }
+    
+                            modalHtml += '</td>';
+                            modalHtml += '<td class="px-4 py-3">' + (detail.quantity || 0) + '</td>';
+                            modalHtml += '<td class="px-4 py-3 font-medium text-blue-600">₱' + parseFloat(detail
+                                .subtotal || 0).toFixed(2) + '</td>';
+    
+                            totalAmount += parseFloat(detail.subtotal || 0);
+                        });
+    
+                        modalHtml += '</tbody>';
+                        modalHtml += '<tfoot class="bg-gray-50"><tr>';
+                        modalHtml +=
+                            '<td colspan="3" class="px-4 py-3 font-medium text-right text-gray-700">Total Amount:</td>';
+                        modalHtml += '<td class="px-4 py-3 font-bold text-blue-600">₱' + totalAmount.toFixed(2) + '</td>';
+                        modalHtml += '</tr></tfoot>';
+                        modalHtml += '</table></div></div>';
                     } else {
-                        modalHtml += '<p class="text-gray-500">No address provided</p>';
+                        // Display a message if no order details available
+                        modalHtml += '<div class="p-4 border rounded-lg bg-gray-50">';
+                        modalHtml += '<p class="text-center text-gray-500">No product details available for this order</p>';
+                        modalHtml += '</div>';
                     }
-
+    
+                    // Delivery Information - Only show if order has user information
+                    if (order && order.user) {
+                        modalHtml += '<div class="p-4 mt-4 bg-white rounded-lg shadow">';
+                        modalHtml += '<h3 class="mb-3 text-lg font-semibold text-gray-800">Delivery Information</h3>';
+                        modalHtml += '<div class="grid grid-cols-1 gap-4 md:grid-cols-2">';
+    
+                        // Customer details section remains unchanged
+                        modalHtml += '<div class="p-3 border rounded-lg">';
+                        modalHtml += '<h4 class="font-medium text-gray-700">Customer Details</h4>';
+                        modalHtml += '<div class="mt-2 space-y-1 text-sm">';
+                        modalHtml += '<p><span class="font-medium">Name:</span> ' +
+                            (order.user.first_name || '') + ' ' + (order.user.last_name || '') + '</p>';
+    
+                        if (order.user.email) {
+                            modalHtml += '<p><span class="font-medium">Email:</span> ' + order.user.email + '</p>';
+                        }
+    
+                        if (order.user.retailer_profile && order.user.retailer_profile.phone) {
+                            modalHtml += '<p><span class="font-medium">Phone:</span> ' + order.user.retailer_profile.phone +
+                                '</p>';
+                        }
+                        modalHtml += '</div>';
+                        modalHtml += '</div>';
+    
+                        // Delivery address - updated to handle multi-address
+                        modalHtml += '<div class="p-3 border rounded-lg">';
+                        modalHtml += '<h4 class="font-medium text-gray-700">Delivery Address</h4>';
+                        modalHtml += '<div class="mt-2 text-sm">';
+    
+                        if (isMultiAddress) {
+                            modalHtml += `
+                        <div id="delivery-address-${delivery.id}" class="text-sm">
+                            <p class="font-medium text-blue-600">This delivery is for:</p>`;
+    
+    
+                            // Get the address for this specific delivery from orderItemDeliveries
+                            if (delivery.address) {
+                                modalHtml +=
+                                    `<p class="mt-1">${delivery.address.barangay_name}${delivery.address.street ? ', ' + delivery.address.street : ''}</p>`;
+                            } else {
+                                // If we don't have direct address access, suggest checking the table above
+                                modalHtml +=
+                                    `<p class="mt-1 text-gray-600">Please see the product table above for specific delivery addresses.</p>`;
+                            }
+    
+                            modalHtml += `</div>`;
+                        } else if (orderDetails && Array.isArray(orderDetails) && orderDetails.length > 0 && orderDetails[0]
+                            .delivery_address) {
+                            modalHtml += '<p>' + orderDetails[0].delivery_address + '</p>';
+                        } else {
+                            modalHtml += '<p class="text-gray-500">No address provided</p>';
+                        }
+    
+                        modalHtml += '</div>';
+                        modalHtml += '</div>';
+    
+                        modalHtml += '</div>';
+                        modalHtml += '</div>';
+                    }
+    
                     modalHtml += '</div>';
-                    modalHtml += '</div>';
-
-                    modalHtml += '</div>';
-                    modalHtml += '</div>';
+    
+                    document.getElementById('deliveryModalContent').innerHTML = modalHtml;
+                    document.getElementById('deliveryModal').classList.remove('hidden');
+    
+                    // Only show the Delivered button for deliveries that are out_for_delivery
+                    if (delivery.status === 'out_for_delivery') {
+                        document.getElementById('markDeliveredBtn').classList.remove('hidden');
+                    } else {
+                        document.getElementById('markDeliveredBtn').classList.add('hidden');
+                    }
+                } catch (error) {
+                    console.error('Error in openDeliveryModal:', error);
+                    alert('An error occurred while displaying delivery details: ' + error.message);
                 }
-
-                modalHtml += '</div>';
-
-                document.getElementById('deliveryModalContent').innerHTML = modalHtml;
-                document.getElementById('deliveryModal').classList.remove('hidden');
-
-                // Only show the Delivered button for deliveries that are out_for_delivery
-                if (delivery.status === 'out_for_delivery') {
-                    document.getElementById('markDeliveredBtn').classList.remove('hidden');
-                } else {
-                    document.getElementById('markDeliveredBtn').classList.add('hidden');
+    
+                const moveBtn = document.getElementById('moveDeliveryBtn');
+                if (moveBtn) {
+                    if (delivery.status === 'pending' || delivery.status === 'in_transit') {
+                        moveBtn.classList.remove('hidden');
+                    } else {
+                        moveBtn.classList.add('hidden');
+                    }
                 }
-            } catch (error) {
-                console.error('Error in openDeliveryModal:', error);
-                alert('An error occurred while displaying delivery details: ' + error.message);
             }
-
-            const moveBtn = document.getElementById('moveDeliveryBtn');
-            if (moveBtn) {
-                if (delivery.status === 'pending' || delivery.status === 'in_transit') {
-                    moveBtn.classList.remove('hidden');
+    
+            // Function to fetch specific delivery items for multi-address orders
+            function fetchDeliveryItems(deliveryId) {
+                fetch(`/delivery/${deliveryId}/details`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const container = document.getElementById(`multi-address-items-${deliveryId}`);
+                            if (!container) return;
+    
+                            let itemsHtml = `
+                                <h4 class="mb-2 font-medium text-blue-700">Items in this specific delivery:</h4>
+                                <div class="space-y-3">`;
+    
+                            data.items.forEach(item => {
+                                itemsHtml += `
+                                    <div class="p-3 bg-white border border-blue-100 rounded-lg">
+                                        <div class="flex items-center mb-2">
+                                            <svg class="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                            <span class="font-medium text-gray-800">${item.address.barangay_name}${item.address.street ? ', ' + item.address.street : ''}</span>
+                                        </div>
+                                        
+                                        <h5 class="mb-1 text-sm font-medium text-gray-700">Products:</h5>
+                                        <ul class="pl-5 space-y-1 text-sm list-disc">`;
+    
+                                item.products.forEach(product => {
+                                    itemsHtml += `
+                                        <li class="text-gray-600">
+                                            ${product.name}
+                                            <span class="font-medium text-blue-600">(Qty: ${product.quantity})</span>
+                                            <span class="text-gray-500">₱${parseFloat(product.price).toFixed(2)} each</span>
+                                        </li>`;
+                                });
+    
+                                itemsHtml += `
+                                        </ul>
+                                        <div class="mt-2 font-medium text-right text-blue-600">
+                                            Subtotal: ₱${item.products.reduce((sum, product) => sum + parseFloat(product.subtotal), 0).toFixed(2)}
+                                        </div>
+                                    </div>`;
+                            });
+    
+                            itemsHtml += `</div>`;
+                            container.innerHTML = itemsHtml;
+                        } else {
+                            const container = document.getElementById(`multi-address-items-${deliveryId}`);
+                            if (container) {
+                                container.innerHTML = `
+                                    <div class="p-3 text-red-600">
+                                        <p>Unable to load specific delivery items.</p>
+                                        <p class="text-sm">${data.message || 'An error occurred while fetching the data.'}</p>
+                                    </div>`;
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching delivery items:', error);
+                        const container = document.getElementById(`multi-address-items-${deliveryId}`);
+                        if (container) {
+                            container.innerHTML = `
+                                <div class="p-3 text-red-600">
+                                    <p>Error loading delivery items.</p>
+                                    <p class="text-sm">${error.message}</p>
+                                </div>`;
+                        }
+                    });
+            }
+    
+            function closeDeliveryModal() {
+                document.getElementById('deliveryModal').classList.add('hidden');
+            }
+    
+            function markAsDelivered() {
+                if (!currentDeliveryId) return;
+    
+                // Show payment modal instead of direct confirmation
+                document.getElementById('paymentModal').classList.remove('hidden');
+    
+                // Set the form action dynamically
+                const paymentForm = document.getElementById('paymentForm');
+                paymentForm.action = "{{ route('distributors.deliveries.mark-delivered', ['delivery' => ':id']) }}"
+                    .replace(':id', currentDeliveryId);
+    
+                let maxAmount = 0;
+                let isMultiAddress = false;
+    
+                // Check if this is a multi-address order by looking for the specific items container
+                const multiAddressContainer = document.getElementById(`multi-address-items-${currentDeliveryId}`);
+                if (multiAddressContainer) {
+                    isMultiAddress = true;
+                    // Find the sum of all subtotals in this specific delivery
+                    const subtotalElements = multiAddressContainer.querySelectorAll('.text-blue-600');
+                    if (subtotalElements && subtotalElements.length > 0) {
+                        // Get the last element which should contain the total
+                        subtotalElements.forEach(element => {
+                            if (element.textContent.includes('Subtotal')) {
+                                const subtotalText = element.textContent;
+                                const amount = parseFloat(subtotalText.replace('Subtotal: ₱', '').trim());
+                                if (!isNaN(amount)) {
+                                    maxAmount += amount;
+                                }
+                            }
+                        });
+                    }
                 } else {
-                    moveBtn.classList.add('hidden');
+                    // Regular order - get total from order summary
+                    const totalAmountElement = document.querySelector('#deliveryModalContent tfoot .text-blue-600');
+                    if (totalAmountElement) {
+                        const totalText = totalAmountElement.innerText;
+                        const amount = parseFloat(totalText.replace('₱', '').trim());
+                        if (!isNaN(amount)) {
+                            maxAmount = amount;
+                        }
+                    }
+                }
+                document.getElementById('payment_amount').dataset.maxAmount = maxAmount.toFixed(2);
+                document.getElementById('payment_amount').value = maxAmount.toFixed(2);
+                // Add validation for the payment amount
+                const amountField = document.getElementById('payment_amount');
+                amountField.max = maxAmount;
+    
+                // Add an error message container
+                const errorContainer = document.getElementById('payment-amount-error') || document.createElement('p');
+                errorContainer.id = 'payment-amount-error';
+                errorContainer.className = 'text-xs text-red-600 mt-1 hidden';
+                errorContainer.textContent = `Amount cannot exceed ₱${maxAmount.toFixed(2)}`;
+                amountField.parentNode.appendChild(errorContainer);
+    
+                // Add input validation
+                amountField.addEventListener('input', validatePaymentAmount);
+    
+                const paymentStatusRadios = document.getElementsByName('payment_status');
+                paymentStatusRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const amountField = document.getElementById('payment_amount');
+                        const maxAmount = parseFloat(amountField.dataset.maxAmount);
+                        
+                        if (this.value === 'unpaid') {
+                            amountField.value = '0.00';
+                        } else if (this.value === 'paid') {
+                            amountField.value = maxAmount.toFixed(2);
+                        } else if (this.value === 'partial') {
+                            // For partial payment, set to half the amount as a starting point
+                            amountField.value = (maxAmount / 2).toFixed(2);
+                        }
+                        validatePaymentAmount();
+                    });
+                });
+            }
+    
+            function validatePaymentAmount() {
+                const amountField = document.getElementById('payment_amount');
+                const errorContainer = document.getElementById('payment-amount-error');
+                const submitButton = document.querySelector('#paymentForm button[type="submit"]');
+                
+                const enteredAmount = parseFloat(amountField.value);
+                const maxAmount = parseFloat(amountField.dataset.maxAmount);
+                
+                if (enteredAmount > maxAmount) {
+                    errorContainer.classList.remove('hidden');
+                    submitButton.disabled = true;
+                    submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    return false;
+                } else {
+                    errorContainer.classList.add('hidden');
+                    submitButton.disabled = false;
+                    submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    return true;
                 }
             }
-        }
-
-        function closeDeliveryModal() {
-            document.getElementById('deliveryModal').classList.add('hidden');
-        }
-
-        function markAsDelivered() {
-            if (!currentDeliveryId) return;
-
-            // Show payment modal instead of direct confirmation
-            document.getElementById('paymentModal').classList.remove('hidden');
-
-            // Set the form action dynamically
-            const paymentForm = document.getElementById('paymentForm');
-            paymentForm.action = "{{ route('distributors.deliveries.mark-delivered', ['delivery' => ':id']) }}"
-                .replace(':id', currentDeliveryId);
-        }
-
-        function closePaymentModal() {
-            document.getElementById('paymentModal').classList.add('hidden');
-        }
-
-        document.getElementById('paymentForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent immediate form submission
-
-            const form = this;
-            const paymentStatus = form.querySelector('input[name="payment_status"]:checked').value;
-
-            Swal.fire({
-            title: 'Confirm Delivery & Payment',
-            html: `
-            <p>Are you sure this order has been delivered?</p>
-            <p class="mt-2">Payment will be marked as <strong>${
-            paymentStatus === 'paid' ? 'PAID' : 
-            (paymentStatus === 'partial' ? 'PARTIALLY PAID' : 'UNPAID')
-            }</strong>.</p>
-        `,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#4CAF50',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, confirm'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.submit(); // Actually submit the form
+    
+            function closePaymentModal() {
+                document.getElementById('paymentModal').classList.add('hidden');
+            }
+    
+            function openEstimatedDeliveryModal() {
+                // Set minimum date to today
+                document.getElementById('estimated_delivery').min = new Date().toISOString().split('T')[0];
+    
+                // Set default value to tomorrow
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                document.getElementById('estimated_delivery').value = tomorrow.toISOString().split('T')[0];
+    
+                // Show modal
+                document.getElementById('estimatedDeliveryModal').classList.remove('hidden');
+            }
+    
+            function closeEstimatedDeliveryModal() {
+                document.getElementById('estimatedDeliveryModal').classList.add('hidden');
+            }
+    
+            function openMoveDeliveryModal() {
+                if (!currentDeliveryId) return;
+    
+                // Set the hidden delivery ID field
+                document.getElementById('delivery_id_to_move').value = currentDeliveryId;
+    
+                // Show the modal
+                document.getElementById('moveDeliveryModal').classList.remove('hidden');
+    
+                // Close the delivery details modal
+                closeDeliveryModal();
+            }
+    
+            function closeMoveDeliveryModal() {
+                document.getElementById('moveDeliveryModal').classList.add('hidden');
+            }
+        </script>
+    
+        <div class="py-12">
+            <!-- Rest of your HTML content -->
+        </div>
+    
+        <!-- Payment form submission handler -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const paymentForm = document.getElementById('paymentForm');
+                if (paymentForm) {
+                    paymentForm.addEventListener('submit', function(event) {
+                        event.preventDefault(); // Prevent immediate form submission
+    
+                        // Validate payment amount before submission
+                        if (!validatePaymentAmount()) {
+                            return false; // Stop submission if validation fails
+                        }
+    
+                        const form = this;
+                        const paymentStatus = form.querySelector('input[name="payment_status"]:checked').value;
+                        const paymentAmount = parseFloat(form.querySelector('#payment_amount').value);
+                        const maxAmount = parseFloat(form.querySelector('#payment_amount').dataset.maxAmount);
+    
+                        Swal.fire({
+                            title: 'Confirm Delivery & Payment',
+                            html: `
+                                <p>Are you sure this order has been delivered?</p>
+                                <p class="mt-2">Payment will be marked as <strong>${
+                                    paymentStatus === 'paid' ? 'PAID' : 
+                                    (paymentStatus === 'partial' ? 'PARTIALLY PAID' : 'UNPAID')
+                                }</strong>.</p>
+                                <p class="mt-2">Payment amount: <strong>₱${paymentAmount.toFixed(2)}</strong> of <strong>₱${maxAmount.toFixed(2)}</strong></p>
+                            `,
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonColor: '#4CAF50',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: 'Yes, confirm'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                form.submit(); // Actually submit the form
+                            }
+                        });
+                    });
                 }
             });
-        });
+        </script>
+    </x-distributor-layout>
 
-        function openEstimatedDeliveryModal() {
-            // Set minimum date to today
-            document.getElementById('estimated_delivery').min = new Date().toISOString().split('T')[0];
-
-            // Set default value to tomorrow
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            document.getElementById('estimated_delivery').value = tomorrow.toISOString().split('T')[0];
-
-            // Show modal
-            document.getElementById('estimatedDeliveryModal').classList.remove('hidden');
-        }
-
-        function closeEstimatedDeliveryModal() {
-            document.getElementById('estimatedDeliveryModal').classList.add('hidden');
-        }
-
-        function openMoveDeliveryModal() {
-            if (!currentDeliveryId) return;
-
-            // Set the hidden delivery ID field
-            document.getElementById('delivery_id_to_move').value = currentDeliveryId;
-
-            // Show the modal
-            document.getElementById('moveDeliveryModal').classList.remove('hidden');
-
-            // Close the delivery details modal
-            closeDeliveryModal();
-        }
-
-        function closeMoveDeliveryModal() {
-            document.getElementById('moveDeliveryModal').classList.add('hidden');
-        }
-        
-    </script>
-</x-distributor-layout>
